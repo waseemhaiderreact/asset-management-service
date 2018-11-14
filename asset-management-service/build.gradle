@@ -1,0 +1,50 @@
+buildscript {
+    ext {
+        springBootVersion = '1.5.3.RELEASE'
+    }
+    repositories {
+        mavenCentral()
+    }
+    dependencies {
+        classpath("org.springframework.boot:spring-boot-gradle-plugin:${springBootVersion}")
+    }
+}
+
+apply plugin: 'java'
+apply plugin: 'eclipse'
+apply plugin: 'org.springframework.boot'
+apply plugin: 'io.spring.dependency-management'
+apply plugin: 'war'
+
+group = 'com.alsharqi'
+version = '0.0.1-SNAPSHOT'
+sourceCompatibility = 1.8
+
+repositories {
+    mavenCentral()
+}
+
+war {
+    baseName = 'asset-management-service'
+    version =  '0.0.1'
+}
+
+
+dependencies {
+    compile("org.springframework.boot:spring-boot-starter-websocket:1.5.3.RELEASE")
+    compile('org.springframework.boot:spring-boot-starter-data-jpa:1.5.3.RELEASE')
+    compile('org.springframework.boot:spring-boot-starter-parent:1.5.3.RELEASE')
+    compile('org.springframework.boot:spring-boot-autoconfigure:1.5.3.RELEASE')
+    compile ('org.springframework.cloud:spring-cloud-starter-config:1.4.2.RELEASE')
+    compile ('mysql:mysql-connector-java:5.1.41')
+
+    compile group: 'javax.persistence', name: 'javax.persistence-api', version: '2.2'
+
+    compile group: 'org.springframework.boot', name: 'spring-boot-starter-web', version: '1.5.3.RELEASE'
+
+    //Auth Dependencies
+    compile 'org.springframework.security.oauth:spring-security-oauth2:2.2.1.RELEASE'
+    //kafka dependency
+    compile('org.springframework.cloud:spring-cloud-stream:1.2.2.RELEASE')
+    compile('org.springframework.cloud:spring-cloud-starter-stream-kafka:1.2.1.RELEASE')
+}
