@@ -79,11 +79,11 @@ public class AssetController {
 
     //create a new Issue
 
-    @RequestMapping(method = RequestMethod.POST,value="/issues")
+    @RequestMapping(method = RequestMethod.POST,value="/issues",params = {"assetNumber"})
     public @ResponseBody
-    ResponseEntity createIssue(@RequestBody IssueReporting issueReporting) throws EmptyEntityTableException {
-        return Optional.ofNullable(assetService.saveIssue(issueReporting))
-                .map(resp -> new ResponseEntity<IssueReporting>(resp, HttpStatus.OK))
+    ResponseEntity createIssue(@RequestBody IssueReporting issueReporting,@RequestParam String assetNumber) throws EmptyEntityTableException {
+        return Optional.ofNullable(assetService.saveIssue(issueReporting,assetNumber))
+                .map(resp -> new ResponseEntity<Vehicle>(resp, HttpStatus.OK))
                 .orElseThrow(() -> new EmptyEntityTableException("No Vehicle exists",0L));
     }
 

@@ -7,4 +7,5 @@ import java.util.List;
 
 public interface IssueReportingRepository extends JpaRepository<IssueReporting,Long> {
     List<IssueReporting> findByVehicle(Vehicle vehicle);
+    IssueReporting findById(Long id);
 }
