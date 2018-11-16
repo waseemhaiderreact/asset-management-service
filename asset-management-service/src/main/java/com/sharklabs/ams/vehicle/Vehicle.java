@@ -1,11 +1,12 @@
 package com.sharklabs.ams.vehicle;
 
 
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
+import com.sharklabs.ams.issuesreporting.IssueReporting;
+
+import javax.persistence.*;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 @Entity(name = "t_vehicle")
 public class Vehicle {
@@ -44,6 +45,9 @@ public class Vehicle {
     private Date createdAt;
     private Date updatedAt;
     private String driverNumber;
+
+    @OneToMany(  cascade = CascadeType.ALL,mappedBy = "vehicle",fetch = FetchType.EAGER)
+    private List<IssueReporting> issueReportings =new ArrayList<>();
 
     public Long getId() {
         return id;
@@ -299,5 +303,16 @@ public class Vehicle {
 
     public void setDriverNumber(String driverNumber) {
         this.driverNumber = driverNumber;
+    }
+
+    public List<IssueReporting> getIssueReportings() {
+        return issueReportings;
+    }
+
+    public void setIssueReportings(List<IssueReporting> issueReportings) {
+        this.issueReportings = issueReportings;
+    }
+    public  void addIssueReporting(IssueReporting issueReporting){
+        this.issueReportings.add(issueReporting);
     }
 }

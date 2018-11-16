@@ -4,14 +4,18 @@ package com.sharklabs.ams.api;
 import com.sharklabs.ams.AssignmentRecord.AssignmentRecord;
 import com.sharklabs.ams.AssignmentRecord.AssignmentRecordRepository;
 import com.sharklabs.ams.response.DefaultResponse;
+import com.sharklabs.ams.issuesreporting.IssueReporting;
+import com.sharklabs.ams.issuesreporting.IssueReportingRepository;
 import com.sharklabs.ams.vehicle.Vehicle;
 import com.sharklabs.ams.vehicle.VehicleRepository;
+import org.aspectj.weaver.tools.ISupportsMessageContext;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
 import java.util.Date;
+import java.util.List;
 
 @Service
 public class AssetService {
@@ -19,6 +23,8 @@ public class AssetService {
     private VehicleRepository vehicleRepository;
     @Autowired
     private AssignmentRecordRepository assignmentRecordRepository;
+    @Autowired
+    IssueReportingRepository issueReportingRepository;
 
     //create a new vehicle
     Vehicle createVehicle(Vehicle vehicle){
@@ -85,6 +91,25 @@ public class AssetService {
             e.printStackTrace();
         }
         return null;
+    }
+
+    /*****************************Issue Reporting***************************************/
+    public IssueReporting saveIssue(IssueReporting issueReporting){
+
+        issueReportingRepository.save(issueReporting);
+        Vehicle vehicle = vehicleRepository.findByAssetNumber(issueReporting.getVehicle().getAssetNumber());
+        vehicle.addIssueReporting(issueReporting);
+        vehicleRepository.save(vehicle);
+        IssueReporting issue = issueReportingRepository.findOne(issueReporting.getId());
+        return issue;
+
+    }
+
+    List<IssueReporting> getIssueReporting(String assetNo){
+
+        Vehicle vehicle = vehicleRepository.findByAssetNumber(assetNo);
+        return  issueReportingRepository.findByVehicle(vehicle);
+
     }
 }
 

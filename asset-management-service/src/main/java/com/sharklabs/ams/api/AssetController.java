@@ -2,6 +2,7 @@ package com.sharklabs.ams.api;
 
 import com.sharklabs.ams.exception.EmptyEntityTableException;
 import com.sharklabs.ams.response.DefaultResponse;
+import com.sharklabs.ams.issuesreporting.IssueReporting;
 import com.sharklabs.ams.vehicle.Vehicle;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -10,6 +11,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Optional;
 
 
@@ -62,6 +64,24 @@ public class AssetController {
     ResponseEntity getVehicles(@RequestParam int offset,@RequestParam int limit) throws EmptyEntityTableException {
         return Optional.ofNullable(assetService.getVehicles(offset,limit))
                 .map(resp -> new ResponseEntity<Page<Vehicle>>(resp, HttpStatus.OK))
+                .orElseThrow(() -> new EmptyEntityTableException("No Vehicle exists",0L));
+    }
+
+    //create a new Issue
+
+    @RequestMapping(method = RequestMethod.POST,value="/issues")
+    public @ResponseBody
+    ResponseEntity createIssue(@RequestBody IssueReporting issueReporting) throws EmptyEntityTableException {
+        return Optional.ofNullable(assetService.saveIssue(issueReporting))
+                .map(resp -> new ResponseEntity<IssueReporting>(resp, HttpStatus.OK))
+                .orElseThrow(() -> new EmptyEntityTableException("No Vehicle exists",0L));
+    }
+
+    @RequestMapping(method = RequestMethod.GET,value="/issues")
+    public @ResponseBody
+    ResponseEntity getVehicles(@RequestParam String assetNo) throws EmptyEntityTableException {
+        return Optional.ofNullable(assetService.getIssueReporting(assetNo))
+                .map(resp -> new ResponseEntity<List<IssueReporting>>(resp, HttpStatus.OK))
                 .orElseThrow(() -> new EmptyEntityTableException("No Vehicle exists",0L));
     }
 }
