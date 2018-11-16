@@ -93,6 +93,11 @@ public class AssetService {
         return null;
     }
 
+    //get vehicle by driver number
+    public Vehicle getVehicleByDriverNumber(String driverNumber){
+        return vehicleRepository.findByDriverNumber(driverNumber);
+    }
+
     /*****************************Issue Reporting***************************************/
     public IssueReporting saveIssue(IssueReporting issueReporting){
 

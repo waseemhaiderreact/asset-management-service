@@ -11,6 +11,7 @@ import javax.transaction.Transactional;
 
 public interface VehicleRepository extends JpaRepository<Vehicle, Long> {
     Vehicle findByAssetNumber(String assetNumber);
+    Vehicle findByDriverNumber(String driverNumber);
     @Modifying
     @Transactional
     @Query(value = "delete from t_vehicle where asset_number=?1",nativeQuery = true)
