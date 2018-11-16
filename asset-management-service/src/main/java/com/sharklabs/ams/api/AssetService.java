@@ -96,9 +96,9 @@ public class AssetService {
     /*****************************Issue Reporting***************************************/
     public IssueReporting saveIssue(IssueReporting issueReporting){
 
-        issueReportingRepository.save(issueReporting);
         Vehicle vehicle = vehicleRepository.findByAssetNumber(issueReporting.getVehicle().getAssetNumber());
         vehicle.addIssueReporting(issueReporting);
+        issueReporting.setVehicle(vehicle);
         vehicleRepository.save(vehicle);
         IssueReporting issue = issueReportingRepository.findOne(issueReporting.getId());
         return issue;
