@@ -11,6 +11,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
+import java.lang.reflect.Method;
 import java.util.List;
 import java.util.Optional;
 
@@ -64,6 +65,15 @@ public class AssetController {
     ResponseEntity getVehicles(@RequestParam int offset,@RequestParam int limit) throws EmptyEntityTableException {
         return Optional.ofNullable(assetService.getVehicles(offset,limit))
                 .map(resp -> new ResponseEntity<Page<Vehicle>>(resp, HttpStatus.OK))
+                .orElseThrow(() -> new EmptyEntityTableException("No Vehicle exists",0L));
+    }
+
+    //get vehicle by driverNumber
+    @RequestMapping(method=RequestMethod.GET,value="/vehicles",params = {"driverNumber"})
+    public @ResponseBody
+    ResponseEntity getVehicleByDriverNumber(@RequestParam String driverNumber) throws EmptyEntityTableException {
+        return Optional.ofNullable(assetService.getVehicleByDriverNumber(driverNumber))
+                .map(resp -> new ResponseEntity<Vehicle>(resp, HttpStatus.OK))
                 .orElseThrow(() -> new EmptyEntityTableException("No Vehicle exists",0L));
     }
 
