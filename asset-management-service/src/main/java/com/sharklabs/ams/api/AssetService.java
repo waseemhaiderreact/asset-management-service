@@ -3,6 +3,7 @@ package com.sharklabs.ams.api;
 
 import com.sharklabs.ams.AssignmentRecord.AssignmentRecord;
 import com.sharklabs.ams.AssignmentRecord.AssignmentRecordRepository;
+import com.sharklabs.ams.response.DefaultResponse;
 import com.sharklabs.ams.vehicle.Vehicle;
 import com.sharklabs.ams.vehicle.VehicleRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -52,8 +53,11 @@ public class AssetService {
     }
 
     //delete a vehicle by assetNumber
-    Integer deleteVehicle(String assetNumber){
-        return vehicleRepository.deleteByAssetNumber(assetNumber);
+    DefaultResponse deleteVehicle(String assetNumber){
+        if(vehicleRepository.deleteByAssetNumber(assetNumber)==1) {
+            return new DefaultResponse("NA","Vehicle Deleted Successfully","200");
+        }
+        return new DefaultResponse("NA","Error in deleting vehicle","500");
     }
 
     //get a vehicle by assetNumber

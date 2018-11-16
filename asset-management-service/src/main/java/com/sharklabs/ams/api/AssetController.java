@@ -1,6 +1,7 @@
 package com.sharklabs.ams.api;
 
 import com.sharklabs.ams.exception.EmptyEntityTableException;
+import com.sharklabs.ams.response.DefaultResponse;
 import com.sharklabs.ams.vehicle.Vehicle;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -51,7 +52,7 @@ public class AssetController {
     public @ResponseBody
     ResponseEntity updateVehicle(@PathVariable("assetNumber") String assetNumber) throws EmptyEntityTableException {
         return Optional.ofNullable(assetService.deleteVehicle(assetNumber))
-                .map(resp -> new ResponseEntity<Integer>(resp, HttpStatus.OK))
+                .map(resp -> new ResponseEntity<DefaultResponse>(resp, HttpStatus.OK))
                 .orElseThrow(() -> new EmptyEntityTableException("No Vehicle exists",0L));
     }
 
