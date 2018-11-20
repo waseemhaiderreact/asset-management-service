@@ -1,6 +1,8 @@
 package com.sharklabs.ams.api;
 
 
+import com.sharklabs.ams.Recording.Recording;
+import com.sharklabs.ams.image.Image;
 import com.sharklabs.ams.response.DefaultResponse;
 import com.sharklabs.ams.issuesreporting.IssueReporting;
 import com.sharklabs.ams.issuesreporting.IssueReportingRepository;
@@ -67,9 +69,9 @@ public class AssetService {
     }
 
     //get vehicle by driver number
-    public Vehicle getVehicleByDriverNumber(String driverNumber){
-        return vehicleRepository.findByDriverNumber(driverNumber);
-    }
+//    public Vehicle getVehicleByDriverNumber(String driverNumber){
+//        return vehicleRepository.findByDriverNumber(driverNumber);
+//    }
 
     /*****************************Issue Reporting***************************************/
     public Vehicle saveIssue(IssueReporting issueReporting,String assetNumber){
@@ -77,6 +79,12 @@ public class AssetService {
         Vehicle vehicle = vehicleRepository.findByAssetNumber(assetNumber);
         vehicle.addIssueReporting(issueReporting);
         issueReporting.setVehicle(vehicle);
+        for(Image image:issueReporting.getImages()){
+            image.setIssue(issueReporting);
+        }
+        for(Recording recording: issueReporting.getRecordings()){
+            recording.setIssue(issueReporting);
+        }
         vehicleRepository.save(vehicle);
         Vehicle vehicle1= vehicleRepository.findOne(vehicle.getId());
         return vehicle1;

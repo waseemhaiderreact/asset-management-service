@@ -1,9 +1,15 @@
 package com.sharklabs.ams.issuesreporting;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.sharklabs.ams.Recording.Recording;
+import com.sharklabs.ams.image.Image;
 import com.sharklabs.ams.vehicle.Vehicle;
 
 import javax.persistence.*;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 
 @Entity(name = "t_issue_reporting")
@@ -19,11 +25,14 @@ public class IssueReporting {
     private Vehicle vehicle;
 
     private String issueDescription;
-
-    @Lob
-    private byte[] content;
     private String udid;
     private String status;
+
+    @OneToMany(  cascade = CascadeType.ALL,mappedBy = "issue",fetch = FetchType.EAGER)
+    private Set<Image> images =new HashSet<>();
+
+    @OneToMany(  cascade = CascadeType.ALL,mappedBy = "issue",fetch = FetchType.EAGER)
+    private Set<Recording> recordings =new HashSet<>();
 
     public IssueReporting() {
     }
@@ -52,14 +61,6 @@ public class IssueReporting {
         this.issueDescription = issueDescription;
     }
 
-    public byte[] getContent() {
-        return content;
-    }
-
-    public void setContent(byte[] content) {
-        this.content = content;
-    }
-
     public String getUdid() {
         return udid;
     }
@@ -74,5 +75,21 @@ public class IssueReporting {
 
     public void setStatus(String status) {
         this.status = status;
+    }
+
+    public Set<Image> getImages() {
+        return images;
+    }
+
+    public void setImages(Set<Image> images) {
+        this.images = images;
+    }
+
+    public Set<Recording> getRecordings() {
+        return recordings;
+    }
+
+    public void setRecordings(Set<Recording> recordings) {
+        this.recordings = recordings;
     }
 }

@@ -69,13 +69,13 @@ public class AssetController {
     }
 
     //get vehicle by driverNumber
-    @RequestMapping(method=RequestMethod.GET,value="/vehicles",params = {"driverNumber"})
-    public @ResponseBody
-    ResponseEntity getVehicleByDriverNumber(@RequestParam String driverNumber) throws EmptyEntityTableException {
-        return Optional.ofNullable(assetService.getVehicleByDriverNumber(driverNumber))
-                .map(resp -> new ResponseEntity<Vehicle>(resp, HttpStatus.OK))
-                .orElseThrow(() -> new EmptyEntityTableException("No Vehicle exists",0L));
-    }
+//    @RequestMapping(method=RequestMethod.GET,value="/vehicles",params = {"driverNumber"})
+//    public @ResponseBody
+//    ResponseEntity getVehicleByDriverNumber(@RequestParam String driverNumber) throws EmptyEntityTableException {
+//        return Optional.ofNullable(assetService.getVehicleByDriverNumber(driverNumber))
+//                .map(resp -> new ResponseEntity<Vehicle>(resp, HttpStatus.OK))
+//                .orElseThrow(() -> new EmptyEntityTableException("No Vehicle exists",0L));
+//    }
 
     //create a new Issue
 
