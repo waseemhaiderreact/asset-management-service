@@ -44,7 +44,6 @@ public class Vehicle {
     private double price;
     private Date createdAt;
     private Date updatedAt;
-    private String driverNumber;
 
     @OneToMany(  cascade = CascadeType.ALL,mappedBy = "vehicle",fetch = FetchType.EAGER)
     private List<IssueReporting> issueReportings =new ArrayList<>();
@@ -297,13 +296,6 @@ public class Vehicle {
         this.updatedAt = updatedAt;
     }
 
-    public String getDriverNumber() {
-        return driverNumber;
-    }
-
-    public void setDriverNumber(String driverNumber) {
-        this.driverNumber = driverNumber;
-    }
 
     public List<IssueReporting> getIssueReportings() {
         return issueReportings;

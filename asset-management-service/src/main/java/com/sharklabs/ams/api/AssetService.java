@@ -1,14 +1,11 @@
 package com.sharklabs.ams.api;
 
 
-import com.sharklabs.ams.AssignmentRecord.AssignmentRecord;
-import com.sharklabs.ams.AssignmentRecord.AssignmentRecordRepository;
 import com.sharklabs.ams.response.DefaultResponse;
 import com.sharklabs.ams.issuesreporting.IssueReporting;
 import com.sharklabs.ams.issuesreporting.IssueReportingRepository;
 import com.sharklabs.ams.vehicle.Vehicle;
 import com.sharklabs.ams.vehicle.VehicleRepository;
-import org.aspectj.weaver.tools.ISupportsMessageContext;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -21,8 +18,6 @@ import java.util.List;
 public class AssetService {
     @Autowired
     private VehicleRepository vehicleRepository;
-    @Autowired
-    private AssignmentRecordRepository assignmentRecordRepository;
     @Autowired
     IssueReportingRepository issueReportingRepository;
 
@@ -69,28 +64,6 @@ public class AssetService {
     //get a vehicle by assetNumber
     Page<Vehicle> getVehicles(int offset, int limit){
         return vehicleRepository.findByIdNotNull(new PageRequest(offset, limit));
-    }
-
-    //assign vehicle a driver
-    public Vehicle assignDriver(AssignmentRecord assignmentRecord){
-        try{
-            Vehicle vehicle =vehicleRepository.findByAssetNumber(assignmentRecord.getAssetNumber());
-            if(vehicle.getDriverNumber()!=null){
-                AssignmentRecord assignmentRecord1=null;
-                assignmentRecord1=assignmentRecordRepository.findByAssetNumberAndDriverNumber(assignmentRecord.getAssetNumber(),assignmentRecord.getDriverNumber());
-                if(assignmentRecord1==null){
-                    assignmentRecord1=new AssignmentRecord();
-                    assignmentRecord1.setAssetNumber(vehicle.getAssetNumber());
-                    assignmentRecord1.setDriverNumber(vehicle.getDriverNumber());
-                    assignmentRecordRepository.save(assignmentRecord1);
-                }
-            }
-            vehicle.setDriverNumber(assignmentRecord.getDriverNumber());
-            vehicleRepository.save(vehicle);
-        }catch(Exception e){
-            e.printStackTrace();
-        }
-        return null;
     }
 
     //get vehicle by driver number
