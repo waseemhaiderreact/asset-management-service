@@ -144,3 +144,5 @@ asset-management-service/build/libs/exploded/asset-management-service-0.0.1.war/
 asset-management-service/out/production/classes/com/sharklabs/ams/imagevoice/ImageVoiceRepository.class
 asset-management-service/build/libs/exploded/asset-management-service-0.0.1.war/WEB-INF/classes/com/sharklabs/ams/Recording/Recording.class
 asset-management-service/out/production/classes/com/sharklabs/ams/imagevoice/ImageVoice.class
+asset-management-service/build/libs/exploded/asset-management-service-0.0.1.war/WEB-INF/classes/com/sharklabs/ams/imagevoice/ImageVoiceRepository.class
+asset-management-service/build/libs/exploded/asset-management-service-0.0.1.war/WEB-INF/classes/com/sharklabs/ams/imagevoice/ImageVoice.class

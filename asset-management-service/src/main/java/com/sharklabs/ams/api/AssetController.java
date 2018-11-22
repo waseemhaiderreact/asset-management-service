@@ -11,6 +11,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
+import javax.transaction.Transactional;
 import java.lang.reflect.Method;
 import java.util.List;
 import java.util.Optional;
@@ -89,8 +90,8 @@ public class AssetController {
 
     @RequestMapping(method = RequestMethod.GET,value="/issues")
     public @ResponseBody
-    ResponseEntity getVehicles(@RequestParam String assetNo) throws EmptyEntityTableException {
-        return Optional.ofNullable(assetService.getIssueReporting(assetNo))
+    ResponseEntity getVehicles(@RequestParam String assetNumber) throws EmptyEntityTableException {
+        return Optional.ofNullable(assetService.getIssueReporting(assetNumber))
                 .map(resp -> new ResponseEntity<List<IssueReporting>>(resp, HttpStatus.OK))
                 .orElseThrow(() -> new EmptyEntityTableException("No Vehicle exists",0L));
     }

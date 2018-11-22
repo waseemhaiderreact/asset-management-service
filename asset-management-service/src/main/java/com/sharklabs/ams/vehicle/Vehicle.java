@@ -1,6 +1,7 @@
 package com.sharklabs.ams.vehicle;
 
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.sharklabs.ams.issuesreporting.IssueReporting;
 
 import javax.persistence.*;
@@ -45,6 +46,7 @@ public class Vehicle {
     private Date createdAt;
     private Date updatedAt;
 
+    @JsonIgnore
     @OneToMany(  cascade = CascadeType.ALL,mappedBy = "vehicle",fetch = FetchType.EAGER)
     private List<IssueReporting> issueReportings =new ArrayList<>();
 

@@ -12,6 +12,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
+import javax.transaction.Transactional;
 import java.util.Date;
 import java.util.List;
 
@@ -81,6 +82,11 @@ public class AssetService {
         for(ImageVoice imageVoice: issueReporting.getImageVoices()){
             imageVoice.setIssue(issueReporting);
         }
+        vehicleRepository.save(vehicle);
+        String issueNumber="FMS-ISS-";
+        Long myId=1000L+issueReporting.getId();
+        String formatted = String.format("%06d",myId);
+        issueReporting.setIssueNumber(issueNumber+formatted);
         vehicleRepository.save(vehicle);
         Vehicle vehicle1= vehicleRepository.findOne(vehicle.getId());
         return vehicle1;

@@ -16,10 +16,11 @@ public class IssueReporting {
     private Long id;
 
 
-    @JsonIgnore
     @ManyToOne(fetch = FetchType.EAGER,cascade = CascadeType.ALL)
     @JoinColumn(name = "vehicle_id",referencedColumnName = "id")
     private Vehicle vehicle;
+
+    private String issueNumber;
 
     private String issueDescription;
     private String udid;
@@ -77,5 +78,13 @@ public class IssueReporting {
 
     public void setImageVoices(Set<ImageVoice> imageVoices) {
         this.imageVoices = imageVoices;
+    }
+
+    public String getIssueNumber() {
+        return issueNumber;
+    }
+
+    public void setIssueNumber(String issueNumber) {
+        this.issueNumber = issueNumber;
     }
 }
