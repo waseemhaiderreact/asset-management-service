@@ -1,14 +1,11 @@
 package com.sharklabs.ams.issuesreporting;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.sharklabs.ams.Recording.Recording;
-import com.sharklabs.ams.image.Image;
+import com.sharklabs.ams.imagevoice.ImageVoice;
 import com.sharklabs.ams.vehicle.Vehicle;
 
 import javax.persistence.*;
-import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 
@@ -29,10 +26,7 @@ public class IssueReporting {
     private String status;
 
     @OneToMany(  cascade = CascadeType.ALL,mappedBy = "issue",fetch = FetchType.EAGER)
-    private Set<Image> images =new HashSet<>();
-
-    @OneToMany(  cascade = CascadeType.ALL,mappedBy = "issue",fetch = FetchType.EAGER)
-    private Set<Recording> recordings =new HashSet<>();
+    private Set<ImageVoice> imageVoices =new HashSet<>();
 
     public IssueReporting() {
     }
@@ -77,19 +71,11 @@ public class IssueReporting {
         this.status = status;
     }
 
-    public Set<Image> getImages() {
-        return images;
+    public Set<ImageVoice> getImageVoices() {
+        return imageVoices;
     }
 
-    public void setImages(Set<Image> images) {
-        this.images = images;
-    }
-
-    public Set<Recording> getRecordings() {
-        return recordings;
-    }
-
-    public void setRecordings(Set<Recording> recordings) {
-        this.recordings = recordings;
+    public void setImageVoices(Set<ImageVoice> imageVoices) {
+        this.imageVoices = imageVoices;
     }
 }
