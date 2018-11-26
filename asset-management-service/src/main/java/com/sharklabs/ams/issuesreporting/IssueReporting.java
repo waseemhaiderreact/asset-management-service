@@ -2,6 +2,7 @@ package com.sharklabs.ams.issuesreporting;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.sharklabs.ams.imagevoice.ImageVoice;
+import com.sharklabs.ams.inspectionreportfield.InspectionReportField;
 import com.sharklabs.ams.vehicle.Vehicle;
 
 import javax.persistence.*;
@@ -15,11 +16,6 @@ public class IssueReporting {
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
 
-
-    @ManyToOne(fetch = FetchType.EAGER,cascade = CascadeType.ALL)
-    @JoinColumn(name = "vehicle_id",referencedColumnName = "id")
-    private Vehicle vehicle;
-
     private String issueNumber;
 
     private String issueDescription;
@@ -28,6 +24,10 @@ public class IssueReporting {
 
     @OneToMany(  cascade = CascadeType.ALL,mappedBy = "issue",fetch = FetchType.EAGER)
     private Set<ImageVoice> imageVoices =new HashSet<>();
+
+    @OneToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "inspection_report_field_id")
+    private InspectionReportField inspectionReportField;
 
     public IssueReporting() {
     }
@@ -38,14 +38,6 @@ public class IssueReporting {
 
     public void setId(Long id) {
         this.id = id;
-    }
-
-    public Vehicle getVehicle() {
-        return vehicle;
-    }
-
-    public void setVehicle(Vehicle vehicle) {
-        this.vehicle = vehicle;
     }
 
     public String getIssueDescription() {
@@ -86,5 +78,13 @@ public class IssueReporting {
 
     public void setIssueNumber(String issueNumber) {
         this.issueNumber = issueNumber;
+    }
+
+    public InspectionReportField getInspectionReportField() {
+        return inspectionReportField;
+    }
+
+    public void setInspectionReportField(InspectionReportField inspectionReportField) {
+        this.inspectionReportField = inspectionReportField;
     }
 }

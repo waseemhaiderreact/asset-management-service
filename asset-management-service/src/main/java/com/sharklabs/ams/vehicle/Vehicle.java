@@ -2,6 +2,7 @@ package com.sharklabs.ams.vehicle;
 
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.sharklabs.ams.inspectionreport.InspectionReport;
 import com.sharklabs.ams.issuesreporting.IssueReporting;
 
 import javax.persistence.*;
@@ -46,9 +47,12 @@ public class Vehicle {
     private Date createdAt;
     private Date updatedAt;
 
+    @Lob
+    private byte[] image;
+
     @JsonIgnore
     @OneToMany(  cascade = CascadeType.ALL,mappedBy = "vehicle",fetch = FetchType.EAGER)
-    private List<IssueReporting> issueReportings =new ArrayList<>();
+    private List<InspectionReport> inspectionReports =new ArrayList<>();
 
     public Long getId() {
         return id;
@@ -298,15 +302,23 @@ public class Vehicle {
         this.updatedAt = updatedAt;
     }
 
-
-    public List<IssueReporting> getIssueReportings() {
-        return issueReportings;
+    public List<InspectionReport> getInspectionReports() {
+        return inspectionReports;
     }
 
-    public void setIssueReportings(List<IssueReporting> issueReportings) {
-        this.issueReportings = issueReportings;
+    public void setInspectionReports(List<InspectionReport> inspectionReports) {
+        this.inspectionReports = inspectionReports;
     }
-    public  void addIssueReporting(IssueReporting issueReporting){
-        this.issueReportings.add(issueReporting);
+
+    public  void addInspectionReport(InspectionReport inspectionReport){
+        this.inspectionReports.add(inspectionReport);
+    }
+
+    public byte[] getImage() {
+        return image;
+    }
+
+    public void setImage(byte[] image) {
+        this.image = image;
     }
 }

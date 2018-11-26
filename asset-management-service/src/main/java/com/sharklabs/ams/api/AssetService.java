@@ -2,6 +2,9 @@ package com.sharklabs.ams.api;
 
 
 import com.sharklabs.ams.imagevoice.ImageVoice;
+import com.sharklabs.ams.inspectionreport.InspectionReport;
+import com.sharklabs.ams.inspectionreport.InspectionReportRepository;
+import com.sharklabs.ams.inspectionreportfield.InspectionReportField;
 import com.sharklabs.ams.response.DefaultResponse;
 import com.sharklabs.ams.issuesreporting.IssueReporting;
 import com.sharklabs.ams.issuesreporting.IssueReportingRepository;
@@ -22,6 +25,8 @@ public class AssetService {
     private VehicleRepository vehicleRepository;
     @Autowired
     IssueReportingRepository issueReportingRepository;
+    @Autowired
+    InspectionReportRepository inspectionReportRepository;
 
     //create a new vehicle
     Vehicle createVehicle(Vehicle vehicle){
@@ -73,30 +78,44 @@ public class AssetService {
 //        return vehicleRepository.findByDriverNumber(driverNumber);
 //    }
 
-    /*****************************Issue Reporting***************************************/
-    public Vehicle saveIssue(IssueReporting issueReporting,String assetNumber){
+    /*****************************Inspection Report***************************************/
+
+    /************Save Inspection Report*************/
+    public Vehicle saveInspectionReport(InspectionReport inspectionReport, String assetNumber){
 
         Vehicle vehicle = vehicleRepository.findByAssetNumber(assetNumber);
-        vehicle.addIssueReporting(issueReporting);
-        issueReporting.setVehicle(vehicle);
-        for(ImageVoice imageVoice: issueReporting.getImageVoices()){
-            imageVoice.setIssue(issueReporting);
+        vehicle.addInspectionReport(inspectionReport);
+        inspectionReport.setVehicle(vehicle);
+        for(InspectionReportField inspectionReportField: inspectionReport.getInspectionReportFields()) {
+            inspectionReportField.setInspectionReport(inspectionReport);
+            if (inspectionReportField.getIssueReporting() != null) {
+                inspectionReportField.getIssueReporting().setInspectionReportField(inspectionReportField);
+                for(ImageVoice imageVoice: inspectionReportField.getIssueReporting().getImageVoices()){
+                    imageVoice.setIssue(inspectionReportField.getIssueReporting());
+                }
+            }
         }
         vehicleRepository.save(vehicle);
-        String issueNumber="FMS-ISS-";
-        Long myId=1000L+issueReporting.getId();
-        String formatted = String.format("%06d",myId);
-        issueReporting.setIssueNumber(issueNumber+formatted);
-        vehicleRepository.save(vehicle);
+        for(InspectionReportField inspectionReportField: inspectionReport.getInspectionReportFields()){
+            if (inspectionReportField.getIssueReporting() != null) {
+                String issueNumber="FMS-ISS-";
+                Long myId=1000L+inspectionReportField.getIssueReporting().getId();
+                String formatted = String.format("%06d",myId);
+                inspectionReportField.getIssueReporting().setIssueNumber(issueNumber+formatted);
+                issueReportingRepository.save(inspectionReportField.getIssueReporting());
+            }
+        }
+
         Vehicle vehicle1= vehicleRepository.findOne(vehicle.getId());
         return vehicle1;
 
     }
 
-    List<IssueReporting> getIssueReporting(String assetNo){
+    /************Get Inspection Reports by Asset Number*************/
+    List<InspectionReport> getInspectionReports(String assetNo){
 
         Vehicle vehicle = vehicleRepository.findByAssetNumber(assetNo);
-        return  issueReportingRepository.findByVehicle(vehicle);
+        return inspectionReportRepository.findByVehicle(vehicle);
 
     }
 }

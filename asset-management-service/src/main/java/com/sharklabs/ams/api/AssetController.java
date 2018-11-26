@@ -1,6 +1,7 @@
 package com.sharklabs.ams.api;
 
 import com.sharklabs.ams.exception.EmptyEntityTableException;
+import com.sharklabs.ams.inspectionreport.InspectionReport;
 import com.sharklabs.ams.response.DefaultResponse;
 import com.sharklabs.ams.issuesreporting.IssueReporting;
 import com.sharklabs.ams.vehicle.Vehicle;
@@ -80,19 +81,19 @@ public class AssetController {
 
     //create a new Issue
 
-    @RequestMapping(method = RequestMethod.POST,value="/issues",params = {"assetNumber"})
+    @RequestMapping(method = RequestMethod.POST,value="/inspection",params = {"assetNumber"})
     public @ResponseBody
-    ResponseEntity createIssue(@RequestBody IssueReporting issueReporting,@RequestParam String assetNumber) throws EmptyEntityTableException {
-        return Optional.ofNullable(assetService.saveIssue(issueReporting,assetNumber))
+    ResponseEntity createIssue(@RequestBody InspectionReport inspectionReport, @RequestParam String assetNumber) throws EmptyEntityTableException {
+        return Optional.ofNullable(assetService.saveInspectionReport(inspectionReport,assetNumber))
                 .map(resp -> new ResponseEntity<Vehicle>(resp, HttpStatus.OK))
                 .orElseThrow(() -> new EmptyEntityTableException("No Vehicle exists",0L));
     }
 
-    @RequestMapping(method = RequestMethod.GET,value="/issues")
+    @RequestMapping(method = RequestMethod.GET,value="/inspection")
     public @ResponseBody
-    ResponseEntity getVehicles(@RequestParam String assetNumber) throws EmptyEntityTableException {
-        return Optional.ofNullable(assetService.getIssueReporting(assetNumber))
-                .map(resp -> new ResponseEntity<List<IssueReporting>>(resp, HttpStatus.OK))
+    ResponseEntity getInspectionReports(@RequestParam String assetNumber) throws EmptyEntityTableException {
+        return Optional.ofNullable(assetService.getInspectionReports(assetNumber))
+                .map(resp -> new ResponseEntity<List<InspectionReport>>(resp, HttpStatus.OK))
                 .orElseThrow(() -> new EmptyEntityTableException("No Vehicle exists",0L));
     }
 }
