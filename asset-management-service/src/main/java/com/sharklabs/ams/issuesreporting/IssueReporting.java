@@ -19,12 +19,12 @@ public class IssueReporting {
     private String issueNumber;
 
     private String issueDescription;
-    private String udid;
     private String status;
 
     @OneToMany(  cascade = CascadeType.ALL,mappedBy = "issue",fetch = FetchType.EAGER)
     private Set<ImageVoice> imageVoices =new HashSet<>();
 
+    @JsonIgnore
     @OneToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "inspection_report_field_id")
     private InspectionReportField inspectionReportField;
@@ -46,14 +46,6 @@ public class IssueReporting {
 
     public void setIssueDescription(String issueDescription) {
         this.issueDescription = issueDescription;
-    }
-
-    public String getUdid() {
-        return udid;
-    }
-
-    public void setUdid(String udid) {
-        this.udid = udid;
     }
 
     public String getStatus() {

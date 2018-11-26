@@ -92,8 +92,8 @@ public class AssetController {
     @RequestMapping(method = RequestMethod.GET,value="/inspection")
     public @ResponseBody
     ResponseEntity getInspectionReports(@RequestParam String assetNumber) throws EmptyEntityTableException {
-        return Optional.ofNullable(assetService.getInspectionReports(assetNumber))
-                .map(resp -> new ResponseEntity<List<InspectionReport>>(resp, HttpStatus.OK))
-                .orElseThrow(() -> new EmptyEntityTableException("No Vehicle exists",0L));
+            return Optional.ofNullable(assetService.getInspectionReports(assetNumber))
+                    .map(resp -> new ResponseEntity<Iterable<InspectionReport>>(resp, HttpStatus.OK))
+                    .orElseThrow(() -> new EmptyEntityTableException("No Vehicle exists", 0L));
     }
 }

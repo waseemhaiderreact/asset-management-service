@@ -85,6 +85,7 @@ public class AssetService {
 
         Vehicle vehicle = vehicleRepository.findByAssetNumber(assetNumber);
         vehicle.addInspectionReport(inspectionReport);
+        inspectionReport.setCreatedAt(new Date());
         inspectionReport.setVehicle(vehicle);
         for(InspectionReportField inspectionReportField: inspectionReport.getInspectionReportFields()) {
             inspectionReportField.setInspectionReport(inspectionReport);
@@ -96,6 +97,8 @@ public class AssetService {
             }
         }
         vehicleRepository.save(vehicle);
+        vehicle=vehicleRepository.findOne(vehicle.getId());
+        inspectionReport=vehicle.getInspectionReports().get(vehicle.getInspectionReports().size()-1);
         for(InspectionReportField inspectionReportField: inspectionReport.getInspectionReportFields()){
             if (inspectionReportField.getIssueReporting() != null) {
                 String issueNumber="FMS-ISS-";
@@ -112,7 +115,7 @@ public class AssetService {
     }
 
     /************Get Inspection Reports by Asset Number*************/
-    List<InspectionReport> getInspectionReports(String assetNo){
+    Iterable<InspectionReport> getInspectionReports(String assetNo){
 
         Vehicle vehicle = vehicleRepository.findByAssetNumber(assetNo);
         return inspectionReportRepository.findByVehicle(vehicle);
