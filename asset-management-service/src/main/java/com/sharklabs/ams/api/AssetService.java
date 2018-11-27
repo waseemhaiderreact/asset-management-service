@@ -5,8 +5,10 @@ import com.sharklabs.ams.imagevoice.ImageVoice;
 import com.sharklabs.ams.inspectionreport.InspectionReport;
 import com.sharklabs.ams.inspectionreport.InspectionReportRepository;
 import com.sharklabs.ams.inspectionreportfield.InspectionReportField;
+import com.sharklabs.ams.inspectionreporttemplate.InspectionReportTemplate;
+import com.sharklabs.ams.inspectionreporttemplate.InspectionReportTemplateRepository;
+import com.sharklabs.ams.inspectionreporttemplatefield.InspectionReportTemplateField;
 import com.sharklabs.ams.response.DefaultResponse;
-import com.sharklabs.ams.issuesreporting.IssueReporting;
 import com.sharklabs.ams.issuesreporting.IssueReportingRepository;
 import com.sharklabs.ams.vehicle.Vehicle;
 import com.sharklabs.ams.vehicle.VehicleRepository;
@@ -16,7 +18,9 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.Iterator;
 import java.util.List;
 
 @Service
@@ -27,6 +31,8 @@ public class AssetService {
     IssueReportingRepository issueReportingRepository;
     @Autowired
     InspectionReportRepository inspectionReportRepository;
+    @Autowired
+    InspectionReportTemplateRepository inspectionReportTemplateRepository;
 
     //create a new vehicle
     Vehicle createVehicle(Vehicle vehicle){
@@ -68,9 +74,18 @@ public class AssetService {
         return new DefaultResponse("NA","Error in deleting vehicle","500");
     }
 
-    //get a vehicle by assetNumber
+    //get list of vehicles
     Page<Vehicle> getVehicles(int offset, int limit){
         return vehicleRepository.findByIdNotNull(new PageRequest(offset, limit));
+    }
+
+    //get list of vehicles given their asset numbers
+    List<Vehicle> getVehiclesGivenAssetNumbers(List<String> assetNumbers){
+        List<Vehicle> vehicles=new ArrayList<>();
+        for(String assetNumber: assetNumbers){
+            vehicles.add(vehicleRepository.findByAssetNumber(assetNumber));
+        }
+        return vehicles;
     }
 
     //get vehicle by driver number
@@ -98,7 +113,12 @@ public class AssetService {
         }
         vehicleRepository.save(vehicle);
         vehicle=vehicleRepository.findOne(vehicle.getId());
-        inspectionReport=vehicle.getInspectionReports().get(vehicle.getInspectionReports().size()-1);
+        InspectionReport lastElement=null;
+        Iterator<InspectionReport> iterator=vehicle.getInspectionReports().iterator();
+        while(iterator.hasNext()){
+            lastElement=iterator.next();
+        }
+        inspectionReport=lastElement;
         for(InspectionReportField inspectionReportField: inspectionReport.getInspectionReportFields()){
             if (inspectionReportField.getIssueReporting() != null) {
                 String issueNumber="FMS-ISS-";
@@ -120,6 +140,29 @@ public class AssetService {
         Vehicle vehicle = vehicleRepository.findByAssetNumber(assetNo);
         return inspectionReportRepository.findByVehicle(vehicle);
 
+    }
+
+    /***********************END of Inspection report functions*********************/
+
+    /*******************************************Inspection Report Template Functions********************************/
+    /**********Save inspection report template**************/
+    Vehicle saveInspectionReportTemplate(InspectionReportTemplate inspectionReportTemplate,String assetNumber){
+        Vehicle vehicle = vehicleRepository.findByAssetNumber(assetNumber);
+        vehicle.addInspectionReportTemplate(inspectionReportTemplate);
+        inspectionReportTemplate.setCreatedAt(new Date());
+        inspectionReportTemplate.setVehicle(vehicle);
+        for(InspectionReportTemplateField inspectionReportTemplateField: inspectionReportTemplate.getInspectionReportTemplateFields()) {
+            inspectionReportTemplateField.setInspectionReportTemplate(inspectionReportTemplate);
+        }
+        vehicleRepository.save(vehicle);
+        vehicle=vehicleRepository.findOne(vehicle.getId());
+        return vehicle;
+    }
+
+    /************Get inspection report templates of a vehicle*************/
+    Iterable<InspectionReportTemplate> getInspectionReportTemplates(String assetNumber){
+        Vehicle vehicle=vehicleRepository.findByAssetNumber(assetNumber);
+        return inspectionReportTemplateRepository.findByVehicle(vehicle);
     }
 }
 

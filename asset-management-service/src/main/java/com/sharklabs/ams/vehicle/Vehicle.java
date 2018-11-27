@@ -3,12 +3,11 @@ package com.sharklabs.ams.vehicle;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.sharklabs.ams.inspectionreport.InspectionReport;
+import com.sharklabs.ams.inspectionreporttemplate.InspectionReportTemplate;
 import com.sharklabs.ams.issuesreporting.IssueReporting;
 
 import javax.persistence.*;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 
 @Entity(name = "t_vehicle")
 public class Vehicle {
@@ -52,7 +51,11 @@ public class Vehicle {
 
     @JsonIgnore
     @OneToMany(  cascade = CascadeType.ALL,mappedBy = "vehicle",fetch = FetchType.EAGER)
-    private List<InspectionReport> inspectionReports =new ArrayList<>();
+    private Set<InspectionReport> inspectionReports =new HashSet<>();
+
+    @JsonIgnore
+    @OneToMany(  cascade = CascadeType.ALL,mappedBy = "vehicle",fetch = FetchType.EAGER)
+    private Set<InspectionReportTemplate> inspectionReportTemplates =new HashSet<>();
 
     public Long getId() {
         return id;
@@ -302,16 +305,28 @@ public class Vehicle {
         this.updatedAt = updatedAt;
     }
 
-    public List<InspectionReport> getInspectionReports() {
+    public Set<InspectionReport> getInspectionReports() {
         return inspectionReports;
     }
 
-    public void setInspectionReports(List<InspectionReport> inspectionReports) {
+    public void setInspectionReports(Set<InspectionReport> inspectionReports) {
         this.inspectionReports = inspectionReports;
     }
 
     public  void addInspectionReport(InspectionReport inspectionReport){
         this.inspectionReports.add(inspectionReport);
+    }
+
+    public Set<InspectionReportTemplate> getInspectionReportTemplates() {
+        return inspectionReportTemplates;
+    }
+
+    public void setInspectionReportTemplates(Set<InspectionReportTemplate> inspectionReportTemplates) {
+        this.inspectionReportTemplates = inspectionReportTemplates;
+    }
+
+    public void addInspectionReportTemplate(InspectionReportTemplate inspectionReportTemplate){
+        this.inspectionReportTemplates.add(inspectionReportTemplate);
     }
 
     public byte[] getImage() {

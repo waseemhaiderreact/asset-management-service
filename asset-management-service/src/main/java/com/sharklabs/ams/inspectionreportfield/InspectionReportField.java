@@ -17,6 +17,8 @@ public class InspectionReportField {
 
     private boolean fieldStatus;
 
+    private String fieldValue;
+
     @JsonIgnore
     @ManyToOne(fetch = FetchType.EAGER,cascade = CascadeType.ALL)
     @JoinColumn(name = "inspection_report_id",referencedColumnName = "id")
@@ -63,5 +65,13 @@ public class InspectionReportField {
 
     public void setIssueReporting(IssueReporting issueReporting) {
         this.issueReporting = issueReporting;
+    }
+
+    public String getFieldValue() {
+        return fieldValue;
+    }
+
+    public void setFieldValue(String fieldValue) {
+        this.fieldValue = fieldValue;
     }
 }

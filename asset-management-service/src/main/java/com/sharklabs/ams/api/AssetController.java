@@ -2,6 +2,7 @@ package com.sharklabs.ams.api;
 
 import com.sharklabs.ams.exception.EmptyEntityTableException;
 import com.sharklabs.ams.inspectionreport.InspectionReport;
+import com.sharklabs.ams.inspectionreporttemplate.InspectionReportTemplate;
 import com.sharklabs.ams.response.DefaultResponse;
 import com.sharklabs.ams.issuesreporting.IssueReporting;
 import com.sharklabs.ams.vehicle.Vehicle;
@@ -62,11 +63,20 @@ public class AssetController {
     }
 
     //get List of vehicles
-    @RequestMapping(method = RequestMethod.GET,value="/vehicles")
+    @RequestMapping(method = RequestMethod.GET,value="/vehicles",params = {"offset","limit"})
     public @ResponseBody
     ResponseEntity getVehicles(@RequestParam int offset,@RequestParam int limit) throws EmptyEntityTableException {
         return Optional.ofNullable(assetService.getVehicles(offset,limit))
                 .map(resp -> new ResponseEntity<Page<Vehicle>>(resp, HttpStatus.OK))
+                .orElseThrow(() -> new EmptyEntityTableException("No Vehicle exists",0L));
+    }
+
+    //get list of vehicles given the asset numbers
+    @RequestMapping(method = RequestMethod.POST,value="/vehicles/getdetails")
+    public @ResponseBody
+    ResponseEntity getVehicles(@RequestBody List<String> assetNumbers) throws EmptyEntityTableException {
+        return Optional.ofNullable(assetService.getVehiclesGivenAssetNumbers(assetNumbers))
+                .map(resp -> new ResponseEntity<List<Vehicle>>(resp, HttpStatus.OK))
                 .orElseThrow(() -> new EmptyEntityTableException("No Vehicle exists",0L));
     }
 
@@ -79,9 +89,8 @@ public class AssetController {
 //                .orElseThrow(() -> new EmptyEntityTableException("No Vehicle exists",0L));
 //    }
 
-    //create a new Issue
-
-    @RequestMapping(method = RequestMethod.POST,value="/inspection",params = {"assetNumber"})
+    //save an inspection report
+    @RequestMapping(method = RequestMethod.POST,value="/inspections",params = {"assetNumber"})
     public @ResponseBody
     ResponseEntity createIssue(@RequestBody InspectionReport inspectionReport, @RequestParam String assetNumber) throws EmptyEntityTableException {
         return Optional.ofNullable(assetService.saveInspectionReport(inspectionReport,assetNumber))
@@ -89,11 +98,30 @@ public class AssetController {
                 .orElseThrow(() -> new EmptyEntityTableException("No Vehicle exists",0L));
     }
 
-    @RequestMapping(method = RequestMethod.GET,value="/inspection")
+    //get list of inspection reports of a vehicle
+    @RequestMapping(method = RequestMethod.GET,value="/inspections")
     public @ResponseBody
     ResponseEntity getInspectionReports(@RequestParam String assetNumber) throws EmptyEntityTableException {
             return Optional.ofNullable(assetService.getInspectionReports(assetNumber))
                     .map(resp -> new ResponseEntity<Iterable<InspectionReport>>(resp, HttpStatus.OK))
                     .orElseThrow(() -> new EmptyEntityTableException("No Vehicle exists", 0L));
+    }
+
+    //save an inspection report template
+    @RequestMapping(method = RequestMethod.POST,value="/inspectiontemplates",params = {"assetNumber"})
+    public @ResponseBody
+    ResponseEntity createIssue(@RequestBody InspectionReportTemplate inspectionReportTemplate, @RequestParam String assetNumber) throws EmptyEntityTableException {
+        return Optional.ofNullable(assetService.saveInspectionReportTemplate(inspectionReportTemplate,assetNumber))
+                .map(resp -> new ResponseEntity<Vehicle>(resp, HttpStatus.OK))
+                .orElseThrow(() -> new EmptyEntityTableException("No Vehicle exists",0L));
+    }
+
+    //get list of inspection report templates of a vehicle
+    @RequestMapping(method = RequestMethod.GET,value="/inspectiontemplates")
+    public @ResponseBody
+    ResponseEntity getInspectionReportTemplates(@RequestParam String assetNumber) throws EmptyEntityTableException {
+        return Optional.ofNullable(assetService.getInspectionReportTemplates(assetNumber))
+                .map(resp -> new ResponseEntity<Iterable<InspectionReportTemplate>>(resp, HttpStatus.OK))
+                .orElseThrow(() -> new EmptyEntityTableException("No Vehicle exists", 0L));
     }
 }
