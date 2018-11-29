@@ -99,12 +99,21 @@ public class AssetController {
     }
 
     //get list of inspection reports of a vehicle
-    @RequestMapping(method = RequestMethod.GET,value="/inspections")
+    @RequestMapping(method = RequestMethod.GET,value="/inspections",params = {"assetNumber"})
     public @ResponseBody
     ResponseEntity getInspectionReports(@RequestParam String assetNumber) throws EmptyEntityTableException {
             return Optional.ofNullable(assetService.getInspectionReports(assetNumber))
                     .map(resp -> new ResponseEntity<Iterable<InspectionReport>>(resp, HttpStatus.OK))
                     .orElseThrow(() -> new EmptyEntityTableException("No Vehicle exists", 0L));
+    }
+
+    //get all inspection reports
+    @RequestMapping(method = RequestMethod.GET,value="/inspections")
+    public @ResponseBody
+    ResponseEntity getAllInspectionReports() throws EmptyEntityTableException {
+        return Optional.ofNullable(assetService.getAllInspectionReports())
+                .map(resp -> new ResponseEntity<Iterable<InspectionReport>>(resp, HttpStatus.OK))
+                .orElseThrow(() -> new EmptyEntityTableException("No Vehicle exists", 0L));
     }
 
     //save an inspection report template

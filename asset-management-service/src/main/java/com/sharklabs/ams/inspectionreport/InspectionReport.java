@@ -13,6 +13,8 @@ public class InspectionReport {
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
 
+    private String name;
+
     private String reportedBy;
 
     private Date createdAt;
@@ -72,5 +74,13 @@ public class InspectionReport {
 
     public void setInspectionReportFields(Set<InspectionReportField> inspectionReportFields) {
         this.inspectionReportFields = inspectionReportFields;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
     }
 }

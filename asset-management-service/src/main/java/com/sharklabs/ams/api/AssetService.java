@@ -142,6 +142,11 @@ public class AssetService {
 
     }
 
+    /************Get All Inspection Reports*************/
+    Iterable<InspectionReport> getAllInspectionReports(){
+        return inspectionReportRepository.findAll();
+    }
+
     /***********************END of Inspection report functions*********************/
 
     /*******************************************Inspection Report Template Functions********************************/
@@ -164,5 +169,7 @@ public class AssetService {
         Vehicle vehicle=vehicleRepository.findByAssetNumber(assetNumber);
         return inspectionReportTemplateRepository.findByVehicle(vehicle);
     }
+
+    /************************END of Inspection report template functions*********************/
 }
 

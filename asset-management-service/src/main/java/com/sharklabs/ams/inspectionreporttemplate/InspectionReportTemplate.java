@@ -14,6 +14,8 @@ public class InspectionReportTemplate {
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
 
+    private String name;
+
     private String createdBy;
 
     private Date createdAt;
@@ -73,5 +75,13 @@ public class InspectionReportTemplate {
 
     public void setInspectionReportTemplateFields(Set<InspectionReportTemplateField> inspectionReportTemplateFields) {
         this.inspectionReportTemplateFields = inspectionReportTemplateFields;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
     }
 }
