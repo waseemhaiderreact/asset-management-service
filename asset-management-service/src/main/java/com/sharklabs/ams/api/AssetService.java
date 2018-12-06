@@ -33,6 +33,8 @@ public class AssetService {
     InspectionReportRepository inspectionReportRepository;
     @Autowired
     InspectionReportTemplateRepository inspectionReportTemplateRepository;
+    @Autowired
+    KafkaAsyncService kafkaAsyncService;
 
     //create a new vehicle
     Vehicle createVehicle(Vehicle vehicle){
@@ -44,6 +46,10 @@ public class AssetService {
             vehicle.setAssetNumber(assetNumber+formatted);
             vehicle.setCreatedAt(new Date());
             vehicleRepository.save(vehicle);
+
+            //send vehicle to search-service
+            kafkaAsyncService.sendVehicle(vehicle,"CREATE");
+
             return vehicle;
         }catch(Exception e){
             return null;
@@ -60,6 +66,10 @@ public class AssetService {
         try{
             vehicle.setUpdatedAt(new Date());
             vehicleRepository.save(vehicle);
+
+            //send updated vehicle to search-service
+            kafkaAsyncService.sendVehicle(vehicle,"UPDATE");
+
             return vehicle;
         }catch(Exception e){
             return null;
@@ -68,7 +78,10 @@ public class AssetService {
 
     //delete a vehicle by assetNumber
     DefaultResponse deleteVehicle(String assetNumber){
+        Vehicle vehicle=vehicleRepository.findByAssetNumber(assetNumber);
         if(vehicleRepository.deleteByAssetNumber(assetNumber)==1) {
+            //send vehicle to search-service to delete
+            kafkaAsyncService.sendVehicle(vehicle,"DELETE");
             return new DefaultResponse("NA","Vehicle Deleted Successfully","200");
         }
         return new DefaultResponse("NA","Error in deleting vehicle","500");
@@ -88,6 +101,19 @@ public class AssetService {
         return vehicles;
     }
 
+    //re-index vehicles
+    DefaultResponse reIndexVehicles(){
+        try{
+            List<Vehicle> vehicles=vehicleRepository.findAll();
+            for(Vehicle vehicle: vehicles){
+                kafkaAsyncService.sendVehicle(vehicle,"CREATE");
+            }
+            return new DefaultResponse("NA","Vehicles sent to search service","200");
+        }catch(Exception e){
+            return new DefaultResponse("NA","Error in getting vehicles or sending vehicles to search service","500");
+        }
+    }
+
     //get vehicle by driver number
 //    public Vehicle getVehicleByDriverNumber(String driverNumber){
 //        return vehicleRepository.findByDriverNumber(driverNumber);
@@ -99,7 +125,7 @@ public class AssetService {
     public Vehicle saveInspectionReport(InspectionReport inspectionReport, String assetNumber){
 
         Vehicle vehicle = vehicleRepository.findByAssetNumber(assetNumber);
-        vehicle.addInspectionReport(inspectionReport);
+//        vehicle.addInspectionReport(inspectionReport);
         inspectionReport.setCreatedAt(new Date());
         inspectionReport.setVehicle(vehicle);
         for(InspectionReportField inspectionReportField: inspectionReport.getInspectionReportFields()) {
@@ -111,14 +137,16 @@ public class AssetService {
                 }
             }
         }
-        vehicleRepository.save(vehicle);
-        vehicle=vehicleRepository.findOne(vehicle.getId());
-        InspectionReport lastElement=null;
-        Iterator<InspectionReport> iterator=vehicle.getInspectionReports().iterator();
-        while(iterator.hasNext()){
-            lastElement=iterator.next();
-        }
-        inspectionReport=lastElement;
+        inspectionReportRepository.save(inspectionReport);
+//        vehicleRepository.save(vehicle);
+//        vehicle=vehicleRepository.findOne(vehicle.getId());
+//        InspectionReport lastElement=null;
+//        Iterator<InspectionReport> iterator=vehicle.getInspectionReports().iterator();
+//        while(iterator.hasNext()){
+//            lastElement=iterator.next();
+//        }
+//        inspectionReport=lastElement;
+        //assigning issue number to a issue
         for(InspectionReportField inspectionReportField: inspectionReport.getInspectionReportFields()){
             if (inspectionReportField.getIssueReporting() != null) {
                 String issueNumber="FMS-ISS-";
@@ -128,6 +156,16 @@ public class AssetService {
                 issueReportingRepository.save(inspectionReportField.getIssueReporting());
             }
         }
+//        vehicle=vehicleRepository.findOne(vehicle.getId());
+//        lastElement=null;
+//        iterator=vehicle.getInspectionReports().iterator();
+//        while(iterator.hasNext()){
+//            lastElement=iterator.next();
+//        }
+//        inspectionReport=lastElement;
+
+        //send inspection report to search service to save issues
+        kafkaAsyncService.sendInspectionReport(inspectionReport,"CREATE");
 
         Vehicle vehicle1= vehicleRepository.findOne(vehicle.getId());
         return vehicle1;
@@ -145,6 +183,19 @@ public class AssetService {
     /************Get All Inspection Reports*************/
     Iterable<InspectionReport> getAllInspectionReports(){
         return inspectionReportRepository.findAll();
+    }
+
+    //re-index inspection reports
+    DefaultResponse reIndexInspections(){
+        try{
+            List<InspectionReport> inspectionReports=inspectionReportRepository.findAll();
+            for(InspectionReport inspectionReport:inspectionReports){
+                kafkaAsyncService.sendInspectionReport(inspectionReport,"CREATE");
+            }
+            return new DefaultResponse("NA","Inspection reports sent to search service","200");
+        }catch(Exception e){
+            return new DefaultResponse("NA","Error in getting inspection reports or sending inspection reports to search service","500");
+        }
     }
 
     /***********************END of Inspection report functions*********************/

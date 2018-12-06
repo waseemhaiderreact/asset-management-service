@@ -80,6 +80,15 @@ public class AssetController {
                 .orElseThrow(() -> new EmptyEntityTableException("No Vehicle exists",0L));
     }
 
+    //re-index vehicles
+    @RequestMapping(method = RequestMethod.POST,value="/vehicles/re-index")
+    public @ResponseBody
+    ResponseEntity reIndexVehicles() throws EmptyEntityTableException {
+        return Optional.ofNullable(assetService.reIndexVehicles())
+                .map(resp -> new ResponseEntity<DefaultResponse>(resp, HttpStatus.OK))
+                .orElseThrow(() -> new EmptyEntityTableException("No Vehicle exists",0L));
+    }
+
     //get vehicle by driverNumber
 //    @RequestMapping(method=RequestMethod.GET,value="/vehicles",params = {"driverNumber"})
 //    public @ResponseBody
@@ -114,6 +123,15 @@ public class AssetController {
         return Optional.ofNullable(assetService.getAllInspectionReports())
                 .map(resp -> new ResponseEntity<Iterable<InspectionReport>>(resp, HttpStatus.OK))
                 .orElseThrow(() -> new EmptyEntityTableException("No Vehicle exists", 0L));
+    }
+
+    //re-index inspection reports
+    @RequestMapping(method = RequestMethod.POST,value="/inspections/re-index")
+    public @ResponseBody
+    ResponseEntity reIndexInspections() throws EmptyEntityTableException {
+        return Optional.ofNullable(assetService.reIndexInspections())
+                .map(resp -> new ResponseEntity<DefaultResponse>(resp, HttpStatus.OK))
+                .orElseThrow(() -> new EmptyEntityTableException("No Inspection Report exists",0L));
     }
 
     //save an inspection report template

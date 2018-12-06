@@ -21,7 +21,7 @@ public class InspectionReport {
 
     private String status;
 
-    @ManyToOne(fetch = FetchType.EAGER,cascade = CascadeType.ALL)
+    @ManyToOne(fetch = FetchType.EAGER,cascade = CascadeType.MERGE)
     @JoinColumn(name = "vehicle_id",referencedColumnName = "id")
     private Vehicle vehicle;
 
