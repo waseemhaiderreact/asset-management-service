@@ -10,6 +10,8 @@ import com.sharklabs.ams.inspectionreporttemplate.InspectionReportTemplateReposi
 import com.sharklabs.ams.inspectionreporttemplatefield.InspectionReportTemplateField;
 import com.sharklabs.ams.response.DefaultResponse;
 import com.sharklabs.ams.issuesreporting.IssueReportingRepository;
+import com.sharklabs.ams.servicetask.ServiceTask;
+import com.sharklabs.ams.servicetask.ServiceTaskRepository;
 import com.sharklabs.ams.vehicle.Vehicle;
 import com.sharklabs.ams.vehicle.VehicleRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,6 +37,8 @@ public class AssetService {
     InspectionReportTemplateRepository inspectionReportTemplateRepository;
     @Autowired
     KafkaAsyncService kafkaAsyncService;
+    @Autowired
+    ServiceTaskRepository serviceTaskRepository;
 
     //create a new vehicle
     Vehicle createVehicle(Vehicle vehicle){
@@ -222,5 +226,60 @@ public class AssetService {
     }
 
     /************************END of Inspection report template functions*********************/
+
+    /**************************** Service Task Functions*********************************/
+    //add service task
+    ServiceTask addServiceTask(ServiceTask serviceTask){
+        serviceTask.setCreatedAt(new Date());
+        //it means that service request has subtasks
+        if(serviceTask.getSubTasks().size()!=0){
+            for(ServiceTask serviceTask1: serviceTask.getSubTasks()){
+                serviceTask1.addTask(serviceTask);
+            }
+        }
+        else{
+            serviceTask.setSubTasks(null);
+        }
+        if(serviceTask.getTasks().size()==0){
+            serviceTask.setTasks(null);
+        }
+        serviceTaskRepository.save(serviceTask);
+        return serviceTaskRepository.findOne(serviceTask.getId());
+    }
+
+    //update service task
+    ServiceTask updateServiceTask(ServiceTask serviceTask){
+        serviceTask.setUpdatedAt(new Date());
+        //it means that service request has subtasks
+        if(serviceTask.getSubTasks()!=null){
+            for(ServiceTask serviceTask1: serviceTask.getSubTasks()){
+                serviceTask1.addTask(serviceTask);
+            }
+        }
+        serviceTaskRepository.save(serviceTask);
+        return serviceTaskRepository.findOne(serviceTask.getId());
+    }
+
+    //delete service task by id
+    DefaultResponse deleteServiceTask(Long id){
+        try {
+            serviceTaskRepository.delete(id);
+            return new DefaultResponse("","Service Task deleted Successfully","200");
+        }catch(Exception e){
+            return new DefaultResponse("","Error in deleting Service Task","500");
+        }
+    }
+
+    //get service task by id
+    ServiceTask getServiceTask(Long id){
+        return serviceTaskRepository.findOne(id);
+    }
+
+    //get list of service tasks
+    Page<ServiceTask> getServiceTasks(int page,int size){
+        return serviceTaskRepository.findByIdNotNull(new PageRequest(page,size));
+    }
+
+    /****************************END Service Task Functions******************************/
 }
 

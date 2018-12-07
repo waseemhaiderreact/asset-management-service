@@ -5,6 +5,7 @@ import com.sharklabs.ams.inspectionreport.InspectionReport;
 import com.sharklabs.ams.inspectionreporttemplate.InspectionReportTemplate;
 import com.sharklabs.ams.response.DefaultResponse;
 import com.sharklabs.ams.issuesreporting.IssueReporting;
+import com.sharklabs.ams.servicetask.ServiceTask;
 import com.sharklabs.ams.vehicle.Vehicle;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -150,5 +151,50 @@ public class AssetController {
         return Optional.ofNullable(assetService.getInspectionReportTemplates(assetNumber))
                 .map(resp -> new ResponseEntity<Iterable<InspectionReportTemplate>>(resp, HttpStatus.OK))
                 .orElseThrow(() -> new EmptyEntityTableException("No Vehicle exists", 0L));
+    }
+
+    //add a service task
+    @RequestMapping(method = RequestMethod.POST,value="/servicetasks")
+    public @ResponseBody
+    ResponseEntity addServiceTask(@RequestBody ServiceTask serviceTask) throws EmptyEntityTableException {
+        return Optional.ofNullable(assetService.addServiceTask(serviceTask))
+                .map(resp -> new ResponseEntity<ServiceTask>(resp, HttpStatus.OK))
+                .orElseThrow(() -> new EmptyEntityTableException("No Service Task exists", 0L));
+    }
+
+    //update a service task
+    @RequestMapping(method = RequestMethod.PUT,value="/servicetasks")
+    public @ResponseBody
+    ResponseEntity updateServiceTask(@RequestBody ServiceTask serviceTask) throws EmptyEntityTableException {
+        return Optional.ofNullable(assetService.updateServiceTask(serviceTask))
+                .map(resp -> new ResponseEntity<ServiceTask>(resp, HttpStatus.OK))
+                .orElseThrow(() -> new EmptyEntityTableException("No Service Task exists", 0L));
+    }
+
+    //delete a service task
+    @RequestMapping(method = RequestMethod.DELETE,value="/servicetasks")
+    public @ResponseBody
+    ResponseEntity deleteServiceTask(@RequestParam Long id) throws EmptyEntityTableException {
+        return Optional.ofNullable(assetService.deleteServiceTask(id))
+                .map(resp -> new ResponseEntity<DefaultResponse>(resp, HttpStatus.OK))
+                .orElseThrow(() -> new EmptyEntityTableException("No Service Task exists", 0L));
+    }
+
+    //get a service task by id
+    @RequestMapping(method = RequestMethod.GET,value="/servicetasks",params = {"id"})
+    public @ResponseBody
+    ResponseEntity getServiceTask(@RequestParam Long id) throws EmptyEntityTableException {
+        return Optional.ofNullable(assetService.getServiceTask(id))
+                .map(resp -> new ResponseEntity<ServiceTask>(resp, HttpStatus.OK))
+                .orElseThrow(() -> new EmptyEntityTableException("No Service Task exists", 0L));
+    }
+
+    //get list of service tasks
+    @RequestMapping(method = RequestMethod.GET,value="/servicetasks",params = {"page","size"})
+    public @ResponseBody
+    ResponseEntity getServiceTasks(@RequestParam int page,@RequestParam int size) throws EmptyEntityTableException {
+        return Optional.ofNullable(assetService.getServiceTasks(page,size))
+                .map(resp -> new ResponseEntity<Page<ServiceTask>>(resp, HttpStatus.OK))
+                .orElseThrow(() -> new EmptyEntityTableException("No Service Task exists", 0L));
     }
 }
