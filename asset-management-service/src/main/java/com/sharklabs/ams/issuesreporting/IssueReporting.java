@@ -3,6 +3,7 @@ package com.sharklabs.ams.issuesreporting;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.sharklabs.ams.imagevoice.ImageVoice;
 import com.sharklabs.ams.inspectionreportfield.InspectionReportField;
+import com.sharklabs.ams.serviceentry.ServiceEntry;
 import com.sharklabs.ams.vehicle.Vehicle;
 
 import javax.persistence.*;
@@ -25,12 +26,19 @@ public class IssueReporting {
     private Set<ImageVoice> imageVoices =new HashSet<>();
 
     @JsonIgnore
-    @OneToOne(fetch = FetchType.EAGER)
+    @OneToOne(cascade = {CascadeType.MERGE,CascadeType.DETACH,CascadeType.REFRESH,CascadeType.REMOVE},fetch = FetchType.EAGER)
     @JoinColumn(name = "inspection_report_field_id")
     private InspectionReportField inspectionReportField;
 
-    public IssueReporting() {
-    }
+    @ManyToOne(cascade = {CascadeType.MERGE,CascadeType.DETACH,CascadeType.REFRESH,CascadeType.REMOVE},fetch = FetchType.EAGER)
+    @JoinColumn(name = "vehicle_id",referencedColumnName = "id")
+    private Vehicle vehicle;
+
+    @JsonIgnore
+    @ManyToOne(cascade = {CascadeType.DETACH,CascadeType.REFRESH,CascadeType.REMOVE},fetch = FetchType.EAGER)
+    @JoinColumn(name = "service_entry_id",referencedColumnName = "id")
+    private ServiceEntry serviceEntry;
+
 
     public Long getId() {
         return id;
@@ -79,4 +87,21 @@ public class IssueReporting {
     public void setInspectionReportField(InspectionReportField inspectionReportField) {
         this.inspectionReportField = inspectionReportField;
     }
+
+    public ServiceEntry getServiceEntry() {
+        return serviceEntry;
+    }
+
+    public void setServiceEntry(ServiceEntry serviceEntry) {
+        this.serviceEntry = serviceEntry;
+    }
+
+    public Vehicle getVehicle() {
+        return vehicle;
+    }
+
+    public void setVehicle(Vehicle vehicle) {
+        this.vehicle = vehicle;
+    }
+
 }

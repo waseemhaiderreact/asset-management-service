@@ -8,8 +8,11 @@ import com.sharklabs.ams.inspectionreportfield.InspectionReportField;
 import com.sharklabs.ams.inspectionreporttemplate.InspectionReportTemplate;
 import com.sharklabs.ams.inspectionreporttemplate.InspectionReportTemplateRepository;
 import com.sharklabs.ams.inspectionreporttemplatefield.InspectionReportTemplateField;
+import com.sharklabs.ams.issuesreporting.IssueReporting;
 import com.sharklabs.ams.response.DefaultResponse;
 import com.sharklabs.ams.issuesreporting.IssueReportingRepository;
+import com.sharklabs.ams.serviceentry.ServiceEntry;
+import com.sharklabs.ams.serviceentry.ServiceEntryRepository;
 import com.sharklabs.ams.servicetask.ServiceTask;
 import com.sharklabs.ams.servicetask.ServiceTaskRepository;
 import com.sharklabs.ams.vehicle.Vehicle;
@@ -39,6 +42,8 @@ public class AssetService {
     KafkaAsyncService kafkaAsyncService;
     @Autowired
     ServiceTaskRepository serviceTaskRepository;
+    @Autowired
+    ServiceEntryRepository serviceEntryRepository;
 
     //create a new vehicle
     Vehicle createVehicle(Vehicle vehicle){
@@ -136,6 +141,7 @@ public class AssetService {
             inspectionReportField.setInspectionReport(inspectionReport);
             if (inspectionReportField.getIssueReporting() != null) {
                 inspectionReportField.getIssueReporting().setInspectionReportField(inspectionReportField);
+                inspectionReportField.getIssueReporting().setVehicle(vehicle);
                 for(ImageVoice imageVoice: inspectionReportField.getIssueReporting().getImageVoices()){
                     imageVoice.setIssue(inspectionReportField.getIssueReporting());
                 }
@@ -225,7 +231,19 @@ public class AssetService {
         return inspectionReportTemplateRepository.findByVehicle(vehicle);
     }
 
+    /************Get Paginated inspection report templates*************/
+    Page<InspectionReportTemplate> getAllInspectionReportTemplates(int page,int size){
+        return inspectionReportTemplateRepository.findByIdNotNull(new PageRequest(page,size));
+    }
     /************************END of Inspection report template functions*********************/
+
+    /************************* Issue Functions **********************************/
+    Iterable<IssueReporting> getIssuesOfVehicle(String assetNumber){
+        return issueReportingRepository.findAllByVehicle_AssetNumber(assetNumber);
+    }
+
+
+    /************************* END Issue Functions **********************************/
 
     /**************************** Service Task Functions*********************************/
     //add service task
@@ -281,5 +299,62 @@ public class AssetService {
     }
 
     /****************************END Service Task Functions******************************/
+
+    /**************************** Service Entry Functions*********************************/
+    //add service Entry
+    ServiceEntry addServiceEntry(ServiceEntry serviceEntry){
+        serviceEntry.setCreatedAt(new Date());
+        Vehicle vehicle=vehicleRepository.findByAssetNumber(serviceEntry.getVehicle().getAssetNumber());
+        serviceEntry.setVehicle(vehicle);
+        if(serviceEntry.getMeterEntry()!=null){
+            serviceEntry.getMeterEntry().setServiceEntry(serviceEntry);
+            serviceEntry.getMeterEntry().setVehicle(vehicle);
+        }
+        serviceEntryRepository.save(serviceEntry);
+        for(ServiceTask serviceTask:serviceEntry.getServiceTasks()){
+            serviceTask.addServiceEntry(serviceEntry);
+            serviceTaskRepository.save(serviceTask);
+        }
+        for(IssueReporting issueReporting:serviceEntry.getIssueReportings()) {
+            IssueReporting issue=issueReportingRepository.findByIssueNumber(issueReporting.getIssueNumber());
+            issue.setStatus("Resolved");
+            issue.setServiceEntry(serviceEntry);
+            issueReportingRepository.save(issue);
+        }
+        return serviceEntryRepository.findOne(serviceEntry.getId());
+    }
+
+    //update service Entry
+    ServiceEntry updateServiceEntry(ServiceEntry serviceEntry){
+        serviceEntry.setUpdatedAt(new Date());
+        if(serviceEntry.getMeterEntry()!=null){
+            serviceEntry.getMeterEntry().setServiceEntry(serviceEntry);
+        }
+        serviceEntryRepository.save(serviceEntry);
+        return serviceEntryRepository.findOne(serviceEntry.getId());
+    }
+
+    //delete service Entry by id
+    DefaultResponse deleteServiceEntry(Long id){
+        try {
+            serviceEntryRepository.delete(id);
+            return new DefaultResponse("","Service Entry deleted Successfully","200");
+        }catch(Exception e){
+            return new DefaultResponse("","Error in deleting Service Entry","500");
+        }
+    }
+
+    //get service Entry by id
+    ServiceEntry getServiceEntry(Long id){
+        return serviceEntryRepository.findOne(id);
+    }
+
+    //get list of service Entries
+    Page<ServiceEntry> getServiceEntries(int page,int size){
+        return serviceEntryRepository.findByIdNotNull(new PageRequest(page,size));
+    }
+
+    /****************************END Service Task Functions******************************/
+
 }
 

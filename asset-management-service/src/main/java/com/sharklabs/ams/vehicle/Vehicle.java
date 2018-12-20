@@ -5,6 +5,8 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.sharklabs.ams.inspectionreport.InspectionReport;
 import com.sharklabs.ams.inspectionreporttemplate.InspectionReportTemplate;
 import com.sharklabs.ams.issuesreporting.IssueReporting;
+import com.sharklabs.ams.meterentry.MeterEntry;
+import com.sharklabs.ams.serviceentry.ServiceEntry;
 
 import javax.persistence.*;
 import java.util.*;
@@ -56,6 +58,31 @@ public class Vehicle {
     @JsonIgnore
     @OneToMany(  cascade = CascadeType.ALL,mappedBy = "vehicle",fetch = FetchType.EAGER)
     private Set<InspectionReportTemplate> inspectionReportTemplates =new HashSet<>();
+
+    @JsonIgnore
+    @OneToMany(cascade = {CascadeType.MERGE,CascadeType.DETACH,CascadeType.REFRESH,CascadeType.REMOVE},mappedBy = "vehicle",fetch = FetchType.EAGER)
+    private Set<IssueReporting> issueReportings =new HashSet<>();
+
+    @JsonIgnore
+    @OneToMany(cascade = {CascadeType.MERGE,CascadeType.DETACH,CascadeType.REFRESH,CascadeType.REMOVE}, mappedBy = "vehicle",fetch = FetchType.EAGER)
+    private Set<ServiceEntry> serviceEntries =new HashSet<>();
+
+    @JsonIgnore
+    @OneToMany(cascade = {CascadeType.MERGE,CascadeType.DETACH,CascadeType.REFRESH,CascadeType.REMOVE},mappedBy = "vehicle",fetch = FetchType.EAGER)
+    private Set<MeterEntry> meterEntries =new HashSet<>();
+
+    public  void addInspectionReport(InspectionReport inspectionReport){
+        this.inspectionReports.add(inspectionReport);
+    }
+
+    public void addInspectionReportTemplate(InspectionReportTemplate inspectionReportTemplate){
+        this.inspectionReportTemplates.add(inspectionReportTemplate);
+    }
+
+
+    public void addIssueReporting(IssueReporting issueReporting){
+        this.issueReportings.add(issueReporting);
+    }
 
     public Long getId() {
         return id;
@@ -305,16 +332,20 @@ public class Vehicle {
         this.updatedAt = updatedAt;
     }
 
+    public byte[] getImage() {
+        return image;
+    }
+
+    public void setImage(byte[] image) {
+        this.image = image;
+    }
+
     public Set<InspectionReport> getInspectionReports() {
         return inspectionReports;
     }
 
     public void setInspectionReports(Set<InspectionReport> inspectionReports) {
         this.inspectionReports = inspectionReports;
-    }
-
-    public  void addInspectionReport(InspectionReport inspectionReport){
-        this.inspectionReports.add(inspectionReport);
     }
 
     public Set<InspectionReportTemplate> getInspectionReportTemplates() {
@@ -325,15 +356,27 @@ public class Vehicle {
         this.inspectionReportTemplates = inspectionReportTemplates;
     }
 
-    public void addInspectionReportTemplate(InspectionReportTemplate inspectionReportTemplate){
-        this.inspectionReportTemplates.add(inspectionReportTemplate);
+    public Set<IssueReporting> getIssueReportings() {
+        return issueReportings;
     }
 
-    public byte[] getImage() {
-        return image;
+    public void setIssueReportings(Set<IssueReporting> issueReportings) {
+        this.issueReportings = issueReportings;
     }
 
-    public void setImage(byte[] image) {
-        this.image = image;
+    public Set<ServiceEntry> getServiceEntries() {
+        return serviceEntries;
+    }
+
+    public void setServiceEntries(Set<ServiceEntry> serviceEntries) {
+        this.serviceEntries = serviceEntries;
+    }
+
+    public Set<MeterEntry> getMeterEntries() {
+        return meterEntries;
+    }
+
+    public void setMeterEntries(Set<MeterEntry> meterEntries) {
+        this.meterEntries = meterEntries;
     }
 }

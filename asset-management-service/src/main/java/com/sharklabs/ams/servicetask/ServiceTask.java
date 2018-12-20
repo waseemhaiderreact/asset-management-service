@@ -1,9 +1,9 @@
 package com.sharklabs.ams.servicetask;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import org.codehaus.jackson.annotate.JsonIgnore;
-import org.codehaus.jackson.annotate.JsonIgnoreType;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.sharklabs.ams.serviceentry.ServiceEntry;
+import com.sharklabs.ams.vehicle.Vehicle;
 
 import javax.persistence.*;
 import java.util.Date;
@@ -33,11 +33,31 @@ public class ServiceTask {
 
 
     @ManyToMany(cascade = {CascadeType.MERGE,CascadeType.DETACH,CascadeType.REFRESH,CascadeType.REMOVE},fetch = FetchType.EAGER)
-    @JoinTable(name = "t_service_subtasts",
+    @JoinTable(name = "t_service_subtasks",
             joinColumns = @JoinColumn(name = "task_id"),
-            inverseJoinColumns = @JoinColumn(name = "subtast_id")
+            inverseJoinColumns = @JoinColumn(name = "subtask_id")
     )
     private Set<ServiceTask> subTasks=new HashSet<>();
+
+    @ManyToMany(fetch = FetchType.EAGER,cascade = {CascadeType.DETACH,CascadeType.REFRESH,CascadeType.REMOVE})
+    @JoinTable(name = "t_service_entries_tasks",
+            joinColumns = { @JoinColumn(name = "task_id") },
+            inverseJoinColumns = { @JoinColumn(name = "entry_id") })
+    @JsonIgnore
+    private Set<ServiceEntry> serviceEntries = new HashSet<>();
+
+
+    public void addSubtask(ServiceTask serviceTask){
+        this.subTasks.add(serviceTask);
+    }
+
+    public void addTask(ServiceTask task){
+        this.tasks.add(task);
+    }
+
+    public void addServiceEntry(ServiceEntry serviceEntry){
+        this.serviceEntries.add(serviceEntry);
+    }
 
     public Long getId() {
         return id;
@@ -45,30 +65,6 @@ public class ServiceTask {
 
     public void setId(Long id) {
         this.id = id;
-    }
-
-    public Set<ServiceTask> getSubTasks() {
-        return subTasks;
-    }
-
-    public void setSubTasks(Set<ServiceTask> subTasks) {
-        this.subTasks = subTasks;
-    }
-
-    public void addSubtask(ServiceTask serviceTask){
-        this.subTasks.add(serviceTask);
-    }
-
-    public Set<ServiceTask> getTasks() {
-        return tasks;
-    }
-
-    public void setTasks(Set<ServiceTask> tasks) {
-        this.tasks = tasks;
-    }
-
-    public void addTask(ServiceTask task){
-        this.tasks.add(task);
     }
 
     public String getName() {
@@ -111,4 +107,27 @@ public class ServiceTask {
         this.labels = labels;
     }
 
+    public Set<ServiceTask> getTasks() {
+        return tasks;
+    }
+
+    public void setTasks(Set<ServiceTask> tasks) {
+        this.tasks = tasks;
+    }
+
+    public Set<ServiceTask> getSubTasks() {
+        return subTasks;
+    }
+
+    public void setSubTasks(Set<ServiceTask> subTasks) {
+        this.subTasks = subTasks;
+    }
+
+    public Set<ServiceEntry> getServiceEntries() {
+        return serviceEntries;
+    }
+
+    public void setServiceEntries(Set<ServiceEntry> serviceEntries) {
+        this.serviceEntries = serviceEntries;
+    }
 }
