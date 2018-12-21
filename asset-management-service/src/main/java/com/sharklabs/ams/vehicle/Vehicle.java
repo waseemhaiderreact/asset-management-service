@@ -47,6 +47,10 @@ public class Vehicle {
     private double price;
     private Date createdAt;
     private Date updatedAt;
+    private String status;
+    private String region;
+
+    private boolean assigned;
 
     @Lob
     private byte[] image;
@@ -378,5 +382,29 @@ public class Vehicle {
 
     public void setMeterEntries(Set<MeterEntry> meterEntries) {
         this.meterEntries = meterEntries;
+    }
+
+    public boolean isAssigned() {
+        return assigned;
+    }
+
+    public void setAssigned(boolean assigned) {
+        this.assigned = assigned;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
+
+    public String getRegion() {
+        return region;
+    }
+
+    public void setRegion(String region) {
+        this.region = region;
     }
 }

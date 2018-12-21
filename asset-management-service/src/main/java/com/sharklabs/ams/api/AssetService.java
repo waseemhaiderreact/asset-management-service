@@ -356,5 +356,14 @@ public class AssetService {
 
     /****************************END Service Task Functions******************************/
 
+    //set assigned attribute of vehicle
+    public void setAssignedAttribute(String assetNumber,boolean assigned){
+        Vehicle vehicle=null;
+        vehicle=vehicleRepository.findByAssetNumber(assetNumber);
+        if(vehicle!=null){
+            vehicle.setAssigned(assigned);
+            vehicleRepository.save(vehicle);
+        }
+    }
 }
 
