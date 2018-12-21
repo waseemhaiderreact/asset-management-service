@@ -8,6 +8,7 @@ import com.sharklabs.ams.issuesreporting.IssueReporting;
 import com.sharklabs.ams.serviceentry.ServiceEntry;
 import com.sharklabs.ams.servicetask.ServiceTask;
 import com.sharklabs.ams.vehicle.Vehicle;
+import com.sharklabs.ams.workorder.WorkOrder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
@@ -238,7 +239,7 @@ public class AssetController {
     //delete a service entry
     @RequestMapping(method = RequestMethod.DELETE,value="/serviceentries",params = {"id"})
     public @ResponseBody
-    ResponseEntity addServiceEntries(@RequestParam Long id) throws EmptyEntityTableException {
+    ResponseEntity deleteServiceEntries(@RequestParam Long id) throws EmptyEntityTableException {
         return Optional.ofNullable(assetService.deleteServiceEntry(id))
                 .map(resp -> new ResponseEntity<DefaultResponse>(resp, HttpStatus.OK))
                 .orElseThrow(() -> new EmptyEntityTableException("No Service Entry exists", 0L));
@@ -260,5 +261,50 @@ public class AssetController {
         return Optional.ofNullable(assetService.getServiceEntries(page,size))
                 .map(resp -> new ResponseEntity<Page<ServiceEntry>>(resp, HttpStatus.OK))
                 .orElseThrow(() -> new EmptyEntityTableException("No Service Task exists", 0L));
+    }
+
+    //add a work order
+    @RequestMapping(method = RequestMethod.POST,value="/workorder")
+    public @ResponseBody
+    ResponseEntity addWorkOrder(@RequestBody WorkOrder workOrder) throws EmptyEntityTableException {
+        return Optional.ofNullable(assetService.addWorkOrder(workOrder))
+                .map(resp -> new ResponseEntity<WorkOrder>(resp, HttpStatus.OK))
+                .orElseThrow(() -> new EmptyEntityTableException("No Work Order exists", 0L));
+    }
+
+    //update a work order
+    @RequestMapping(method = RequestMethod.PUT,value="/workorder")
+    public @ResponseBody
+    ResponseEntity updateWorkOrder(@RequestBody WorkOrder workOrder) throws EmptyEntityTableException {
+        return Optional.ofNullable(assetService.updateWorkOrder(workOrder))
+                .map(resp -> new ResponseEntity<WorkOrder>(resp, HttpStatus.OK))
+                .orElseThrow(() -> new EmptyEntityTableException("No Work Order exists", 0L));
+    }
+
+    //delete a work order
+    @RequestMapping(method = RequestMethod.DELETE,value="/workorder",params = {"id"})
+    public @ResponseBody
+    ResponseEntity deleteWorkOrder(@RequestParam Long id) throws EmptyEntityTableException {
+        return Optional.ofNullable(assetService.deleteWorkOrder(id))
+                .map(resp -> new ResponseEntity<DefaultResponse>(resp, HttpStatus.OK))
+                .orElseThrow(() -> new EmptyEntityTableException("No Work Order exists", 0L));
+    }
+
+    //get a work order by id
+    @RequestMapping(method = RequestMethod.GET,value="/workorder",params = {"id"})
+    public @ResponseBody
+    ResponseEntity getWorkOrderById(@RequestParam Long id) throws EmptyEntityTableException {
+        return Optional.ofNullable(assetService.getWorkOrder(id))
+                .map(resp -> new ResponseEntity<WorkOrder>(resp, HttpStatus.OK))
+                .orElseThrow(() -> new EmptyEntityTableException("No Work Order exists", 0L));
+    }
+
+    //get list of work orders
+    @RequestMapping(method = RequestMethod.GET,value="/workorder",params = {"page","size"})
+    public @ResponseBody
+    ResponseEntity getWorkOrders(@RequestParam int page,@RequestParam int size) throws EmptyEntityTableException {
+        return Optional.ofNullable(assetService.getWorkOrders(page,size))
+                .map(resp -> new ResponseEntity<Page<WorkOrder>>(resp, HttpStatus.OK))
+                .orElseThrow(() -> new EmptyEntityTableException("No Work Order exists", 0L));
     }
 }

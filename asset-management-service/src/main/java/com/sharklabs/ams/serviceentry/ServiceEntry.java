@@ -32,11 +32,8 @@ public class ServiceEntry {
     @JoinColumn(name = "vehicle_id",referencedColumnName = "id")
     private Vehicle vehicle;
 
-//    @ManyToMany(cascade = {CascadeType.MERGE,CascadeType.DETACH,CascadeType.REFRESH,CascadeType.REMOVE,CascadeType.PERSIST},mappedBy = "serviceEntries",fetch = FetchType.EAGER)
-//    private Set<ServiceTask> serviceTasks=new HashSet<>();
     @ManyToMany(fetch = FetchType.EAGER,cascade = {CascadeType.DETACH,CascadeType.REFRESH,CascadeType.REMOVE}, mappedBy = "serviceEntries")
     private Set<ServiceTask> serviceTasks = new HashSet<>();
-
 
     @OneToMany(cascade = {CascadeType.DETACH,CascadeType.REFRESH,CascadeType.REMOVE},mappedBy = "serviceEntry",fetch = FetchType.EAGER)
     private Set<IssueReporting> issueReportings =new HashSet<>();

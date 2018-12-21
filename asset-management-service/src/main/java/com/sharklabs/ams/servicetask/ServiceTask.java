@@ -3,12 +3,11 @@ package com.sharklabs.ams.servicetask;
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.sharklabs.ams.serviceentry.ServiceEntry;
-import com.sharklabs.ams.vehicle.Vehicle;
+import com.sharklabs.ams.workorderlineitems.WorkOrderLineItems;
 
 import javax.persistence.*;
 import java.util.Date;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 @Entity(name = "t_service_task")
@@ -46,6 +45,9 @@ public class ServiceTask {
     @JsonIgnore
     private Set<ServiceEntry> serviceEntries = new HashSet<>();
 
+    @JsonIgnore
+    @OneToOne(mappedBy = "serviceTask", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    private WorkOrderLineItems workOrderLineItems;
 
     public void addSubtask(ServiceTask serviceTask){
         this.subTasks.add(serviceTask);
@@ -129,5 +131,13 @@ public class ServiceTask {
 
     public void setServiceEntries(Set<ServiceEntry> serviceEntries) {
         this.serviceEntries = serviceEntries;
+    }
+
+    public WorkOrderLineItems getWorkOrderLineItems() {
+        return workOrderLineItems;
+    }
+
+    public void setWorkOrderLineItems(WorkOrderLineItems workOrderLineItems) {
+        this.workOrderLineItems = workOrderLineItems;
     }
 }

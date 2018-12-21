@@ -5,6 +5,7 @@ import com.sharklabs.ams.imagevoice.ImageVoice;
 import com.sharklabs.ams.inspectionreportfield.InspectionReportField;
 import com.sharklabs.ams.serviceentry.ServiceEntry;
 import com.sharklabs.ams.vehicle.Vehicle;
+import com.sharklabs.ams.workorderlineitems.WorkOrderLineItems;
 
 import javax.persistence.*;
 import java.util.HashSet;
@@ -39,6 +40,9 @@ public class IssueReporting {
     @JoinColumn(name = "service_entry_id",referencedColumnName = "id")
     private ServiceEntry serviceEntry;
 
+    @JsonIgnore
+    @OneToOne(mappedBy = "issueReporting", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    private WorkOrderLineItems workOrderLineItems;
 
     public Long getId() {
         return id;
@@ -104,4 +108,11 @@ public class IssueReporting {
         this.vehicle = vehicle;
     }
 
+    public WorkOrderLineItems getWorkOrderLineItems() {
+        return workOrderLineItems;
+    }
+
+    public void setWorkOrderLineItems(WorkOrderLineItems workOrderLineItems) {
+        this.workOrderLineItems = workOrderLineItems;
+    }
 }

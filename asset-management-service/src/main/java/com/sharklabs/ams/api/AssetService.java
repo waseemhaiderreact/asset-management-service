@@ -17,6 +17,10 @@ import com.sharklabs.ams.servicetask.ServiceTask;
 import com.sharklabs.ams.servicetask.ServiceTaskRepository;
 import com.sharklabs.ams.vehicle.Vehicle;
 import com.sharklabs.ams.vehicle.VehicleRepository;
+import com.sharklabs.ams.workorder.WorkOrder;
+import com.sharklabs.ams.workorder.WorkOrderRepository;
+import com.sharklabs.ams.workorderlineitems.WorkOrderLineItems;
+import com.sharklabs.ams.workorderlineitems.WorkOrderLineItemsRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -44,6 +48,10 @@ public class AssetService {
     ServiceTaskRepository serviceTaskRepository;
     @Autowired
     ServiceEntryRepository serviceEntryRepository;
+    @Autowired
+    WorkOrderRepository workOrderRepository;
+    @Autowired
+    WorkOrderLineItemsRepository workOrderLineItemsRepository;
 
     //create a new vehicle
     Vehicle createVehicle(Vehicle vehicle){
@@ -109,6 +117,17 @@ public class AssetService {
         }
         return vehicles;
     }
+
+    //set assigned attribute of vehicle
+    public void setAssignedAttribute(String assetNumber,boolean assigned){
+        Vehicle vehicle=null;
+        vehicle=vehicleRepository.findByAssetNumber(assetNumber);
+        if(vehicle!=null){
+            vehicle.setAssigned(assigned);
+            vehicleRepository.save(vehicle);
+        }
+    }
+
 
     //re-index vehicles
     DefaultResponse reIndexVehicles(){
@@ -356,14 +375,62 @@ public class AssetService {
 
     /****************************END Service Task Functions******************************/
 
-    //set assigned attribute of vehicle
-    public void setAssignedAttribute(String assetNumber,boolean assigned){
-        Vehicle vehicle=null;
-        vehicle=vehicleRepository.findByAssetNumber(assetNumber);
-        if(vehicle!=null){
-            vehicle.setAssigned(assigned);
-            vehicleRepository.save(vehicle);
+
+    /**************************** Work Order Functions*********************************/
+    //add work order
+    WorkOrder addWorkOrder(WorkOrder workOrder){
+        workOrder.setCreatedAt(new Date());
+        Vehicle vehicle=vehicleRepository.findByAssetNumber(workOrder.getVehicle().getAssetNumber());
+        workOrder.setVehicle(vehicle);
+        vehicle.addWorkOrder(workOrder);
+        for(WorkOrderLineItems workOrderLineItem: workOrder.getWorkOrderLineItems()){
+            workOrderLineItem.setWorkOrder(workOrder);
+            if(workOrderLineItem.getIssueReporting()!=null){
+                workOrderLineItem.getIssueReporting().setWorkOrderLineItems(workOrderLineItem);
+            }
+            if(workOrderLineItem.getServiceTask()!=null){
+                workOrderLineItem.getServiceTask().setWorkOrderLineItems(workOrderLineItem);
+            }
+        }
+        workOrderRepository.save(workOrder);
+        String workOrderNumber="FMS-WO-";
+        Long myId=1000L+workOrder.getId();
+        String formatted = String.format("%06d",myId);
+        workOrder.setWorkOrderNumber(workOrderNumber+formatted);
+        workOrderRepository.save(workOrder);
+        return workOrderRepository.findOne(workOrder.getId());
+    }
+
+    //update work order
+    WorkOrder updateWorkOrder(WorkOrder workOrder){
+        workOrder.setUpdatedAt(new Date());
+        Vehicle vehicle=vehicleRepository.findByAssetNumber(workOrder.getVehicle().getAssetNumber());
+        workOrder.setVehicle(vehicle);
+        workOrderRepository.save(workOrder);
+        return workOrderRepository.findOne(workOrder.getId());
+    }
+
+    //delete work order by id
+    DefaultResponse deleteWorkOrder(Long id){
+        try {
+            workOrderRepository.delete(id);
+            return new DefaultResponse("","Work Order deleted Successfully","200");
+        }catch(Exception e){
+            return new DefaultResponse("","Error in deleting Work Order","500");
         }
     }
+
+    //get work order by id
+    WorkOrder getWorkOrder(Long id){
+        return workOrderRepository.findOne(id);
+    }
+
+    //get list of work orders
+    Page<WorkOrder> getWorkOrders(int page,int size){
+        return workOrderRepository.findByIdNotNull(new PageRequest(page,size));
+    }
+
+    /****************************END Work Order Functions******************************/
+
 }
 

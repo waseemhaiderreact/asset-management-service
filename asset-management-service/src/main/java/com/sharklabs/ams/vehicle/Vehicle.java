@@ -7,6 +7,7 @@ import com.sharklabs.ams.inspectionreporttemplate.InspectionReportTemplate;
 import com.sharklabs.ams.issuesreporting.IssueReporting;
 import com.sharklabs.ams.meterentry.MeterEntry;
 import com.sharklabs.ams.serviceentry.ServiceEntry;
+import com.sharklabs.ams.workorder.WorkOrder;
 
 import javax.persistence.*;
 import java.util.*;
@@ -74,6 +75,10 @@ public class Vehicle {
     @JsonIgnore
     @OneToMany(cascade = {CascadeType.MERGE,CascadeType.DETACH,CascadeType.REFRESH,CascadeType.REMOVE},mappedBy = "vehicle",fetch = FetchType.EAGER)
     private Set<MeterEntry> meterEntries =new HashSet<>();
+
+    @JsonIgnore
+    @OneToMany(cascade = {CascadeType.MERGE,CascadeType.DETACH,CascadeType.REFRESH,CascadeType.REMOVE},mappedBy = "vehicle",fetch = FetchType.EAGER)
+    private Set<WorkOrder> workOrders =new HashSet<>();
 
     public  void addInspectionReport(InspectionReport inspectionReport){
         this.inspectionReports.add(inspectionReport);
@@ -407,4 +412,17 @@ public class Vehicle {
     public void setRegion(String region) {
         this.region = region;
     }
+
+    public Set<WorkOrder> getWorkOrders() {
+        return workOrders;
+    }
+
+    public void setWorkOrders(Set<WorkOrder> workOrders) {
+        this.workOrders = workOrders;
+    }
+
+    public void addWorkOrder(WorkOrder workOrder){
+        this.workOrders.add(workOrder);
+    }
+
 }
