@@ -57,11 +57,14 @@ public class AssetService {
     Vehicle createVehicle(Vehicle vehicle){
         try{
             vehicleRepository.save(vehicle);
+            vehicle.setType("Truck");
+            vehicle.setStatus("Active");
             String assetNumber="FMS-AS-";
             Long myId=1000L+vehicle.getId();
             String formatted = String.format("%06d",myId);
             vehicle.setAssetNumber(assetNumber+formatted);
             vehicle.setCreatedAt(new Date());
+            vehicle.setAssigned(false);
             vehicleRepository.save(vehicle);
 
             //send vehicle to search-service

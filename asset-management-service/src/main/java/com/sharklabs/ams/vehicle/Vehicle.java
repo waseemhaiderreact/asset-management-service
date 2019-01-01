@@ -22,6 +22,12 @@ public class Vehicle {
     private String color;
     private String type;
     private String fuelVolumeUnits;
+    private String externalFuelId;
+    private String fuelId;
+    private String taskCode;
+    private String traxxisId;
+    private String fuelType;
+    private String groupName;
     private String licensePlate;
     private String loanAccountNumber;
     private String loanInterestRate;
@@ -30,12 +36,13 @@ public class Vehicle {
     private Date loanEndedAt;
     private String make;
     private String meterUnit;
+    private int currentMeterValue;
     private String model;
     private String name;
     private String ownership;
-    private int registrationExpirationMonth;
+    private String registrationExpirationMonth;
     private String registrationState;
-    private boolean secondaryMeter;
+    private String secondaryMeter;
     private String secondaryMeterUnit;
     private String systemOfMeasurement;
     private String trim;
@@ -44,6 +51,7 @@ public class Vehicle {
     private double residualValue;
     private double loanAmount;
     private double loanPayment;
+    private String loanVendorName;
     private Date purchaseDate;
     private double price;
     private Date createdAt;
@@ -221,11 +229,11 @@ public class Vehicle {
         this.ownership = ownership;
     }
 
-    public int getRegistrationExpirationMonth() {
+    public String getRegistrationExpirationMonth() {
         return registrationExpirationMonth;
     }
 
-    public void setRegistrationExpirationMonth(int registrationExpirationMonth) {
+    public void setRegistrationExpirationMonth(String registrationExpirationMonth) {
         this.registrationExpirationMonth = registrationExpirationMonth;
     }
 
@@ -237,11 +245,11 @@ public class Vehicle {
         this.registrationState = registrationState;
     }
 
-    public boolean isSecondaryMeter() {
+    public String isSecondaryMeter() {
         return secondaryMeter;
     }
 
-    public void setSecondaryMeter(boolean secondaryMeter) {
+    public void setSecondaryMeter(String secondaryMeter) {
         this.secondaryMeter = secondaryMeter;
     }
 
@@ -425,4 +433,71 @@ public class Vehicle {
         this.workOrders.add(workOrder);
     }
 
+    public String getLoanVendorName() {
+        return loanVendorName;
+    }
+
+    public void setLoanVendorName(String loanVendorName) {
+        this.loanVendorName = loanVendorName;
+    }
+
+    public int getCurrentMeterValue() {
+        return currentMeterValue;
+    }
+
+    public void setCurrentMeterValue(int currentMeterValue) {
+        this.currentMeterValue = currentMeterValue;
+    }
+
+    public String getExternalFuelId() {
+        return externalFuelId;
+    }
+
+    public void setExternalFuelId(String externalFuelId) {
+        this.externalFuelId = externalFuelId;
+    }
+
+    public String getFuelId() {
+        return fuelId;
+    }
+
+    public void setFuelId(String fuelId) {
+        this.fuelId = fuelId;
+    }
+
+    public String getTaskCode() {
+        return taskCode;
+    }
+
+    public void setTaskCode(String taskCode) {
+        this.taskCode = taskCode;
+    }
+
+    public String getTraxxisId() {
+        return traxxisId;
+    }
+
+    public void setTraxxisId(String traxxisId) {
+        this.traxxisId = traxxisId;
+    }
+
+    public String getFuelType() {
+        return fuelType;
+    }
+
+    public void setFuelType(String fuelType) {
+        this.fuelType = fuelType;
+    }
+
+    public String getGroupName() {
+        return groupName;
+    }
+
+    public void setGroupName(String groupName) {
+        this.groupName = groupName;
+    }
+
+    public String getSecondaryMeter() {
+        return secondaryMeter;
+    }
 }
