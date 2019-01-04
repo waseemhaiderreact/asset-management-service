@@ -65,12 +65,21 @@ public class AssetController {
                 .orElseThrow(() -> new EmptyEntityTableException("No Vehicle exists",0L));
     }
 
-    //get List of vehicles
+    //get Paginated List of vehicles
     @RequestMapping(method = RequestMethod.GET,value="/vehicles",params = {"offset","limit"})
     public @ResponseBody
     ResponseEntity getVehicles(@RequestParam int offset,@RequestParam int limit) throws EmptyEntityTableException {
         return Optional.ofNullable(assetService.getVehicles(offset,limit))
                 .map(resp -> new ResponseEntity<Page<Vehicle>>(resp, HttpStatus.OK))
+                .orElseThrow(() -> new EmptyEntityTableException("No Vehicle exists",0L));
+    }
+
+    //get List of vehicles
+    @RequestMapping(method = RequestMethod.GET,value="/vehicles")
+    public @ResponseBody
+    ResponseEntity getAllVehicles() throws EmptyEntityTableException {
+        return Optional.ofNullable(assetService.getAllVehicles())
+                .map(resp -> new ResponseEntity<Iterable<Vehicle>>(resp, HttpStatus.OK))
                 .orElseThrow(() -> new EmptyEntityTableException("No Vehicle exists",0L));
     }
 

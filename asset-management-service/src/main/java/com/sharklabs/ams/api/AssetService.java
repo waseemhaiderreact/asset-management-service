@@ -107,9 +107,14 @@ public class AssetService {
         return new DefaultResponse("NA","Error in deleting vehicle","500");
     }
 
-    //get list of vehicles
+    //get Paginated list of vehicles
     Page<Vehicle> getVehicles(int offset, int limit){
         return vehicleRepository.findByIdNotNull(new PageRequest(offset, limit));
+    }
+
+    //get All Vehicles
+    Iterable<Vehicle> getAllVehicles(){
+        return vehicleRepository.findAll();
     }
 
     //get list of vehicles given their asset numbers

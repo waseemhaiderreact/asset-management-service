@@ -17,14 +17,19 @@ public class WorkOrder {
 
     private String status;
     private Date completedAt;
+    private String labels;
     private String description;
+    private String odometer;
+    private String secondaryMeter;
     private int discountPercentage;
     private String discountType;
     private int downtimeInSeconds;
     private String invoiceNumber;
+    private String poNumber;
     private Date issuedAt;
     private Long issuedById;
     private String issuedByName;
+    private String assignedToName;
     private Long contactId;
     private String contactName;
     private Date startedAt;
@@ -280,5 +285,35 @@ public class WorkOrder {
         this.workOrderLineItems = workOrderLineItems;
     }
 
+    public String getOdometer() {
+        return odometer;
+    }
 
+    public void setOdometer(String odometer) {
+        this.odometer = odometer;
+    }
+
+    public String getSecondaryMeter() {
+        return secondaryMeter;
+    }
+
+    public void setSecondaryMeter(String secondaryMeter) {
+        this.secondaryMeter = secondaryMeter;
+    }
+
+    public String getAssignedToName() {
+        return assignedToName;
+    }
+
+    public void setAssignedToName(String assignedToName) {
+        this.assignedToName = assignedToName;
+    }
+
+    public String getPoNumber() {
+        return poNumber;
+    }
+
+    public void setPoNumber(String poNumber) {
+        this.poNumber = poNumber;
+    }
 }
