@@ -2,6 +2,7 @@ package com.sharklabs.ams.issuesreporting;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.sharklabs.ams.imagevoice.ImageVoice;
+import com.sharklabs.ams.inspectionreport.InspectionReport;
 import com.sharklabs.ams.inspectionreportfield.InspectionReportField;
 import com.sharklabs.ams.serviceentry.ServiceEntry;
 import com.sharklabs.ams.vehicle.Vehicle;
@@ -28,8 +29,8 @@ public class IssueReporting {
 
     @JsonIgnore
     @OneToOne(cascade = {CascadeType.MERGE,CascadeType.DETACH,CascadeType.REFRESH,CascadeType.REMOVE},fetch = FetchType.EAGER)
-    @JoinColumn(name = "inspection_report_field_id")
-    private InspectionReportField inspectionReportField;
+    @JoinColumn(name = "inspection_report_id")
+    private InspectionReport inspectionReport;
 
     @ManyToOne(cascade = {CascadeType.MERGE,CascadeType.DETACH,CascadeType.REFRESH,CascadeType.REMOVE},fetch = FetchType.EAGER)
     @JoinColumn(name = "vehicle_id",referencedColumnName = "id")
@@ -84,12 +85,12 @@ public class IssueReporting {
         this.issueNumber = issueNumber;
     }
 
-    public InspectionReportField getInspectionReportField() {
-        return inspectionReportField;
+    public InspectionReport getInspectionReport() {
+        return inspectionReport;
     }
 
-    public void setInspectionReportField(InspectionReportField inspectionReportField) {
-        this.inspectionReportField = inspectionReportField;
+    public void setInspectionReport(InspectionReport inspectionReport) {
+        this.inspectionReport = inspectionReport;
     }
 
     public ServiceEntry getServiceEntry() {

@@ -24,9 +24,6 @@ public class InspectionReportField {
     @JoinColumn(name = "inspection_report_id",referencedColumnName = "id")
     private InspectionReport inspectionReport;
 
-    @OneToOne(mappedBy = "inspectionReportField", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
-    private IssueReporting issueReporting;
-
     public Long getId() {
         return id;
     }
@@ -57,14 +54,6 @@ public class InspectionReportField {
 
     public void setInspectionReport(InspectionReport inspectionReport) {
         this.inspectionReport = inspectionReport;
-    }
-
-    public IssueReporting getIssueReporting() {
-        return issueReporting;
-    }
-
-    public void setIssueReporting(IssueReporting issueReporting) {
-        this.issueReporting = issueReporting;
     }
 
     public String getFieldValue() {

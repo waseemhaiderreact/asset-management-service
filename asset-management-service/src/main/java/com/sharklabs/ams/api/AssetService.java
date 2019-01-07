@@ -164,42 +164,26 @@ public class AssetService {
 //        vehicle.addInspectionReport(inspectionReport);
         inspectionReport.setCreatedAt(new Date());
         inspectionReport.setVehicle(vehicle);
+        if(inspectionReport.getIssueReporting()!=null){
+            inspectionReport.getIssueReporting().setInspectionReport(inspectionReport);
+            inspectionReport.getIssueReporting().setVehicle(vehicle);
+            for(ImageVoice imageVoice: inspectionReport.getIssueReporting().getImageVoices()){
+                imageVoice.setIssue(inspectionReport.getIssueReporting());
+            }
+        }
         for(InspectionReportField inspectionReportField: inspectionReport.getInspectionReportFields()) {
             inspectionReportField.setInspectionReport(inspectionReport);
-            if (inspectionReportField.getIssueReporting() != null) {
-                inspectionReportField.getIssueReporting().setInspectionReportField(inspectionReportField);
-                inspectionReportField.getIssueReporting().setVehicle(vehicle);
-                for(ImageVoice imageVoice: inspectionReportField.getIssueReporting().getImageVoices()){
-                    imageVoice.setIssue(inspectionReportField.getIssueReporting());
-                }
-            }
         }
         inspectionReportRepository.save(inspectionReport);
-//        vehicleRepository.save(vehicle);
-//        vehicle=vehicleRepository.findOne(vehicle.getId());
-//        InspectionReport lastElement=null;
-//        Iterator<InspectionReport> iterator=vehicle.getInspectionReports().iterator();
-//        while(iterator.hasNext()){
-//            lastElement=iterator.next();
-//        }
-//        inspectionReport=lastElement;
+
         //assigning issue number to a issue
-        for(InspectionReportField inspectionReportField: inspectionReport.getInspectionReportFields()){
-            if (inspectionReportField.getIssueReporting() != null) {
-                String issueNumber="FMS-ISS-";
-                Long myId=1000L+inspectionReportField.getIssueReporting().getId();
-                String formatted = String.format("%06d",myId);
-                inspectionReportField.getIssueReporting().setIssueNumber(issueNumber+formatted);
-                issueReportingRepository.save(inspectionReportField.getIssueReporting());
-            }
+        if (inspectionReport.getIssueReporting() != null) {
+            String issueNumber="FMS-ISS-";
+            Long myId=1000L+inspectionReport.getIssueReporting().getId();
+            String formatted = String.format("%06d",myId);
+            inspectionReport.getIssueReporting().setIssueNumber(issueNumber+formatted);
+            issueReportingRepository.save(inspectionReport.getIssueReporting());
         }
-//        vehicle=vehicleRepository.findOne(vehicle.getId());
-//        lastElement=null;
-//        iterator=vehicle.getInspectionReports().iterator();
-//        while(iterator.hasNext()){
-//            lastElement=iterator.next();
-//        }
-//        inspectionReport=lastElement;
 
         //send inspection report to search service to save issues
         kafkaAsyncService.sendInspectionReport(inspectionReport,"CREATE");

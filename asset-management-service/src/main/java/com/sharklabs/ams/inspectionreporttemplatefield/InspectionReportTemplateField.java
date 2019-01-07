@@ -15,7 +15,9 @@ public class InspectionReportTemplateField {
 
     private String fieldType;
 
+    private String question;
 
+    private String description;
 
     @JsonIgnore
     @ManyToOne(fetch = FetchType.EAGER,cascade = CascadeType.ALL)
@@ -52,5 +54,21 @@ public class InspectionReportTemplateField {
 
     public void setFieldType(String fieldType) {
         this.fieldType = fieldType;
+    }
+
+    public String getQuestion() {
+        return question;
+    }
+
+    public void setQuestion(String question) {
+        this.question = question;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
     }
 }

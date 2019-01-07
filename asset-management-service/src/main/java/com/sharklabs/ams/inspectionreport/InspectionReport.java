@@ -2,6 +2,7 @@ package com.sharklabs.ams.inspectionreport;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.sharklabs.ams.inspectionreportfield.InspectionReportField;
+import com.sharklabs.ams.issuesreporting.IssueReporting;
 import com.sharklabs.ams.vehicle.Vehicle;
 
 import javax.persistence.*;
@@ -20,6 +21,9 @@ public class InspectionReport {
     private Date createdAt;
 
     private String status;
+
+    @OneToOne(mappedBy = "inspectionReport", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    private IssueReporting issueReporting;
 
     @ManyToOne(fetch = FetchType.EAGER,cascade = CascadeType.MERGE)
     @JoinColumn(name = "vehicle_id",referencedColumnName = "id")
@@ -82,5 +86,13 @@ public class InspectionReport {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public IssueReporting getIssueReporting() {
+        return issueReporting;
+    }
+
+    public void setIssueReporting(IssueReporting issueReporting) {
+        this.issueReporting = issueReporting;
     }
 }
