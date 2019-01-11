@@ -1,6 +1,29 @@
 package com.sharklabs.ams.api;
 
+import com.amazonaws.auth.AWSCredentials;
+import com.amazonaws.auth.BasicAWSCredentials;
+import com.amazonaws.services.s3.AmazonS3;
+import com.amazonaws.services.s3.AmazonS3Client;
+//import com.sharklabs.ams.configuraion.AmazonClient;
+import com.amazonaws.services.s3.model.GetObjectRequest;
+import com.amazonaws.services.s3.model.S3Object;
+import com.amazonaws.services.s3.model.S3ObjectInputStream;
+import org.apache.commons.io.IOUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Service;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URLEncoder;
+import java.util.ArrayList;
+import java.util.List;
 import com.sharklabs.ams.imagevoice.ImageVoice;
 import com.sharklabs.ams.inspectionreport.InspectionReport;
 import com.sharklabs.ams.inspectionreport.InspectionReportRepository;
@@ -21,16 +44,9 @@ import com.sharklabs.ams.workorder.WorkOrder;
 import com.sharklabs.ams.workorder.WorkOrderRepository;
 import com.sharklabs.ams.workorderlineitems.WorkOrderLineItems;
 import com.sharklabs.ams.workorderlineitems.WorkOrderLineItemsRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.stereotype.Service;
-
-import javax.transaction.Transactional;
-import java.util.ArrayList;
 import java.util.Date;
-import java.util.Iterator;
-import java.util.List;
 
 @Service
 public class AssetService {
@@ -52,6 +68,23 @@ public class AssetService {
     WorkOrderRepository workOrderRepository;
     @Autowired
     WorkOrderLineItemsRepository workOrderLineItemsRepository;
+    private AmazonS3 s3client;
+    @Value("${cloud.aws.credentials.accessKey}")
+    private String accessKey;
+
+    @Value("${cloud.aws.credentials.secretKey}")
+    private String secretKey;
+
+    @Value("${cloud.aws.region}")
+    private String region;
+
+    @Value("${cloud.aws.bucketName}")
+    private String bucket;
+//    @Autowired
+//    private AmazonS3Client amazonS3Client;
+//
+//    @Value("${cloud.aws.s3.bucket}")
+//    private String bucket;
 
     //create a new vehicle
     Vehicle createVehicle(Vehicle vehicle){
@@ -72,6 +105,7 @@ public class AssetService {
 
             return vehicle;
         }catch(Exception e){
+            e.printStackTrace();
             return null;
         }
     }
@@ -162,11 +196,13 @@ public class AssetService {
 
         Vehicle vehicle = vehicleRepository.findByAssetNumber(assetNumber);
 //        vehicle.addInspectionReport(inspectionReport);
-        inspectionReport.setCreatedAt(new Date());
+        Date currentTime=new Date();
+        inspectionReport.setCreatedAt(currentTime);
         inspectionReport.setVehicle(vehicle);
         if(inspectionReport.getIssueReporting()!=null){
             inspectionReport.getIssueReporting().setInspectionReport(inspectionReport);
             inspectionReport.getIssueReporting().setVehicle(vehicle);
+            inspectionReport.getIssueReporting().setReportedAt(currentTime);
             for(ImageVoice imageVoice: inspectionReport.getIssueReporting().getImageVoices()){
                 imageVoice.setIssue(inspectionReport.getIssueReporting());
             }
@@ -249,10 +285,20 @@ public class AssetService {
     /************************END of Inspection report template functions*********************/
 
     /************************* Issue Functions **********************************/
+    /***********************Get issues of a vehicle******************************/
     Iterable<IssueReporting> getIssuesOfVehicle(String assetNumber){
         return issueReportingRepository.findAllByVehicle_AssetNumber(assetNumber);
     }
 
+    /************************ Get Paginated Issues******************************/
+    Page<IssueReporting> getPaginatedIssues(int page, int size){
+        return issueReportingRepository.findByIdNotNull(new PageRequest(page,size));
+    }
+
+    /************************* Get All Issues **********************************/
+    Iterable<IssueReporting> getAllIssues(){
+        return issueReportingRepository.findAll();
+    }
 
     /************************* END Issue Functions **********************************/
 
@@ -423,6 +469,32 @@ public class AssetService {
     }
 
     /****************************END Work Order Functions******************************/
+
+
+    /***************************Get file from s3*******************************/
+    ResponseEntity<byte[]> getFileFroms3(String url) throws IOException {
+        AWSCredentials credentials = new BasicAWSCredentials(this.accessKey, this.secretKey);
+        this.s3client = new AmazonS3Client(credentials);
+        String[] parts=url.split("/");
+        String key=parts[parts.length-1];
+        GetObjectRequest getObjectRequest = new GetObjectRequest(bucket, key);
+        S3Object s3Object = this.s3client.getObject(getObjectRequest);
+
+        S3ObjectInputStream objectInputStream = s3Object.getObjectContent();
+
+        byte[] bytes = IOUtils.toByteArray(objectInputStream);
+
+        String fileName = URLEncoder.encode(key, "UTF-8").replaceAll("\\+", "%20");
+//        File initialFile = new File("C:\\Users\\user\\Desktop\\sample_audio2.mp3");
+//        InputStream targetStream = new FileInputStream(initialFile);
+//        byte[] bytes=IOUtils.toByteArray(targetStream);
+        HttpHeaders httpHeaders = new HttpHeaders();
+        httpHeaders.setContentType(MediaType.APPLICATION_OCTET_STREAM);
+        httpHeaders.setContentLength(bytes.length);
+        httpHeaders.setContentDispositionFormData("attachment", "sample_audio.mp3");
+
+        return new ResponseEntity<>(bytes, httpHeaders, HttpStatus.OK);
+    }
 
 }
 

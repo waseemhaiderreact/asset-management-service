@@ -18,6 +18,8 @@ public class InspectionReport {
 
     private String reportedBy;
 
+    private String driverUUID;
+
     private Date createdAt;
 
     private String status;
@@ -94,5 +96,13 @@ public class InspectionReport {
 
     public void setIssueReporting(IssueReporting issueReporting) {
         this.issueReporting = issueReporting;
+    }
+
+    public String getDriverUUID() {
+        return driverUUID;
+    }
+
+    public void setDriverUUID(String driverUUID) {
+        this.driverUUID = driverUUID;
     }
 }

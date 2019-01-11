@@ -17,6 +17,8 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
 import javax.transaction.Transactional;
+import java.io.File;
+import java.io.IOException;
 import java.lang.reflect.Method;
 import java.util.List;
 import java.util.Optional;
@@ -182,6 +184,24 @@ public class AssetController {
                 .orElseThrow(() -> new EmptyEntityTableException("No Issues exists", 0L));
     }
 
+    //get paginated issues
+    @RequestMapping(method = RequestMethod.GET,value="/issues",params = {"page","size"})
+    public @ResponseBody
+    ResponseEntity getPaginatedIssues(@RequestParam int page,int size) throws EmptyEntityTableException {
+        return Optional.ofNullable(assetService.getPaginatedIssues(page,size))
+                .map(resp -> new ResponseEntity<Page<IssueReporting>>(resp, HttpStatus.OK))
+                .orElseThrow(() -> new EmptyEntityTableException("No Issues exists", 0L));
+    }
+
+    //get all issues
+    @RequestMapping(method = RequestMethod.GET,value="/issues")
+    public @ResponseBody
+    ResponseEntity getAllIssues() throws EmptyEntityTableException {
+        return Optional.ofNullable(assetService.getAllIssues())
+                .map(resp -> new ResponseEntity<Iterable<IssueReporting>>(resp, HttpStatus.OK))
+                .orElseThrow(() -> new EmptyEntityTableException("No Issues exists", 0L));
+    }
+
     //add a service task
     @RequestMapping(method = RequestMethod.POST,value="/servicetasks")
     public @ResponseBody
@@ -315,5 +335,14 @@ public class AssetController {
         return Optional.ofNullable(assetService.getWorkOrders(page,size))
                 .map(resp -> new ResponseEntity<Page<WorkOrder>>(resp, HttpStatus.OK))
                 .orElseThrow(() -> new EmptyEntityTableException("No Work Order exists", 0L));
+    }
+
+    //get asset from s3
+    @RequestMapping(method = RequestMethod.GET,value = "",params = {"url"})
+    public @ResponseBody
+    ResponseEntity getFile(@RequestParam String url) throws EmptyEntityTableException, IOException {
+        return Optional.ofNullable(assetService.getFileFroms3(url))
+                .map(resp -> new ResponseEntity<ResponseEntity<byte[]>>(resp, HttpStatus.OK))
+                .orElseThrow(() -> new EmptyEntityTableException("File not found", 0L));
     }
 }

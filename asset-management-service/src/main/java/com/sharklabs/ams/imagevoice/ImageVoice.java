@@ -12,6 +12,10 @@ public class ImageVoice {
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
 
+    private String voiceContentUrl;
+
+    private String imageContentUrl;
+
     @Lob
     private byte[] voiceContent;
 
@@ -99,5 +103,21 @@ public class ImageVoice {
 
     public void setIssue(IssueReporting issue) {
         this.issue = issue;
+    }
+
+    public String getVoiceContentUrl() {
+        return voiceContentUrl;
+    }
+
+    public void setVoiceContentUrl(String voiceContentUrl) {
+        this.voiceContentUrl = voiceContentUrl;
+    }
+
+    public String getImageContentUrl() {
+        return imageContentUrl;
+    }
+
+    public void setImageContentUrl(String imageContentUrl) {
+        this.imageContentUrl = imageContentUrl;
     }
 }

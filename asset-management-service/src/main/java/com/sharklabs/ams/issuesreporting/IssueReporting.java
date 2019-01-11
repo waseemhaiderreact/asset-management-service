@@ -9,6 +9,7 @@ import com.sharklabs.ams.vehicle.Vehicle;
 import com.sharklabs.ams.workorderlineitems.WorkOrderLineItems;
 
 import javax.persistence.*;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -23,6 +24,7 @@ public class IssueReporting {
 
     private String issueDescription;
     private String status;
+    private Date reportedAt;
 
     @OneToMany(  cascade = CascadeType.ALL,mappedBy = "issue",fetch = FetchType.EAGER)
     private Set<ImageVoice> imageVoices =new HashSet<>();
@@ -115,5 +117,13 @@ public class IssueReporting {
 
     public void setWorkOrderLineItems(WorkOrderLineItems workOrderLineItems) {
         this.workOrderLineItems = workOrderLineItems;
+    }
+
+    public Date getReportedAt() {
+        return reportedAt;
+    }
+
+    public void setReportedAt(Date reportedAt) {
+        this.reportedAt = reportedAt;
     }
 }
