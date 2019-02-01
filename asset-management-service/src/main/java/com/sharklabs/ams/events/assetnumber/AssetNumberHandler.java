@@ -18,11 +18,11 @@ public class AssetNumberHandler {
         switch(assetNumberModel.getAction()) {
             case "CREATE":
                 System.out.println("**Setting Attribute Assigned of Vehicle True****");
-                assetService.setAssignedAttribute(assetNumberModel.getAssetNumber(),true);
+//                assetService.setAssignedAttribute(assetNumberModel.getAssetNumber(),true);
                 break;
             case "DELETE":
                 System.out.println("**Setting Attribute Assigned of Vehicle False****");
-                assetService.setAssignedAttribute(assetNumberModel.getAssetNumber(),false);
+//                assetService.setAssignedAttribute(assetNumberModel.getAssetNumber(),false);
                 break;
         }
     }

@@ -2,6 +2,8 @@ package com.sharklabs.ams;
 
 
 import com.sharklabs.ams.events.CustomChannels;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.boot.Banner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -22,6 +24,7 @@ import java.util.TimeZone;
 @EnableResourceServer
 @EnableBinding(CustomChannels.class)
 public class AssetApplication extends SpringBootServletInitializer {
+    private static final Logger LOGGER = LogManager.getLogger(AssetApplication.class);
 
     @PostConstruct
     public void init(){
@@ -31,6 +34,7 @@ public class AssetApplication extends SpringBootServletInitializer {
 
     public static void main(String[] args) {
         SpringApplication.run(AssetApplication.class, args);
+        LOGGER.info("******* Asset Management Service has started *********");
     }
 
     @Override

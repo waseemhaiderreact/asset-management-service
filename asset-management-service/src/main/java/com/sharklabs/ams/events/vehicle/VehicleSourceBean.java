@@ -16,8 +16,8 @@ public class VehicleSourceBean {
         this.output = output;
     }
 
-    public void sendVehicle(VehicleModel  vehicleModel){
-        System.out.println("Sending vehicle to search service");
-        this.output.send(MessageBuilder.withPayload(vehicleModel).build());
-    }
+//    public void sendVehicle(VehicleModel  vehicleModel){
+//        System.out.println("Sending vehicle to search service");
+//        this.output.send(MessageBuilder.withPayload(vehicleModel).build());
+//    }
 }

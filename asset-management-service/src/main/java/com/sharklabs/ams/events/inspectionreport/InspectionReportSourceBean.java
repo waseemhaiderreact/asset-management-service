@@ -16,8 +16,8 @@ public class InspectionReportSourceBean {
         this.output = output;
     }
 
-    public void sendInspectionReport(InspectionReportModel  inspectionReportModel){
-        System.out.println("Sending inspection report to search service");
-        this.output.send(MessageBuilder.withPayload(inspectionReportModel).build());
-    }
+//    public void sendInspectionReport(InspectionReportModel  inspectionReportModel){
+//        System.out.println("Sending inspection report to search service");
+//        this.output.send(MessageBuilder.withPayload(inspectionReportModel).build());
+//    }
 }
