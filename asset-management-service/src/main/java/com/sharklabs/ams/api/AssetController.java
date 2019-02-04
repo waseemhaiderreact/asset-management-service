@@ -203,7 +203,7 @@ public class AssetController {
         return responseEntity;
     }
 
-    //get asset AMS_UC_12
+    //get asset AMS_UC_13
     @RequestMapping(method = RequestMethod.GET,value="",params={"id"})
     public @ResponseBody
     ResponseEntity getAsset(@RequestParam String id) throws EmptyEntityTableException {
@@ -217,7 +217,7 @@ public class AssetController {
         return responseEntity;
     }
 
-    //get assets AMS_UC_13
+    //get assets AMS_UC_14
     @RequestMapping(method = RequestMethod.GET,value="")
     public @ResponseBody
     ResponseEntity getAssets() throws EmptyEntityTableException {
@@ -232,6 +232,110 @@ public class AssetController {
     }
 
     /*******************************************END Asset Functions**********************************************/
+
+    /******************************************* Inspection Template Functions***********************************/
+    //post inspection template AMS_UC_15
+    @RequestMapping(method = RequestMethod.POST,value="/inspectiontemplates")
+    public @ResponseBody
+    ResponseEntity addInspectionTemplate(@RequestBody PostInspectionTemplateRequest postInspectionTemplateRequest) throws EmptyEntityTableException {
+        Util util = new Util();
+        util.setThreadContextForLogging();
+        LOGGER.info("Request received in controller to post inspection template of a category.");
+        ResponseEntity responseEntity=Optional.ofNullable(assetService.postInspectionTemplate(postInspectionTemplateRequest))
+                .map(resp -> new ResponseEntity<DefaultResponse>(resp, HttpStatus.OK))
+                .orElseThrow(() -> new EmptyEntityTableException("No Inspection Template exists",0L));
+        util.clearThreadContextForLogging();
+        return responseEntity;
+    }
+
+    //get inspection template by uuid AMS_UC_16
+    @RequestMapping(method = RequestMethod.GET,value="/inspectiontemplates",params={"id"})
+    public @ResponseBody
+    ResponseEntity getInspectionTemplate(@RequestParam String id) throws EmptyEntityTableException {
+        Util util = new Util();
+        util.setThreadContextForLogging();
+        LOGGER.info("Request received in controller to get inspection template");
+        ResponseEntity responseEntity=Optional.ofNullable(assetService.getInspectionTemplate(id))
+                .map(resp -> new ResponseEntity<GetInspectionTemplateResponse>(resp, HttpStatus.OK))
+                .orElseThrow(() -> new EmptyEntityTableException("No Inspection Template exists",0L));
+        util.clearThreadContextForLogging();
+        return responseEntity;
+    }
+
+    //edit inspection template by uuid AMS_UC_17
+    @RequestMapping(method = RequestMethod.PUT,value="/inspectiontemplates")
+    public @ResponseBody
+    ResponseEntity editInspectionTemplate(@RequestBody EditInspectionTemplateRequest editInspectionTemplateRequest) throws EmptyEntityTableException {
+        Util util = new Util();
+        util.setThreadContextForLogging();
+        LOGGER.info("Request received in controller to edit inspection template");
+        ResponseEntity responseEntity=Optional.ofNullable(assetService.editInspectionTemplate(editInspectionTemplateRequest))
+                .map(resp -> new ResponseEntity<EditInspectionTemplateResponse>(resp, HttpStatus.OK))
+                .orElseThrow(() -> new EmptyEntityTableException("No Inspection Template exists",0L));
+        util.clearThreadContextForLogging();
+        return responseEntity;
+    }
+
+    //delete inspection template by uuid AMS_UC_18
+    @RequestMapping(method = RequestMethod.DELETE,value="/inspectiontemplates")
+    public @ResponseBody
+    ResponseEntity deleteInspectionTemplate(@RequestParam String id) throws EmptyEntityTableException {
+        Util util = new Util();
+        util.setThreadContextForLogging();
+        LOGGER.info("Request received in controller to delete inspection template");
+        ResponseEntity responseEntity=Optional.ofNullable(assetService.deleteInspectionTemplate(id))
+                .map(resp -> new ResponseEntity<DefaultResponse>(resp, HttpStatus.OK))
+                .orElseThrow(() -> new EmptyEntityTableException("No Inspection Template exists",0L));
+        util.clearThreadContextForLogging();
+        return responseEntity;
+    }
+
+    /******************************************* END Inspection Template Functions***********************************/
+
+    /******************************************* Activity Wall Functions********************************************/
+    //add message to activity wall AMS_UC_19
+    @RequestMapping(method = RequestMethod.POST,value="/activitywall/messages")
+    public @ResponseBody
+    ResponseEntity addMessage(@RequestBody AddMessageRequest addMessageRequest) throws EmptyEntityTableException {
+        Util util = new Util();
+        util.setThreadContextForLogging();
+        LOGGER.info("Request received in controller to add message");
+        ResponseEntity responseEntity=Optional.ofNullable(assetService.addMessage(addMessageRequest))
+                .map(resp -> new ResponseEntity<DefaultResponse>(resp, HttpStatus.OK))
+                .orElseThrow(() -> new EmptyEntityTableException("No Message exists",0L));
+        util.clearThreadContextForLogging();
+        return responseEntity;
+    }
+
+    //edit message to activity wall AMS_UC_20
+    @RequestMapping(method = RequestMethod.PUT,value="/activitywall/messages")
+    public @ResponseBody
+    ResponseEntity editMessage(@RequestBody EditMessageRequest editMessageRequest) throws EmptyEntityTableException {
+        Util util = new Util();
+        util.setThreadContextForLogging();
+        LOGGER.info("Request received in controller to edit message");
+        ResponseEntity responseEntity=Optional.ofNullable(assetService.editMessage(editMessageRequest))
+                .map(resp -> new ResponseEntity<EditMessageResponse>(resp, HttpStatus.OK))
+                .orElseThrow(() -> new EmptyEntityTableException("No Message exists",0L));
+        util.clearThreadContextForLogging();
+        return responseEntity;
+    }
+
+    //delete message to activity wall AMS_UC_21
+    @RequestMapping(method = RequestMethod.DELETE,value="/activitywall/messages")
+    public @ResponseBody
+    ResponseEntity deleteMessage(@RequestParam String id) throws EmptyEntityTableException {
+        Util util = new Util();
+        util.setThreadContextForLogging();
+        LOGGER.info("Request received in controller to delete message");
+        ResponseEntity responseEntity=Optional.ofNullable(assetService.deleteMessage(id))
+                .map(resp -> new ResponseEntity<DefaultResponse>(resp, HttpStatus.OK))
+                .orElseThrow(() -> new EmptyEntityTableException("No Message exists",0L));
+        util.clearThreadContextForLogging();
+        return responseEntity;
+    }
+
+    /*******************************************END Activity Wall Functions********************************************/
     //create a new vehicle
 //    @RequestMapping(method = RequestMethod.POST,value="/vehicles")
 //    public @ResponseBody

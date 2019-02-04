@@ -55,4 +55,8 @@ public class ActivityWall {
     public void setMessages(Set<Message> messages) {
         this.messages = messages;
     }
+
+    public void addMessage(Message message){
+        this.messages.add(message);
+    }
 }

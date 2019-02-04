@@ -10,6 +10,7 @@ package com.sharklabs.ams.api;
 //import com.amazonaws.services.s3.model.S3ObjectInputStream;
 //import org.apache.commons.io.IOUtils;
 import com.sharklabs.ams.activitywall.ActivityWall;
+import com.sharklabs.ams.activitywall.ActivityWallRepository;
 import com.sharklabs.ams.asset.Asset;
 import com.sharklabs.ams.asset.AssetRepository;
 import com.sharklabs.ams.assetfield.AssetField;
@@ -20,7 +21,10 @@ import com.sharklabs.ams.fieldtemplate.FieldTemplate;
 import com.sharklabs.ams.fieldtemplate.FieldTemplateRepository;
 import com.sharklabs.ams.inspectionitem.InspectionItem;
 import com.sharklabs.ams.inspectionitemcategory.InspectionItemCategory;
+import com.sharklabs.ams.inspectiontemplate.InspectionTemplate;
+import com.sharklabs.ams.inspectiontemplate.InspectionTemplateRepository;
 import com.sharklabs.ams.message.Message;
+import com.sharklabs.ams.message.MessageRepository;
 import com.sharklabs.ams.request.*;
 import com.sharklabs.ams.response.*;
 import org.apache.logging.log4j.LogManager;
@@ -40,9 +44,22 @@ public class AssetService {
     FieldTemplateRepository fieldTemplateRepository;
     @Autowired
     AssetRepository assetRepository;
+    @Autowired
+    InspectionTemplateRepository inspectionTemplateRepository;
+    @Autowired
+    ActivityWallRepository activityWallRepository;
+    @Autowired
+    MessageRepository messageRepository;
 
     /********************************************Category Functions**********************************************/
     //add category (AMS_UC_01)
+    /*
+    Purpose of this function is to add a category.
+    Category has children like field template and inspection template and assets.
+    So, we need to set the parent of children so that children are saved automatically if parent is saved
+    UUID is also set before adding category in the db.
+    Then category is saved in db
+    */
     public DefaultResponse addCategory(AddCategoryRequest addCategoryRequest){
         try {
             LOGGER.debug("Inside add category service function");
@@ -88,6 +105,10 @@ public class AssetService {
         }
     }
     //delete category (AMS_UC_05)
+    /*
+        This function deletes a category from db and all it's children(if a category is deleted
+        then it's assets,field template, inspection template will also be deleted)
+     */
     public DefaultResponse deleteCategory(String id){
         LOGGER.debug("Inside Service function of deleting category");
         try{
@@ -103,6 +124,9 @@ public class AssetService {
     }
 
     //get a category (AMS_UC_02)
+    /*
+        This function gets a category from db. We pass it the uuid of category and in response we get a category
+     */
     public GetCategoryResponse getCategory(String id){
         LOGGER.debug("Inside Service function of get category");
         GetCategoryResponse response = new GetCategoryResponse();
@@ -120,6 +144,9 @@ public class AssetService {
     }
 
     //get all categories (AMS_UC_03)
+    /*
+        This function just returns all the categories (List of categories) from db
+     */
     public GetCategoriesResponse GetAllCategories(){
         LOGGER.debug("Inside Service function of get all categories");
         GetCategoriesResponse response = new GetCategoriesResponse();
@@ -137,6 +164,15 @@ public class AssetService {
     }
 
     //edit category (AMS_UC_04)
+    /*
+        Purpose of this function is to edit category
+        It works same as the add function of category. First, we set the parent of category children and then save it
+        This will update the category
+        You will notice an extra if in the code which will only be executed if request is sent through Test Library.
+        This is because in Test Library, we don't know the id of created object, we only know it's uuid as uuid is returned with default response
+        when a object is created therefore, this additional code sets the id of the object. If we don't set the id of object then the old category
+        won't be updated instead a new one will be created
+     */
     public EditCategoryResponse editCategory(EditCategoryRequest editCategoryRequest){
         LOGGER.debug("Inside Service function of edit category");
         EditCategoryResponse response = new EditCategoryResponse();
@@ -185,6 +221,13 @@ public class AssetService {
 
     /*******************************************Field Template Functions*****************************************/
     //add field template (AMS_UC_06)
+    /*
+    This function adds a field template in a category
+    We pass it category uuid and Field template object
+    First of all, we find the category with that uuid and set it as the parent of field template that we have to add.
+    Then we assign a new uuid to field template and set the parent of it's children and also assigning uuid of children.
+    Then save the object
+     */
     public DefaultResponse addFieldTemplate(AddFieldTemplateRequest addFieldTemplateRequest){
         LOGGER.debug("Inside Service function of add field template");
         try {
@@ -218,6 +261,13 @@ public class AssetService {
     }
 
     //delete field template AMS_UC_09
+    /*
+    This function deletes a field template
+    UUID of field template is passed to this function
+    First, we find the field template with that id
+    Then, the parent of field template is set to null because we don't need to delete it's parent(Category)
+    Then, field template is deleted
+     */
     public DefaultResponse deleteFieldTemplate(String id){
         LOGGER.debug("Inside Service function of deleting field template");
         try{
@@ -237,6 +287,10 @@ public class AssetService {
     }
 
     //get field template AMS_UC_07
+    /*
+    This function gets a field template by uuid
+    UUID is passed to this function and field template is returned with that UUID
+     */
     public GetFieldTemplateResponse getFieldTemplate(String id){
         LOGGER.debug("Inside Service function of get field template");
         GetFieldTemplateResponse response = new GetFieldTemplateResponse();
@@ -254,6 +308,17 @@ public class AssetService {
     }
 
     //edit field template AMS_UC_08
+    /*
+    This function edits a field template
+    We pass it category uuid and Field template object that is to be updated
+    First of all, we find the category with that uuid and set it as the parent of field template that we have to add.
+    Then we assign a new uuid to field template and set the parent of it's children and also assigning uuid of children.
+    Then save the object
+    You will notice an extra if in the code which will only be executed if request is sent through Test Library.
+    This is because in Test Library, we don't know the id of created object, we only know it's uuid as uuid is returned with default response
+    when a object is created therefore, this additional code sets the id of the object. If we don't set the id of object then the old field template
+    won't be updated instead a new one will be created
+     */
     public EditFieldTemplateResponse editFieldTemplate(EditFieldTemplateRequest editFieldTemplateRequest){
         LOGGER.debug("Inside Service function of edit field template");
         EditFieldTemplateResponse response=new EditFieldTemplateResponse();
@@ -300,6 +365,12 @@ public class AssetService {
 
     /******************************************* Asset Functions ************************************************/
     //add asset (AMS_UC_10)
+    /*
+    This function adds a new asset
+    Category uuid and asset object is passed to this function
+    First, we get the category with that uuid and set it as a parent of asset
+    The, uuid is assigned to asset and it's children. Also, parent of children is set so that children are saved automatically when parent is saved
+     */
     public DefaultResponse addAsset(AddAssetRequest addAssetRequest){
         LOGGER.debug("Inside Service function of add asset");
         try {
@@ -338,6 +409,17 @@ public class AssetService {
     }
 
     //edit asset AMS_UC_11
+    /*
+    This function edits an asset
+    It works same as add asset
+    category uuid and asset object is passed to this function
+    First, we find the category with that uuid and set it as the parent of asset
+    Then, parent of the children is set so that children are saved automatically
+    You will notice an extra if in the code which will only be executed if request is sent through Test Library.
+    This is because in Test Library, we don't know the id of created object, we only know it's uuid as uuid is returned with default response
+    when a object is created therefore, this additional code sets the id of the object. If we don't set the id of object then the old asset
+    won't be updated instead a new one will be created
+     */
     public EditAssetResponse editAsset(EditAssetRequest editAssetRequest){
         LOGGER.debug("Inside Service function of edit asset");
         EditAssetResponse response=new EditAssetResponse();
@@ -387,6 +469,13 @@ public class AssetService {
     }
 
     //delete asset AMS_UC_12
+    /*
+    This function deletes an asset
+    asset uuid is passed to this function
+    First, we get the asset with that uuid
+    then, we set it's parent to null and save it because we don't want to delete parent alongwith the children
+    then, asset is deleted by id
+     */
     public DefaultResponse deleteAsset(String id) {
         LOGGER.debug("Inside Service function of deleting asset");
         try {
@@ -407,6 +496,11 @@ public class AssetService {
     }
 
     //get asset AMS_UC_13
+    /*
+    This function gets an asset by uuid
+    uuid of asset is passed to this function
+    We get the asset with that uuid from db and return it
+     */
     public GetAssetResponse getAsset(String id){
         LOGGER.debug("Inside Service function of get asset");
         GetAssetResponse response=new GetAssetResponse();
@@ -424,6 +518,10 @@ public class AssetService {
     }
 
     //get assets AMS_UC_14
+    /*
+    This function gets all assrt
+    It simply fetches all assets from db and return it
+     */
     public GetAssetsResponse getAssets(){
         LOGGER.debug("Inside Service function of get assets");
         GetAssetsResponse response=new GetAssetsResponse();
@@ -442,6 +540,272 @@ public class AssetService {
     }
 
     /******************************************* END Asset Functions ************************************************/
+
+    /******************************************** Inspection Template Functions **************************************/
+    //post inspection template AMS_UC_15
+    /*
+    This function adds a inspection template of a category
+    Category uuid and inspection template object is passed to this function
+    First, we find the category with that uuid
+    Then, we set that category as the parent of inspection template
+    Then, we set uuid of inspection template and it's children and also we set the parent of children so that children are saved automatically when parent is saved
+    Then, we save the inspection template
+     */
+    public DefaultResponse postInspectionTemplate(PostInspectionTemplateRequest postInspectionTemplateRequest){
+        LOGGER.debug("Inside Service function of post inspection template");
+        try{
+            //get category from db
+            Category category=null;
+            if(postInspectionTemplateRequest.getCategoryId()!=null) {
+                category = categoryRepository.findCategoryByUuid(postInspectionTemplateRequest.getCategoryId());
+                postInspectionTemplateRequest.getInspectionTemplate().setCategory(category);
+                category.setInspectionTemplate(postInspectionTemplateRequest.getInspectionTemplate());
+            }
+            else{
+                LOGGER.error("category uuid is not given for inspection template");
+                return new DefaultResponse("Failure", "Category id not present in request object","500");
+            }
+            //setting uuid
+            postInspectionTemplateRequest.getInspectionTemplate().setUuid(UUID.randomUUID().toString());
+            //setting parent of children and also setting uuid
+            for(InspectionItemCategory inspectionItemCategory: postInspectionTemplateRequest.getInspectionTemplate().getInspectionItemCategories()){
+                inspectionItemCategory.setInspectionTemplate(postInspectionTemplateRequest.getInspectionTemplate());
+                inspectionItemCategory.setUuid(UUID.randomUUID().toString());
+                for(InspectionItem inspectionItem: inspectionItemCategory.getInspectionItems()){
+                    inspectionItem.setInspectionItemCategory(inspectionItemCategory);
+                    inspectionItem.setUuid(UUID.randomUUID().toString());
+                }
+            }
+            //saving in db
+            categoryRepository.save(category);
+            LOGGER.info("Inspection Template Added Successfully");
+            return new DefaultResponse("Success","Inspection Template Added Successfully","200",postInspectionTemplateRequest.getInspectionTemplate().getUuid());
+        }catch (Exception e){
+            e.printStackTrace();
+            LOGGER.error("Error while adding inspection template",e);
+            return new DefaultResponse("Failure","Error while adding inspection template. Reason: "+e.getMessage(),"500");
+        }
+    }
+
+    //Get Inspection Template AMS_UC_16
+    /*
+    This function gets an inspection template by uuid
+    uuid of inspection template is passed to this function
+    then, we get inspection template with that uuid from db and return it
+     */
+    public GetInspectionTemplateResponse getInspectionTemplate(String id){
+        LOGGER.debug("Inside Service function of get inspection template");
+        GetInspectionTemplateResponse response=new GetInspectionTemplateResponse();
+        try{
+            response.setInspectionTemplate(inspectionTemplateRepository.findInspectionTemplateByUuid(id));
+            response.setResponseIdentifier("Success");
+            LOGGER.info("Received Inspection Template from database. Sending it to controller");
+            return response;
+        }catch (Exception e){
+            e.printStackTrace();
+            LOGGER.error("Error while getting inspection template",e);
+            response.setResponseIdentifier("Failure");
+            return response;
+        }
+    }
+
+    //edit inspection template AMS_UC_17
+    /*
+    This functione edits an inspection template
+    It works same as add inspection template function. Category uuid and inspection template object is passed to this function
+    First, we get the category with that uuid from db and set it as a parent of inspection template
+    Then, we set the parent of children of inspection template so that they are also updated when parent is updated
+    Then, we save that object which will update the object and return the updated object
+    You will notice an extra if in the code which will only be executed if request is sent through Test Library.
+    This is because in Test Library, we don't know the id of created object, we only know it's uuid as uuid is returned with default response
+    when a object is created therefore, this additional code sets the id of the object. If we don't set the id of object then the old inspection template
+    won't be updated instead a new one will be created
+     */
+    public EditInspectionTemplateResponse editInspectionTemplate(EditInspectionTemplateRequest editInspectionTemplateRequest){
+        LOGGER.debug("Inside Service function of edit inspection template");
+        EditInspectionTemplateResponse response=new EditInspectionTemplateResponse();
+        try{
+            //get category from db
+            Category category=null;
+            if(editInspectionTemplateRequest.getCategoryId()!=null) {
+                category = categoryRepository.findCategoryByUuid(editInspectionTemplateRequest.getCategoryId());
+                editInspectionTemplateRequest.getInspectionTemplate().setCategory(category);
+                category.setInspectionTemplate(editInspectionTemplateRequest.getInspectionTemplate());
+            }
+            else{
+                LOGGER.error("category uuid is not given for inspection template");
+                response.setResponseIdentifier("Failure");
+                return response;
+            }
+            //if id of inspection template is null (This will be null when we execute the test library otherwise by frontend, id will be passed).
+            //This if is for Test Library only
+            if(editInspectionTemplateRequest.getInspectionTemplate().getId()==null){
+                InspectionTemplate inspectionTemplate=inspectionTemplateRepository.findInspectionTemplateByUuid(editInspectionTemplateRequest.getInspectionTemplate().getUuid());
+                editInspectionTemplateRequest.getInspectionTemplate().setId(inspectionTemplate.getId());
+                editInspectionTemplateRequest.getInspectionTemplate().setInspectionItemCategories(inspectionTemplate.getInspectionItemCategories());
+            }
+            //setting parent of all children
+            for(InspectionItemCategory inspectionItemCategory: editInspectionTemplateRequest.getInspectionTemplate().getInspectionItemCategories()){
+                inspectionItemCategory.setInspectionTemplate(editInspectionTemplateRequest.getInspectionTemplate());
+                for(InspectionItem inspectionItem: inspectionItemCategory.getInspectionItems()){
+                    inspectionItem.setInspectionItemCategory(inspectionItemCategory);
+                }
+            }
+            //saving in db
+            categoryRepository.save(category);
+            response.setInspectionTemplate(editInspectionTemplateRequest.getInspectionTemplate());
+            response.setResponseIdentifier("Success");
+            LOGGER.info("Inspection Template Edited Successfully");
+            return response;
+        }catch (Exception e){
+            e.printStackTrace();
+            LOGGER.error("Error while editing inspection template",e);
+            response.setResponseIdentifier("Failure");
+            return response;
+        }
+    }
+
+    //delete inspection template AMS_UC_18
+    /*
+    This function will delete a inspection template
+    uuid of inspection template is passed
+    First, we get the inspection template with that uuid
+    Then, we set it's parent to null because we don't want to delete it's parent alongwith the children
+    Then, we delete inspection template by id
+     */
+    public DefaultResponse deleteInspectionTemplate(String id){
+        LOGGER.debug("Inside service function of deleting inspection template");
+        try{
+            InspectionTemplate inspectionTemplate = inspectionTemplateRepository.findInspectionTemplateByUuid(id);
+            //setting parent of inspection template to null to not delete the parent alongwith the children
+            inspectionTemplate.setCategory(null);
+            inspectionTemplateRepository.save(inspectionTemplate);
+            //deleting
+            inspectionTemplateRepository.deleteById(inspectionTemplate.getId());
+            LOGGER.info("Inspection Template deleted Successfully");
+            return new DefaultResponse("Success","Inspection Template deleted Successfully","200");
+        }catch(Exception e){
+            e.printStackTrace();
+            LOGGER.error("Error while deleting inspection template",e);
+            return new DefaultResponse("Failure","Error while deleting inspection template. Reason: "+e.getMessage(),"500");
+        }
+    }
+
+
+    /********************************************END Inspection Template Functions ***********************************/
+
+    /********************************************Activity Wall Functions**********************************************/
+    //add message in an activity wall AMS_UC_19
+    /*
+    This function will add a message in an activity wall of an asset
+    Asset uuid and message object is passed to this function
+    First, We find the asset with that asset uuid and set parent of message (Set activity wall of asset as parent)
+    Then, we set the uuid of asset and save it in db
+    */
+    public DefaultResponse addMessage(AddMessageRequest addMessageRequest){
+        LOGGER.debug("Inside service function of adding message");
+        try{
+            Asset asset=null;
+            //if activity wall uuid is passed in the request then set parent of message
+            if(addMessageRequest.getAssetId()!=null){
+                asset=assetRepository.findAssetByUuid(addMessageRequest.getAssetId());
+                asset.getActivityWall().addMessage(addMessageRequest.getMessage());
+                addMessageRequest.getMessage().setActivityWall(asset.getActivityWall());
+            }
+            else{
+                LOGGER.error("Asset uuid is not passed in the request");
+                return new DefaultResponse("Failure","Asset uuid is not passed in the request","500");
+            }
+            //setting uuid
+            addMessageRequest.getMessage().setUuid(UUID.randomUUID().toString());
+            //saving it in db
+            activityWallRepository.save(asset.getActivityWall());
+            LOGGER.info("Message Added Successfully");
+            return new DefaultResponse("Success","Message Added Successfully","200",addMessageRequest.getMessage().getUuid());
+        }catch(Exception e){
+            e.printStackTrace();
+            LOGGER.error("Error while adding message",e);
+            return new DefaultResponse("Failure","Error while adding message. Reason "+e.getMessage(),"500");
+        }
+    }
+
+    //edit message in activity wall AMS_UC_20
+    /*
+    This function updated a message of activity wall
+    asset uuid and message object is passed to this function
+    First, we find the asset with that asset uuid and set the parent of message(Activity wall of that asset)
+    Then, we save the message and return updated message
+    You will notice an extra if in the code which will only be executed if request is sent through Test Library.
+    This is because in Test Library, we don't know the id of created object, we only know it's uuid as uuid is returned with default response
+    when a object is created therefore, this additional code sets the id of the object. If we don't set the id of object then the old message
+    won't be updated instead a new one will be created
+     */
+    public EditMessageResponse editMessage(EditMessageRequest editMessageRequest){
+        LOGGER.debug("Inside service function of adding message");
+        EditMessageResponse response=new EditMessageResponse();
+        try{
+            Asset asset=null;
+            //if activity wall uuid is passed in the request then set parent of message
+            if(editMessageRequest.getAssetId()!=null){
+                asset=assetRepository.findAssetByUuid(editMessageRequest.getAssetId());
+                editMessageRequest.getMessage().setActivityWall(asset.getActivityWall());
+                //This if will be executed for test library
+                if(editMessageRequest.getMessage().getId()==null) {
+                    for (Message message : asset.getActivityWall().getMessages()) {
+                        if (message.getUuid().equals(editMessageRequest.getMessage().getUuid())) {
+                            editMessageRequest.getMessage().setId(message.getId());
+                        }
+                    }
+                }
+            }
+            else{
+                LOGGER.error("Asset uuid is not passed in the request");
+                response.setResponseIdentifier("Failure");
+                return response;
+            }
+            //saving it in db
+            messageRepository.save(editMessageRequest.getMessage());
+            LOGGER.info("Message Edited Successfully");
+            response.setMessage(editMessageRequest.getMessage());
+            response.setResponseIdentifier("Success");
+            return response;
+        }catch(Exception e){
+            e.printStackTrace();
+            LOGGER.error("Error while editing message",e);
+            response.setResponseIdentifier("Failure");
+            return response;
+        }
+    }
+
+    //delete message from activity wall AMS_UC_21
+    /*
+    This function will delete message of an activity wall
+    message uuid is passed to this function
+    First, we get that message from db
+    Then, we set the parent of message to null because we don't want to delete the parent alongwith the children
+    we save this change and then delete the message
+     */
+    public DefaultResponse deleteMessage(String id){
+        LOGGER.debug("Inside Service function of delete message");
+        try{
+            //get message by uuid
+            Message message=messageRepository.findMessageByUuid(id);
+            //setting parent of message to null so that it does not delete the parent along with it
+            message.setActivityWall(null);
+            //saving the change
+            messageRepository.save(message);
+            //now deleting it
+            messageRepository.deleteById(message.getId());
+            LOGGER.info("Message deleted Successfully");
+            return new DefaultResponse("Success","Message deleted Successfully","200");
+        }catch(Exception e){
+            e.printStackTrace();
+            LOGGER.error("Error while deleting message",e);
+            return new DefaultResponse("Failure","Ërror while deleting message","500");
+        }
+    }
+
+    /********************************************END Activity Wall Functions*******************************************/
 //    @Autowired
 //    private VehicleRepository vehicleRepository;
 //    @Autowired

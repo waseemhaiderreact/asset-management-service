@@ -15,11 +15,11 @@ public class Message {
 
     private String userUUID;
 
-    private boolean isImage;
+    private boolean imageFlag;
 
     private String imageUrl;
 
-    private boolean isMessage;
+    private boolean messageFlag;
 
     private String message;
 
@@ -52,28 +52,12 @@ public class Message {
         this.userUUID = userUUID;
     }
 
-    public boolean isImage() {
-        return isImage;
-    }
-
-    public void setImage(boolean image) {
-        isImage = image;
-    }
-
     public String getImageUrl() {
         return imageUrl;
     }
 
     public void setImageUrl(String imageUrl) {
         this.imageUrl = imageUrl;
-    }
-
-    public boolean isMessage() {
-        return isMessage;
-    }
-
-    public void setMessage(boolean message) {
-        isMessage = message;
     }
 
     public String getMessage() {
@@ -90,5 +74,21 @@ public class Message {
 
     public void setActivityWall(ActivityWall activityWall) {
         this.activityWall = activityWall;
+    }
+
+    public boolean isImageFlag() {
+        return imageFlag;
+    }
+
+    public void setImageFlag(boolean imageFlag) {
+        this.imageFlag = imageFlag;
+    }
+
+    public boolean isMessageFlag() {
+        return messageFlag;
+    }
+
+    public void setMessageFlag(boolean messageFlag) {
+        this.messageFlag = messageFlag;
     }
 }
