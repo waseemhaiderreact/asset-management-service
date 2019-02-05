@@ -10,7 +10,7 @@
         </Console>
 
         <RollingFile name="appLog"
-                     fileName="${APP_LOG_ROOT}/assetmanagementservice/dev_assetmanagementservice.log"
+                     fileName="${APP_LOG_ROOT}/assetmanagementservice/assetmanagementservice.log"
                      filePattern="${APP_LOG_ROOT}/assetmanagementservice/assetmanagementservice-%d{yyyy-MM-dd}-%i.log">
             <PatternLayout pattern="${LOG_PATTERN}" />
             <Policies>
@@ -27,7 +27,7 @@
             <AppenderRef ref="Console" />
         </Logger>
 
-        <Root level="info">
+        <Root level="debug">
             <AppenderRef ref="Console" />
         </Root>
     </Loggers>
