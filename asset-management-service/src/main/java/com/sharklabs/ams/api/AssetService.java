@@ -94,6 +94,19 @@ public class AssetService {
                     }
                 }
             }
+            //if children exists
+            for(Asset asset: addCategoryRequest.getCategory().getAssets()){
+                asset.setCategory(addCategoryRequest.getCategory());
+                asset.setUuid(UUID.randomUUID().toString());
+                ActivityWall activityWall=new ActivityWall();
+                activityWall.setAsset(asset);
+                asset.setActivityWall(activityWall);
+                activityWall.setUuid(UUID.randomUUID().toString());
+                for(AssetField assetField: asset.getAssetFields()){
+                    assetField.setUuid(UUID.randomUUID().toString());
+                    assetField.setAsset(asset);
+                }
+            }
             categoryRepository.save(addCategoryRequest.getCategory());
             LOGGER.info("Category Added Successfully");
             return new DefaultResponse("Success","Category added succssfully","200",addCategoryRequest.getCategory().getUuid());
@@ -200,6 +213,13 @@ public class AssetService {
                 editCategoryRequest.getCategory().getFieldTemplate().setCategory(editCategoryRequest.getCategory());
                 for (Field field : editCategoryRequest.getCategory().getFieldTemplate().getFields()) {
                     field.setFieldTemplate(editCategoryRequest.getCategory().getFieldTemplate());
+                }
+            }
+
+            for(Asset asset: editCategoryRequest.getCategory().getAssets()){
+                asset.setCategory(editCategoryRequest.getCategory());
+                for(AssetField assetField: asset.getAssetFields()){
+                    assetField.setAsset(asset);
                 }
             }
 
