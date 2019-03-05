@@ -7,7 +7,7 @@ import javax.persistence.*;
 import java.io.Serializable;
 
 @Entity(name = "t_field")
-public class Field implements Serializable {
+public class Field implements Serializable,Comparable<Field> {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
@@ -101,5 +101,10 @@ public class Field implements Serializable {
 
     public void setFieldTemplate(FieldTemplate fieldTemplate) {
         this.fieldTemplate = fieldTemplate;
+    }
+
+    @Override
+    public int compareTo(Field field) {
+        return this.fieldPosition > field.fieldPosition ? 1 : this.fieldPosition < field.fieldPosition ? -1 : 0;
     }
 }

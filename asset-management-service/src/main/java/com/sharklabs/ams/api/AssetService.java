@@ -13,6 +13,7 @@ import com.sharklabs.ams.activitywall.ActivityWall;
 import com.sharklabs.ams.activitywall.ActivityWallRepository;
 import com.sharklabs.ams.asset.Asset;
 import com.sharklabs.ams.asset.AssetRepository;
+import com.sharklabs.ams.asset.AssetResponse;
 import com.sharklabs.ams.assetfield.AssetField;
 import com.sharklabs.ams.category.Category;
 import com.sharklabs.ams.category.CategoryRepository;
@@ -30,8 +31,13 @@ import com.sharklabs.ams.response.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -525,7 +531,16 @@ public class AssetService {
         LOGGER.debug("Inside Service function of get asset");
         GetAssetResponse response=new GetAssetResponse();
         try{
-            response.setAsset(assetRepository.findAssetByUuid(id));
+            //find asset with that uuid
+            Asset asset=assetRepository.findAssetByUuid(id);
+            //map it to a new object
+            AssetResponse assetResponse=new AssetResponse();
+            assetResponse.setAsset(asset);
+            response.setAsset(assetResponse);
+            //set field template of asset
+            FieldTemplate fieldTemplate=asset.getCategory().getFieldTemplate();
+            Collections.sort(fieldTemplate.getFields());
+            response.setFieldTemplate(fieldTemplate);
             response.setResponseIdentifier("Success");
             LOGGER.info("Received Asset From database. Sending it to controller");
             return response;
@@ -539,7 +554,7 @@ public class AssetService {
 
     //get assets AMS_UC_14
     /*
-    This function gets all assrt
+    This function gets all assets
     It simply fetches all assets from db and return it
      */
     public GetAssetsResponse getAssets(){
@@ -548,7 +563,7 @@ public class AssetService {
         try {
             response.setAssets(assetRepository.findAll());
             response.setResponseIdentifier("Success");
-            LOGGER.info("Received Categories From database. Sending it to controller");
+            LOGGER.info("Received assets From database. Sending it to controller");
             return response;
         }catch(Exception e){
             e.printStackTrace();
@@ -557,6 +572,57 @@ public class AssetService {
             return response;
         }
 
+    }
+
+    //get page of assets AMS_UC_22
+    /*
+     * This function gets limit and offset and returns page of assets
+     */
+    public GetPaginatedAssetsResponse getPaginatedAssets(int offset,int limit){
+        LOGGER.debug("Inside service function of get page of assets");
+        GetPaginatedAssetsResponse response=new GetPaginatedAssetsResponse();
+        try{
+            Page<Asset> assets=assetRepository.findByIdNotNull(new PageRequest(offset,limit));
+            response.setAssets(assets);
+            response.setResponseIdentifier("Success");
+            LOGGER.info("Received assets from database. Returning to controller");
+            return response;
+        }catch (Exception e){
+            e.printStackTrace();
+            LOGGER.error("Error while getting page of assets",e);
+            response.setResponseIdentifier("Failure");
+            return response;
+        }
+    }
+
+    //get name and type of assets AMS_UC_23
+    /*
+     * This will be used by Inspection Table View FE Screen
+     * This function gets a list of uuids. First, it finds assets by those uuids from db and then creates a hashmap of assets
+     * inwhich a name and type of asset is stored against uuid of asset and returned
+     */
+    public GetNameAndTypeOfAssetsByUUIDSResponse getNameAndTypeOfAssetsByUUIDS(GetNameAndTypeOfAssetsByUUIDSRequest request){
+        LOGGER.debug("Inside service function of get get name and type of assets by uuids");
+        GetNameAndTypeOfAssetsByUUIDSResponse response=new GetNameAndTypeOfAssetsByUUIDSResponse();
+        try{
+            List<Asset> assets=assetRepository.findByUuidIn(request.getUuids());
+            HashMap<String, GetNameAndTypeOfAssetResponse> assetsHashmap=new HashMap<>();
+            for(Asset asset: assets){
+                GetNameAndTypeOfAssetResponse basicAssetInfo=new GetNameAndTypeOfAssetResponse();
+                basicAssetInfo.setName(asset.getName());
+                basicAssetInfo.setType(asset.getCategory().getName());
+                assetsHashmap.put(asset.getUuid(),basicAssetInfo);
+            }
+            response.setAssets(assetsHashmap);
+            response.setResponseIdentifier("Success");
+            LOGGER.info("Received assets from database. Returning to controller");
+            return response;
+        }catch (Exception e){
+            e.printStackTrace();
+            LOGGER.error("Error while getting assets by uuids",e);
+            response.setResponseIdentifier("Failure");
+            return response;
+        }
     }
 
     /******************************************* END Asset Functions ************************************************/
