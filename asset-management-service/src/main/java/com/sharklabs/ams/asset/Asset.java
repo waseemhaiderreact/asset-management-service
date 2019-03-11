@@ -16,6 +16,8 @@ public class Asset implements Serializable {
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
 
+    private String assetNumber;
+
     private String uuid;
 
     private String imageUrl;
@@ -97,5 +99,13 @@ public class Asset implements Serializable {
 
     public void setActivityWall(ActivityWall activityWall) {
         this.activityWall = activityWall;
+    }
+
+    public String getAssetNumber() {
+        return assetNumber;
+    }
+
+    public void setAssetNumber(String assetNumber) {
+        this.assetNumber = assetNumber;
     }
 }

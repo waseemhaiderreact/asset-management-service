@@ -1,14 +1,5 @@
 package com.sharklabs.ams.api;
 
-//import com.amazonaws.auth.AWSCredentials;
-//import com.amazonaws.auth.BasicAWSCredentials;
-//import com.amazonaws.services.s3.AmazonS3;
-//import com.amazonaws.services.s3.AmazonS3Client;
-////import com.sharklabs.ams.configuraion.AmazonClient;
-//import com.amazonaws.services.s3.model.GetObjectRequest;
-//import com.amazonaws.services.s3.model.S3Object;
-//import com.amazonaws.services.s3.model.S3ObjectInputStream;
-//import org.apache.commons.io.IOUtils;
 import com.sharklabs.ams.activitywall.ActivityWall;
 import com.sharklabs.ams.activitywall.ActivityWallRepository;
 import com.sharklabs.ams.asset.Asset;
@@ -58,7 +49,7 @@ public class AssetService {
     ActivityWallRepository activityWallRepository;
     @Autowired
     MessageRepository messageRepository;
-    
+
 
     /********************************************Category Functions**********************************************/
     //add category (AMS_UC_01)
@@ -428,6 +419,12 @@ public class AssetService {
             addAssetRequest.getAsset().setActivityWall(activityWall);
             //saving in db
             categoryRepository.save(category);
+
+            //set asset number
+            Asset savedAsset=assetRepository.findAssetByUuid(addAssetRequest.getAsset().getUuid());
+            savedAsset.setAssetNumber(this.genrateAssetNumber(savedAsset.getId()));
+            assetRepository.save(savedAsset);
+
             LOGGER.info("Asset Added Successfully");
             return new DefaultResponse("Success","Asset Added Successfully","200",addAssetRequest.getAsset().getUuid());
         }catch(Exception e){
@@ -615,6 +612,7 @@ public class AssetService {
                 GetNameAndTypeOfAssetResponse basicAssetInfo=new GetNameAndTypeOfAssetResponse();
                 basicAssetInfo.setName(asset.getName());
                 basicAssetInfo.setType(asset.getCategory().getName());
+                basicAssetInfo.setAssetNumber(asset.getAssetNumber());
                 assetsHashmap.put(asset.getUuid(),basicAssetInfo);
             }
             response.setAssets(assetsHashmap);
@@ -896,6 +894,17 @@ public class AssetService {
     }
 
     /********************************************END Activity Wall Functions*******************************************/
+
+    /******************************************* Class Functions *****************************************************/
+    //generate asset number
+    private String genrateAssetNumber(Long id){
+        String assetNumber="FMS-ASSET-";
+        Long myId=1000L+id;
+        String formatted = String.format("%06d",myId);
+        return assetNumber+formatted;
+    }
+
+    /******************************************* END Class Functions **************************************************/
 //    @Autowired
 //    private VehicleRepository vehicleRepository;
 //    @Autowired
