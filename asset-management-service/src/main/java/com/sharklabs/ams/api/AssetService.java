@@ -18,8 +18,10 @@ import com.sharklabs.ams.assetfield.AssetField;
 import com.sharklabs.ams.category.Category;
 import com.sharklabs.ams.category.CategoryRepository;
 import com.sharklabs.ams.field.Field;
+import com.sharklabs.ams.field.FieldRepository;
 import com.sharklabs.ams.fieldtemplate.FieldTemplate;
 import com.sharklabs.ams.fieldtemplate.FieldTemplateRepository;
+import com.sharklabs.ams.fieldtemplate.FieldTemplateResponse;
 import com.sharklabs.ams.inspectionitem.InspectionItem;
 import com.sharklabs.ams.inspectionitemcategory.InspectionItemCategory;
 import com.sharklabs.ams.inspectiontemplate.InspectionTemplate;
@@ -56,6 +58,7 @@ public class AssetService {
     ActivityWallRepository activityWallRepository;
     @Autowired
     MessageRepository messageRepository;
+    
 
     /********************************************Category Functions**********************************************/
     //add category (AMS_UC_01)
@@ -538,7 +541,8 @@ public class AssetService {
             assetResponse.setAsset(asset);
             response.setAsset(assetResponse);
             //set field template of asset
-            FieldTemplate fieldTemplate=asset.getCategory().getFieldTemplate();
+            FieldTemplateResponse fieldTemplate=new FieldTemplateResponse();
+            fieldTemplate.setFieldTemplate(asset.getCategory().getFieldTemplate());
             Collections.sort(fieldTemplate.getFields());
             response.setFieldTemplate(fieldTemplate);
             response.setResponseIdentifier("Success");

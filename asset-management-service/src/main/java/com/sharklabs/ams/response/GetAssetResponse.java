@@ -3,10 +3,11 @@ package com.sharklabs.ams.response;
 import com.sharklabs.ams.asset.Asset;
 import com.sharklabs.ams.asset.AssetResponse;
 import com.sharklabs.ams.fieldtemplate.FieldTemplate;
+import com.sharklabs.ams.fieldtemplate.FieldTemplateResponse;
 
 public class GetAssetResponse {
     private AssetResponse asset;
-    private FieldTemplate fieldTemplate;
+    private FieldTemplateResponse fieldTemplate;
     private String responseIdentifier;
 
     public AssetResponse getAsset() {
@@ -17,11 +18,11 @@ public class GetAssetResponse {
         this.asset = asset;
     }
 
-    public FieldTemplate getFieldTemplate() {
+    public FieldTemplateResponse getFieldTemplate() {
         return fieldTemplate;
     }
 
-    public void setFieldTemplate(FieldTemplate fieldTemplate) {
+    public void setFieldTemplate(FieldTemplateResponse fieldTemplate) {
         this.fieldTemplate = fieldTemplate;
     }
 

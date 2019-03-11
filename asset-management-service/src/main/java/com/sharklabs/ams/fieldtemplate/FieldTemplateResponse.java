@@ -1,19 +1,11 @@
 package com.sharklabs.ams.fieldtemplate;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.sharklabs.ams.category.Category;
 import com.sharklabs.ams.field.Field;
 
-import javax.persistence.*;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
-@Entity(name = "t_field_template")
-public class FieldTemplate {
-    @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+public class FieldTemplateResponse {
     private Long id;
 
     private String uuid;
@@ -24,14 +16,16 @@ public class FieldTemplate {
 
     private boolean isPrivate;
 
-    @JsonIgnore
-    @OneToOne(fetch = FetchType.EAGER,cascade = CascadeType.ALL)
-    @JoinColumn(name = "category_id")
-    private Category category;
+    private List<Field> fields ;
 
-    @OneToMany(  cascade = CascadeType.ALL,mappedBy = "fieldTemplate",fetch = FetchType.EAGER)
-    private Set<Field> fields =new HashSet<>();
-
+    public void setFieldTemplate(FieldTemplate fieldTemplate){
+        this.id=fieldTemplate.getId();
+        this.uuid=fieldTemplate.getUuid();
+        this.type=fieldTemplate.getType();
+        this.tenantUUID=fieldTemplate.getTenantUUID();
+        this.isPrivate=fieldTemplate.isPrivate();
+        this.fields=new ArrayList<>(fieldTemplate.getFields());
+    }
     public Long getId() {
         return id;
     }
@@ -47,7 +41,6 @@ public class FieldTemplate {
     public void setUuid(String uuid) {
         this.uuid = uuid;
     }
-
 
     public String getType() {
         return type;
@@ -73,19 +66,11 @@ public class FieldTemplate {
         isPrivate = aPrivate;
     }
 
-    public Category getCategory() {
-        return category;
-    }
-
-    public void setCategory(Category category) {
-        this.category = category;
-    }
-
-    public Set<Field> getFields() {
+    public List<Field> getFields() {
         return fields;
     }
 
-    public void setFields(Set<Field> fields) {
+    public void setFields(List<Field> fields) {
         this.fields = fields;
     }
 }
