@@ -1,9 +1,11 @@
 package com.sharklabs.ams.asset;
 
+import com.sharklabs.ams.AssetImage.AssetImage;
 import com.sharklabs.ams.activitywall.ActivityWall;
 import com.sharklabs.ams.assetfield.AssetField;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Set;
 
 public class AssetResponse {
@@ -18,6 +20,8 @@ public class AssetResponse {
     private String tenantUUID;
 
     private HashMap<String, Object> assetFields=new HashMap<String, Object>();
+
+    private Set<AssetImage> assetImages=new HashSet<>();
 
     private ActivityWall activityWall;
 
@@ -80,7 +84,6 @@ public class AssetResponse {
     public void setAsset(Asset asset){
         this.id=asset.getId();
         this.activityWall=asset.getActivityWall();
-        this.imageUrl=asset.getImageUrl();
         this.name=asset.getName();
         this.tenantUUID=asset.getTenantUUID();
         this.uuid=asset.getUuid();
@@ -88,5 +91,6 @@ public class AssetResponse {
         for(AssetField assetField: assetFields){
             this.assetFields.put(assetField.getFieldId(),assetField);
         }
+        this.assetImages=asset.getAssetImages();
     }
 }

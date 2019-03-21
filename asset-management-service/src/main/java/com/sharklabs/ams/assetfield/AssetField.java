@@ -21,7 +21,7 @@ public class AssetField {
 
     @JsonIgnore
     @ManyToOne(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
-    @JoinColumn(name = "asset_id",referencedColumnName = "uuid")
+    @JoinColumn(name = "asset_id",referencedColumnName = "id")
     private Asset asset;
 
     public Long getId() {

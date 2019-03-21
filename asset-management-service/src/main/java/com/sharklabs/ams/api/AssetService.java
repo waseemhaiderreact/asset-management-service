@@ -1,5 +1,9 @@
 package com.sharklabs.ams.api;
 
+import com.amazonaws.auth.AWSCredentials;
+import com.amazonaws.auth.BasicAWSCredentials;
+import com.amazonaws.services.s3.AmazonS3;
+import com.amazonaws.services.s3.AmazonS3Client;
 import com.sharklabs.ams.activitywall.ActivityWall;
 import com.sharklabs.ams.activitywall.ActivityWallRepository;
 import com.sharklabs.ams.asset.Asset;
@@ -24,10 +28,12 @@ import com.sharklabs.ams.response.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
+import javax.annotation.PostConstruct;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -49,6 +55,25 @@ public class AssetService {
     ActivityWallRepository activityWallRepository;
     @Autowired
     MessageRepository messageRepository;
+    @Value("${cloud.aws.credentials.accessKey}")
+    private String accessKey;
+
+    @Value("${cloud.aws.credentials.secretKey}")
+    private String secretKey;
+
+    @Value("${cloud.aws.region}")
+    private String region;
+
+    @Value("${cloud.aws.bucketName}")
+    private String bucket;
+
+    private AmazonS3 s3client;
+
+    @PostConstruct
+    private void initializeAmazon() {
+        AWSCredentials credentials = new BasicAWSCredentials(this.accessKey, this.secretKey);
+        this.s3client = new AmazonS3Client(credentials);
+    }
 
 
     /********************************************Category Functions**********************************************/
@@ -146,6 +171,7 @@ public class AssetService {
         try {
             response.setCategory(categoryRepository.findCategoryByUuid(id));
             response.setResponseIdentifier("Success");
+            response.getCategory().setAssets(null);
             LOGGER.info("Received Category From database. Sending it to controller");
             return response;
         }catch(Exception e){
@@ -165,6 +191,9 @@ public class AssetService {
         GetCategoriesResponse response = new GetCategoriesResponse();
         try {
             response.setCategories(categoryRepository.findAll());
+            for(Category category: response.getCategories()){
+                category.setAssets(null);
+            }
             response.setResponseIdentifier("Success");
             LOGGER.info("Received Categories From database. Sending it to controller");
             return response;
@@ -424,6 +453,9 @@ public class AssetService {
             Asset savedAsset=assetRepository.findAssetByUuid(addAssetRequest.getAsset().getUuid());
             savedAsset.setAssetNumber(this.genrateAssetNumber(savedAsset.getId()));
             assetRepository.save(savedAsset);
+
+            //saving images of assets on s3
+
 
             LOGGER.info("Asset Added Successfully");
             return new DefaultResponse("Success","Asset Added Successfully","200",addAssetRequest.getAsset().getUuid());
@@ -894,6 +926,14 @@ public class AssetService {
     }
 
     /********************************************END Activity Wall Functions*******************************************/
+
+    /******************************************** s3 Functions *********************************************************/
+    //upload file to s3
+    private String uploadFile(String byteArray){
+        return null;
+    }
+
+    /******************************************** END s3 Functions *********************************************************/
 
     /******************************************* Class Functions *****************************************************/
     //generate asset number
