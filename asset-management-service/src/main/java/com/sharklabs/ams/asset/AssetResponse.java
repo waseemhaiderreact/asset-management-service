@@ -17,6 +17,8 @@ public class AssetResponse {
 
     private String name;
 
+    private String description;
+
     private String tenantUUID;
 
     private HashMap<String, Object> assetFields=new HashMap<String, Object>();
@@ -87,6 +89,7 @@ public class AssetResponse {
         this.name=asset.getName();
         this.tenantUUID=asset.getTenantUUID();
         this.uuid=asset.getUuid();
+        this.description=asset.getDescription();
         Set<AssetField> assetFields=asset.getAssetFields();
         for(AssetField assetField: assetFields){
             this.assetFields.put(assetField.getFieldId(),assetField);

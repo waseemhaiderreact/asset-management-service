@@ -572,7 +572,9 @@ public class AssetService {
             //set field template of asset
             FieldTemplateResponse fieldTemplate=new FieldTemplateResponse();
             fieldTemplate.setFieldTemplate(asset.getCategory().getFieldTemplate());
-            Collections.sort(fieldTemplate.getFields());
+            if(fieldTemplate!=null) {
+                Collections.sort(fieldTemplate.getFields());
+            }
             response.setFieldTemplate(fieldTemplate);
             response.setResponseIdentifier("Success");
             LOGGER.info("Received Asset From database. Sending it to controller");
