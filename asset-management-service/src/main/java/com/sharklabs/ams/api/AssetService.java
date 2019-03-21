@@ -571,8 +571,8 @@ public class AssetService {
             response.setAsset(assetResponse);
             //set field template of asset
             FieldTemplateResponse fieldTemplate=new FieldTemplateResponse();
-            fieldTemplate.setFieldTemplate(asset.getCategory().getFieldTemplate());
-            if(fieldTemplate!=null) {
+            if(asset.getCategory().getFieldTemplate()!=null) {
+                fieldTemplate.setFieldTemplate(asset.getCategory().getFieldTemplate());
                 Collections.sort(fieldTemplate.getFields());
             }
             response.setFieldTemplate(fieldTemplate);
