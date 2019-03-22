@@ -71,9 +71,6 @@ public class AssetResponse {
         return assetFields;
     }
 
-    public void setAssetFields(HashMap assetFields) {
-        this.assetFields = assetFields;
-    }
 
     public ActivityWall getActivityWall() {
         return activityWall;
@@ -81,6 +78,26 @@ public class AssetResponse {
 
     public void setActivityWall(ActivityWall activityWall) {
         this.activityWall = activityWall;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    public void setAssetFields(HashMap<String, Object> assetFields) {
+        this.assetFields = assetFields;
+    }
+
+    public Set<AssetImage> getAssetImages() {
+        return assetImages;
+    }
+
+    public void setAssetImages(Set<AssetImage> assetImages) {
+        this.assetImages = assetImages;
     }
 
     public void setAsset(Asset asset){
