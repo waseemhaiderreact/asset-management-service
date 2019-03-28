@@ -12,6 +12,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.util.List;
@@ -364,6 +365,28 @@ public class AssetController {
     }
 
     /*******************************************END Activity Wall Functions********************************************/
+
+    /******************************************* File Functions ******************************************************/
+    //upload file to s3 AMS_UC_24
+    @RequestMapping(method = RequestMethod.POST,value="/files")
+    public @ResponseBody
+    ResponseEntity uploadFile(@RequestParam("file") MultipartFile file) throws EmptyEntityTableException {
+        Util util = new Util();
+        util.setThreadContextForLogging();
+        LOGGER.info("Request received in controller to upload file to s3");
+        UploadFileResponse response=assetService.uploadFile(file);
+        ResponseEntity responseEntity=null;
+        if(response.getResponseIdentifier().equals("Success")){
+            responseEntity=new ResponseEntity<UploadFileResponse>(response,HttpStatus.OK);
+        }
+        else if(response.getResponseIdentifier().equals("Failure")){
+            responseEntity=new ResponseEntity<UploadFileResponse>(response,HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+        util.clearThreadContextForLogging();
+        return responseEntity;
+    }
+
+    /*******************************************END File Functions ******************************************************/
     //create a new vehicle
 //    @RequestMapping(method = RequestMethod.POST,value="/vehicles")
 //    public @ResponseBody

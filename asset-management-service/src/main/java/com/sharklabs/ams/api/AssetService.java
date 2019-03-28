@@ -4,6 +4,9 @@ import com.amazonaws.auth.AWSCredentials;
 import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3Client;
+import com.amazonaws.services.s3.model.CannedAccessControlList;
+import com.amazonaws.services.s3.model.PutObjectRequest;
+import com.sharklabs.ams.AssetImage.AssetImage;
 import com.sharklabs.ams.activitywall.ActivityWall;
 import com.sharklabs.ams.activitywall.ActivityWallRepository;
 import com.sharklabs.ams.asset.Asset;
@@ -25,6 +28,7 @@ import com.sharklabs.ams.message.Message;
 import com.sharklabs.ams.message.MessageRepository;
 import com.sharklabs.ams.request.*;
 import com.sharklabs.ams.response.*;
+import org.apache.commons.io.IOUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,12 +36,14 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.PostConstruct;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.UUID;
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
+import java.io.*;
+import java.util.*;
 
 @Service
 public class AssetService {
@@ -66,6 +72,8 @@ public class AssetService {
 
     @Value("${cloud.aws.bucketName}")
     private String bucket;
+
+    private static final String s3EnpointUrl="https://fms-issue-assets.s3.eu-west-2.amazonaws.com";
 
     private AmazonS3 s3client;
 
@@ -441,6 +449,9 @@ public class AssetService {
                 assetField.setAsset(addAssetRequest.getAsset());
                 assetField.setUuid(UUID.randomUUID().toString());
             }
+            for(AssetImage assetImage: addAssetRequest.getAsset().getAssetImages()){
+                assetImage.setAsset(addAssetRequest.getAsset());
+            }
             //creating activity wall for that asset and also setting uuid
             ActivityWall activityWall=new ActivityWall();
             activityWall.setUuid(UUID.randomUUID().toString());
@@ -453,9 +464,6 @@ public class AssetService {
             Asset savedAsset=assetRepository.findAssetByUuid(addAssetRequest.getAsset().getUuid());
             savedAsset.setAssetNumber(this.genrateAssetNumber(savedAsset.getId()));
             assetRepository.save(savedAsset);
-
-            //saving images of assets on s3
-
 
             LOGGER.info("Asset Added Successfully");
             return new DefaultResponse("Success","Asset Added Successfully","200",addAssetRequest.getAsset().getUuid());
@@ -931,8 +939,58 @@ public class AssetService {
 
     /******************************************** s3 Functions *********************************************************/
     //upload file to s3
-    private String uploadFile(String byteArray){
-        return null;
+//    private String uploadFile(String byteArray,int index) throws IOException {
+//        String fileName = generateFileName(index);
+//        String fileUrl=s3EnpointUrl+"/asset-images/"+fileName;
+////        File byteFile=new File("asset_image_byte_array_"+index);
+//        File file=new File("asset_image_"+index+".png");
+//        try {
+////            os.write(byteArray.getBytes());
+//            ByteArrayInputStream bis = new ByteArrayInputStream(byteArray.getBytes());
+//            OutputStream os = new FileOutputStream(file);
+//            IOUtils.copy(bis,os);
+//
+////            BufferedImage image = ImageIO.read(byteFile);
+////            ImageIO.write(image, "png", file);
+//
+//            this.s3client.putObject(new PutObjectRequest(this.bucket+"/asset-images",fileName,file));
+//            return fileUrl;
+//        }
+//        catch(Exception e){
+//            e.printStackTrace();
+//            LOGGER.error("Error while uploading asset image",e);
+//            return null;
+//        }
+//        finally {
+////            os.close();
+//            file.delete();
+////            byteFile.delete();
+//        }
+//    }
+
+    public UploadFileResponse uploadFile(MultipartFile file){
+        UploadFileResponse response=new UploadFileResponse();
+        LOGGER.debug("inside service function of uploading file to s3");
+        try{
+            File convFile = new File(file.getOriginalFilename());
+            convFile.createNewFile();
+            FileOutputStream fos = new FileOutputStream(convFile);
+            fos.write(file.getBytes());
+            fos.close();
+            String fileName = generateFileName(file.getOriginalFilename());
+            String fileUrl=s3EnpointUrl+"/asset-images/"+fileName;
+            this.s3client.putObject(new PutObjectRequest(this.bucket+"/asset-images",fileName,convFile));
+            response.setResponseIdentifier("Success");
+            response.setFileUrl(fileUrl);
+            LOGGER.info("File uploaded Successfully");
+            convFile.delete();
+            return response;
+        }catch(Exception e){
+            LOGGER.error("Error while uploading file to s3",e);
+            e.printStackTrace();
+            response.setResponseIdentifier("Failure");
+            return response;
+        }
     }
 
     /******************************************** END s3 Functions *********************************************************/
@@ -944,6 +1002,10 @@ public class AssetService {
         Long myId=1000L+id;
         String formatted = String.format("%06d",myId);
         return assetNumber+formatted;
+    }
+
+    private String generateFileName(String filename){
+        return new Date().getTime() + "-" + "asset_image_"+filename;
     }
 
     /******************************************* END Class Functions **************************************************/
