@@ -993,7 +993,7 @@ public class AssetService {
     /******************************************* Class Functions *****************************************************/
     //generate asset number
     private String genrateAssetNumber(Long id){
-        String assetNumber="FMS-ASSET-";
+        String assetNumber="AMS-ASSET-";
         Long myId=1000L+id;
         String formatted = String.format("%06d",myId);
         return assetNumber+formatted;
