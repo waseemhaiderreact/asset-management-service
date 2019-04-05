@@ -189,11 +189,11 @@ public class AssetService {
     /*
         This function just returns all the categories (List of categories) from db
      */
-    public GetCategoriesResponse GetAllCategories(){
+    public GetCategoriesResponse GetAllCategories(String tenantUUID){
         LOGGER.debug("Inside Service function of get all categories");
         GetCategoriesResponse response = new GetCategoriesResponse();
         try {
-            response.setCategories(categoryRepository.findAll());
+            response.setCategories(categoryRepository.findByTenantUUID(tenantUUID));
             for(Category category: response.getCategories()){
                 category.setAssets(null);
             }

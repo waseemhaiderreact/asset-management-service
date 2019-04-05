@@ -4,10 +4,13 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 
 import javax.transaction.Transactional;
+import java.util.List;
 
 public interface CategoryRepository extends JpaRepository<Category,Long> {
 
     Category findCategoryByUuid(String uuid);
+
+    List<Category> findByTenantUUID(String tenantUUID);
 
     @Modifying
     @Transactional

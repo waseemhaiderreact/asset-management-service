@@ -73,13 +73,13 @@ public class AssetController {
     }
 
     //get all categories AMS_UC_03
-    @RequestMapping(method = RequestMethod.GET,value="/categories")
+    @RequestMapping(method = RequestMethod.GET,value="/categories",params = {"tenantuuid"})
     public @ResponseBody
-    ResponseEntity getAllCategories() throws EmptyEntityTableException {
+    ResponseEntity getAllCategories(@RequestParam String tenantuuid) throws EmptyEntityTableException {
         Util util = new Util();
         util.setThreadContextForLogging();
         LOGGER.info("Request received in controller to get all categories.");
-        ResponseEntity responseEntity=Optional.ofNullable(assetService.GetAllCategories())
+        ResponseEntity responseEntity=Optional.ofNullable(assetService.GetAllCategories(tenantuuid))
                 .map(resp -> new ResponseEntity<GetCategoriesResponse>(resp, HttpStatus.OK))
                 .orElseThrow(() -> new EmptyEntityTableException("No Category exists",0L));
         util.clearThreadContextForLogging();
