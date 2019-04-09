@@ -9,6 +9,7 @@ import com.sharklabs.ams.AssetImage.AssetImage;
 import com.sharklabs.ams.activitywall.ActivityWall;
 import com.sharklabs.ams.activitywall.ActivityWallRepository;
 import com.sharklabs.ams.asset.Asset;
+import com.sharklabs.ams.asset.AssetModel;
 import com.sharklabs.ams.asset.AssetRepository;
 import com.sharklabs.ams.asset.AssetResponse;
 import com.sharklabs.ams.assetfield.AssetField;
@@ -595,11 +596,18 @@ public class AssetService {
     This function gets all assets
     It simply fetches all assets from db and return it
      */
-    public GetAssetsResponse getAssets(){
+    public GetAssetsResponse getAssets(String tenantUUID){
         LOGGER.debug("Inside Service function of get assets");
         GetAssetsResponse response=new GetAssetsResponse();
         try {
-            response.setAssets(assetRepository.findAll());
+            List<Asset> assets=assetRepository.findByTenantUUID(tenantUUID);
+            List<AssetModel> assetModels=new ArrayList<>();
+            for(Asset asset: assets){
+                AssetModel assetModel=new AssetModel();
+                assetModel.setAsset(asset);
+                assetModels.add(assetModel);
+            }
+            response.setAssets(assetModels);
             response.setResponseIdentifier("Success");
             LOGGER.info("Received assets From database. Sending it to controller");
             return response;

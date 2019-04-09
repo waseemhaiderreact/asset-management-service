@@ -1,18 +1,19 @@
 package com.sharklabs.ams.response;
 
 import com.sharklabs.ams.asset.Asset;
+import com.sharklabs.ams.asset.AssetModel;
 
 import java.util.List;
 
 public class GetAssetsResponse {
-    private List<Asset> assets;
+    private List<AssetModel> assets;
     private String responseIdentifier;
 
-    public List<Asset> getAssets() {
+    public List<AssetModel> getAssets() {
         return assets;
     }
 
-    public void setAssets(List<Asset> assets) {
+    public void setAssets(List<AssetModel> assets) {
         this.assets = assets;
     }
 

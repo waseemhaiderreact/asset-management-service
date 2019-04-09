@@ -11,6 +11,8 @@ import java.util.List;
 public interface AssetRepository extends JpaRepository<Asset,Long> {
     Asset findAssetByUuid(String uuid);
 
+    List<Asset> findByTenantUUID(String tenantUUID);
+
     @Modifying
     @Transactional
     Integer deleteById(Long id);

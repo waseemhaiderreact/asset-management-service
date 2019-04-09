@@ -219,13 +219,13 @@ public class AssetController {
     }
 
     //get assets AMS_UC_14
-    @RequestMapping(method = RequestMethod.GET,value="")
+    @RequestMapping(method = RequestMethod.GET,value="",params = {"tenantuuid"})
     public @ResponseBody
-    ResponseEntity getAssets() throws EmptyEntityTableException {
+    ResponseEntity getAssets(@RequestParam String tenantuuid) throws EmptyEntityTableException {
         Util util = new Util();
         util.setThreadContextForLogging();
         LOGGER.info("Request received in controller to get assets.");
-        ResponseEntity responseEntity=Optional.ofNullable(assetService.getAssets())
+        ResponseEntity responseEntity=Optional.ofNullable(assetService.getAssets(tenantuuid))
                 .map(resp -> new ResponseEntity<GetAssetsResponse>(resp, HttpStatus.OK))
                 .orElseThrow(() -> new EmptyEntityTableException("No Asset exists",0L));
         util.clearThreadContextForLogging();
