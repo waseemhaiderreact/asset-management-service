@@ -15,6 +15,7 @@ import com.sharklabs.ams.asset.AssetResponse;
 import com.sharklabs.ams.assetfield.AssetField;
 import com.sharklabs.ams.category.Category;
 import com.sharklabs.ams.category.CategoryRepository;
+import com.sharklabs.ams.events.consumption.Consumption;
 import com.sharklabs.ams.field.Field;
 import com.sharklabs.ams.fieldtemplate.FieldTemplate;
 import com.sharklabs.ams.fieldtemplate.FieldTemplateRepository;
@@ -1012,6 +1013,34 @@ public class AssetService {
     }
 
     /******************************************* END Class Functions **************************************************/
+
+    /******************************************* Kafka Functions ******************************************************/
+    public void updateConsumptionUnits(Consumption consumption){
+        try{
+            Asset asset=assetRepository.findAssetByUuid(consumption.getAssetUUID());
+            //whether to update primary consumption unit and secondary consumption unit
+            boolean update=false;
+            if(consumption.getPrimaryConsumptionUnit()!=null && consumption.getPrimaryConsumptionValue()!=null){
+                update=true;
+                asset.setPrimaryConsumptionUnit(consumption.getPrimaryConsumptionUnit());
+                asset.setPrimaryConsumptionValue(consumption.getPrimaryConsumptionValue());
+            }
+            if(consumption.getSecondaryConsumptionUnit()!=null && consumption.getSecondaryConsumptionValue()!=null){
+                update=true;
+                asset.setSecondaryConsumptionUnit(consumption.getSecondaryConsumptionUnit());
+                asset.setSecondaryConsumptionValue(consumption.getSecondaryConsumptionValue());
+            }
+            //update
+            if(update){
+                assetRepository.save(asset);
+            }
+        }catch (Exception e){
+            e.printStackTrace();
+            LOGGER.error("Error while updating consumption units of asset",e);
+        }
+    }
+
+    /*******************************************END Kafka Functions ******************************************************/
 //    @Autowired
 //    private VehicleRepository vehicleRepository;
 //    @Autowired

@@ -21,6 +21,14 @@ public class AssetResponse {
 
     private String tenantUUID;
 
+    private String primaryConsumptionValue;
+
+    private String primaryConsumptionUnit;
+
+    private String secondaryConsumptionValue;
+
+    private String secondaryConsumptionUnit;
+
     private HashMap<String, Object> assetFields=new HashMap<String, Object>();
 
     private Set<AssetImage> assetImages=new HashSet<>();
@@ -100,6 +108,38 @@ public class AssetResponse {
         this.assetImages = assetImages;
     }
 
+    public String getPrimaryConsumptionValue() {
+        return primaryConsumptionValue;
+    }
+
+    public void setPrimaryConsumptionValue(String primaryConsumptionValue) {
+        this.primaryConsumptionValue = primaryConsumptionValue;
+    }
+
+    public String getPrimaryConsumptionUnit() {
+        return primaryConsumptionUnit;
+    }
+
+    public void setPrimaryConsumptionUnit(String primaryConsumptionUnit) {
+        this.primaryConsumptionUnit = primaryConsumptionUnit;
+    }
+
+    public String getSecondaryConsumptionValue() {
+        return secondaryConsumptionValue;
+    }
+
+    public void setSecondaryConsumptionValue(String secondaryConsumptionValue) {
+        this.secondaryConsumptionValue = secondaryConsumptionValue;
+    }
+
+    public String getSecondaryConsumptionUnit() {
+        return secondaryConsumptionUnit;
+    }
+
+    public void setSecondaryConsumptionUnit(String secondaryConsumptionUnit) {
+        this.secondaryConsumptionUnit = secondaryConsumptionUnit;
+    }
+
     public void setAsset(Asset asset){
         this.id=asset.getId();
         this.activityWall=asset.getActivityWall();
@@ -107,6 +147,10 @@ public class AssetResponse {
         this.tenantUUID=asset.getTenantUUID();
         this.uuid=asset.getUuid();
         this.description=asset.getDescription();
+        this.primaryConsumptionUnit=asset.getPrimaryConsumptionUnit();
+        this.primaryConsumptionValue=asset.getPrimaryConsumptionValue();
+        this.secondaryConsumptionUnit=asset.getSecondaryConsumptionUnit();
+        this.secondaryConsumptionValue=asset.getSecondaryConsumptionValue();
         Set<AssetField> assetFields=asset.getAssetFields();
         for(AssetField assetField: assetFields){
             this.assetFields.put(assetField.getFieldId(),assetField);

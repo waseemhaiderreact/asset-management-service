@@ -38,6 +38,14 @@ public class Asset implements Serializable {
 
     private String tenantUUID;
 
+    private String primaryConsumptionValue;
+
+    private String primaryConsumptionUnit;
+
+    private String secondaryConsumptionValue;
+
+    private String secondaryConsumptionUnit;
+
     @JsonIgnore
     @ManyToOne(fetch = FetchType.EAGER, cascade = {CascadeType.DETACH,CascadeType.REFRESH,CascadeType.REMOVE})
     @JoinColumn(name = "category_id",referencedColumnName = "id")
@@ -171,5 +179,37 @@ public class Asset implements Serializable {
 
     public void setDescription(String description) {
         this.description = description;
+    }
+
+    public String getPrimaryConsumptionValue() {
+        return primaryConsumptionValue;
+    }
+
+    public void setPrimaryConsumptionValue(String primaryConsumptionValue) {
+        this.primaryConsumptionValue = primaryConsumptionValue;
+    }
+
+    public String getPrimaryConsumptionUnit() {
+        return primaryConsumptionUnit;
+    }
+
+    public void setPrimaryConsumptionUnit(String primaryConsumptionUnit) {
+        this.primaryConsumptionUnit = primaryConsumptionUnit;
+    }
+
+    public String getSecondaryConsumptionValue() {
+        return secondaryConsumptionValue;
+    }
+
+    public void setSecondaryConsumptionValue(String secondaryConsumptionValue) {
+        this.secondaryConsumptionValue = secondaryConsumptionValue;
+    }
+
+    public String getSecondaryConsumptionUnit() {
+        return secondaryConsumptionUnit;
+    }
+
+    public void setSecondaryConsumptionUnit(String secondaryConsumptionUnit) {
+        this.secondaryConsumptionUnit = secondaryConsumptionUnit;
     }
 }
