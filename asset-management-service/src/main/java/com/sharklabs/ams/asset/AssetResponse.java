@@ -3,6 +3,7 @@ package com.sharklabs.ams.asset;
 import com.sharklabs.ams.AssetImage.AssetImage;
 import com.sharklabs.ams.activitywall.ActivityWall;
 import com.sharklabs.ams.assetfield.AssetField;
+import com.sharklabs.ams.usage.Usage;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -21,13 +22,7 @@ public class AssetResponse {
 
     private String tenantUUID;
 
-    private String primaryConsumptionValue;
-
-    private String primaryConsumptionUnit;
-
-    private String secondaryConsumptionValue;
-
-    private String secondaryConsumptionUnit;
+    private Usage usage;
 
     private HashMap<String, Object> assetFields=new HashMap<String, Object>();
 
@@ -108,36 +103,12 @@ public class AssetResponse {
         this.assetImages = assetImages;
     }
 
-    public String getPrimaryConsumptionValue() {
-        return primaryConsumptionValue;
+    public Usage getUsage() {
+        return usage;
     }
 
-    public void setPrimaryConsumptionValue(String primaryConsumptionValue) {
-        this.primaryConsumptionValue = primaryConsumptionValue;
-    }
-
-    public String getPrimaryConsumptionUnit() {
-        return primaryConsumptionUnit;
-    }
-
-    public void setPrimaryConsumptionUnit(String primaryConsumptionUnit) {
-        this.primaryConsumptionUnit = primaryConsumptionUnit;
-    }
-
-    public String getSecondaryConsumptionValue() {
-        return secondaryConsumptionValue;
-    }
-
-    public void setSecondaryConsumptionValue(String secondaryConsumptionValue) {
-        this.secondaryConsumptionValue = secondaryConsumptionValue;
-    }
-
-    public String getSecondaryConsumptionUnit() {
-        return secondaryConsumptionUnit;
-    }
-
-    public void setSecondaryConsumptionUnit(String secondaryConsumptionUnit) {
-        this.secondaryConsumptionUnit = secondaryConsumptionUnit;
+    public void setUsage(Usage usage) {
+        this.usage = usage;
     }
 
     public void setAsset(Asset asset){
@@ -147,10 +118,22 @@ public class AssetResponse {
         this.tenantUUID=asset.getTenantUUID();
         this.uuid=asset.getUuid();
         this.description=asset.getDescription();
-        this.primaryConsumptionUnit=asset.getPrimaryConsumptionUnit();
-        this.primaryConsumptionValue=asset.getPrimaryConsumptionValue();
-        this.secondaryConsumptionUnit=asset.getSecondaryConsumptionUnit();
-        this.secondaryConsumptionValue=asset.getSecondaryConsumptionValue();
+        //getting latest entry of the usage of asset
+        Usage maxUsage=null;
+        Long maxId=null;
+        for(Usage usage: asset.getUsages()){
+            if(maxId==null){
+                maxUsage=usage;
+                maxId=usage.getId();
+            }
+            else{
+                if(usage.getId()>maxId){
+                    maxUsage=usage;
+                    maxId=usage.getId();
+                }
+            }
+        }
+        this.usage=maxUsage;
         Set<AssetField> assetFields=asset.getAssetFields();
         for(AssetField assetField: assetFields){
             this.assetFields.put(assetField.getFieldId(),assetField);

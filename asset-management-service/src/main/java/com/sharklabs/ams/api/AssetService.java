@@ -15,7 +15,6 @@ import com.sharklabs.ams.asset.AssetResponse;
 import com.sharklabs.ams.assetfield.AssetField;
 import com.sharklabs.ams.category.Category;
 import com.sharklabs.ams.category.CategoryRepository;
-import com.sharklabs.ams.events.consumption.Consumption;
 import com.sharklabs.ams.field.Field;
 import com.sharklabs.ams.fieldtemplate.FieldTemplate;
 import com.sharklabs.ams.fieldtemplate.FieldTemplateRepository;
@@ -28,6 +27,7 @@ import com.sharklabs.ams.message.Message;
 import com.sharklabs.ams.message.MessageRepository;
 import com.sharklabs.ams.request.*;
 import com.sharklabs.ams.response.*;
+import com.sharklabs.ams.usage.Usage;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -1015,28 +1015,26 @@ public class AssetService {
     /******************************************* END Class Functions **************************************************/
 
     /******************************************* Kafka Functions ******************************************************/
-    public void updateConsumptionUnits(Consumption consumption){
+    public void updateUsageUnits(Usage usage){
         try{
-            Asset asset=assetRepository.findAssetByUuid(consumption.getAssetUUID());
-            //whether to update primary consumption unit and secondary consumption unit
+            Asset asset=assetRepository.findAssetByUuid(usage.getAssetUUID());
+            //whether to update primary usage unit and secondary usage unit
             boolean update=false;
-            if(consumption.getPrimaryConsumptionUnit()!=null && consumption.getPrimaryConsumptionValue()!=null){
+            if(usage.getPrimaryUsageUnit()!=null && usage.getPrimaryUsageValue()!=null){
                 update=true;
-                asset.setPrimaryConsumptionUnit(consumption.getPrimaryConsumptionUnit());
-                asset.setPrimaryConsumptionValue(consumption.getPrimaryConsumptionValue());
             }
-            if(consumption.getSecondaryConsumptionUnit()!=null && consumption.getSecondaryConsumptionValue()!=null){
+            if(usage.getSecondaryUsageUnit()!=null && usage.getSecondaryUsageValue()!=null){
                 update=true;
-                asset.setSecondaryConsumptionUnit(consumption.getSecondaryConsumptionUnit());
-                asset.setSecondaryConsumptionValue(consumption.getSecondaryConsumptionValue());
             }
             //update
             if(update){
+                asset.addUsage(usage);
+                usage.setAsset(asset);
                 assetRepository.save(asset);
             }
         }catch (Exception e){
             e.printStackTrace();
-            LOGGER.error("Error while updating consumption units of asset",e);
+            LOGGER.error("Error while updating usage units of asset",e);
         }
     }
 

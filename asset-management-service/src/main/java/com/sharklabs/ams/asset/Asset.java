@@ -5,6 +5,7 @@ import com.sharklabs.ams.AssetImage.AssetImage;
 import com.sharklabs.ams.activitywall.ActivityWall;
 import com.sharklabs.ams.assetfield.AssetField;
 import com.sharklabs.ams.category.Category;
+import com.sharklabs.ams.usage.Usage;
 
 import javax.persistence.*;
 import java.io.Serializable;
@@ -38,14 +39,6 @@ public class Asset implements Serializable {
 
     private String tenantUUID;
 
-    private String primaryConsumptionValue;
-
-    private String primaryConsumptionUnit;
-
-    private String secondaryConsumptionValue;
-
-    private String secondaryConsumptionUnit;
-
     @JsonIgnore
     @ManyToOne(fetch = FetchType.EAGER, cascade = {CascadeType.DETACH,CascadeType.REFRESH,CascadeType.REMOVE})
     @JoinColumn(name = "category_id",referencedColumnName = "id")
@@ -59,6 +52,9 @@ public class Asset implements Serializable {
 
     @OneToOne(mappedBy = "asset", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     private ActivityWall activityWall;
+
+    @OneToMany(  cascade = CascadeType.ALL,mappedBy = "asset",fetch = FetchType.EAGER)
+    private Set<Usage> usages =new HashSet<>();
 
     public Long getId() {
         return id;
@@ -181,35 +177,15 @@ public class Asset implements Serializable {
         this.description = description;
     }
 
-    public String getPrimaryConsumptionValue() {
-        return primaryConsumptionValue;
+    public Set<Usage> getUsages() {
+        return usages;
     }
 
-    public void setPrimaryConsumptionValue(String primaryConsumptionValue) {
-        this.primaryConsumptionValue = primaryConsumptionValue;
+    public void setUsages(Set<Usage> usages) {
+        this.usages = usages;
     }
 
-    public String getPrimaryConsumptionUnit() {
-        return primaryConsumptionUnit;
-    }
-
-    public void setPrimaryConsumptionUnit(String primaryConsumptionUnit) {
-        this.primaryConsumptionUnit = primaryConsumptionUnit;
-    }
-
-    public String getSecondaryConsumptionValue() {
-        return secondaryConsumptionValue;
-    }
-
-    public void setSecondaryConsumptionValue(String secondaryConsumptionValue) {
-        this.secondaryConsumptionValue = secondaryConsumptionValue;
-    }
-
-    public String getSecondaryConsumptionUnit() {
-        return secondaryConsumptionUnit;
-    }
-
-    public void setSecondaryConsumptionUnit(String secondaryConsumptionUnit) {
-        this.secondaryConsumptionUnit = secondaryConsumptionUnit;
+    public void addUsage(Usage usage){
+        this.usages.add(usage);
     }
 }

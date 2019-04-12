@@ -1,4 +1,4 @@
-package com.sharklabs.ams.events.consumption;
+package com.sharklabs.ams.events.usage;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sharklabs.ams.api.AssetService;
@@ -13,25 +13,25 @@ import java.io.IOException;
 
 
 @EnableBinding(CustomChannels.class)
-public class ConsumptionHandler {
-    private static final Logger LOGGER = LogManager.getLogger(ConsumptionHandler.class);
+public class UsageHandler {
+    private static final Logger LOGGER = LogManager.getLogger(UsageHandler.class);
 
     @Autowired
     AssetService assetService;
 
-    @StreamListener("inBoundConsumptionCreate")
-    public void loggerSink(ConsumptionModel consumptionModel){
+    @StreamListener("inBoundUsageCreate")
+    public void loggerSink(UsageModel usageModel){
         try {
-            LOGGER.info("Receiving consumption units of an asset. Asset UUID: " + consumptionModel.getConsumption().getAssetUUID());
-            LOGGER.debug("Consumption Model Object: " + convertTOJOSN(consumptionModel));
-            switch (consumptionModel.getAction()) {
+            LOGGER.info("Receiving usage units of an asset. Asset UUID: " + usageModel.getUsage().getAssetUUID());
+            LOGGER.debug("Usage Model Object: " + convertTOJOSN(usageModel));
+            switch (usageModel.getAction()) {
                 case "CREATE":
-                    assetService.updateConsumptionUnits(consumptionModel.getConsumption());
+                    assetService.updateUsageUnits(usageModel.getUsage());
                     break;
 
             }
         }catch(Exception e){
-            LOGGER.error("Error while receiving consumption units of asset. Asset UUID: "+consumptionModel.getConsumption().getAssetUUID(),e);
+            LOGGER.error("Error while receiving usage units of asset. Asset UUID: "+ usageModel.getUsage().getAssetUUID(),e);
         }
     }
 
