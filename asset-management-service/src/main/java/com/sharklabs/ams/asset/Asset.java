@@ -51,7 +51,7 @@ public class Asset implements Serializable {
     @JoinColumn(name = "category_id",referencedColumnName = "id")
     private Category category;
 
-    @OneToMany(  cascade = CascadeType.ALL,mappedBy = "asset",fetch = FetchType.EAGER)
+    @OneToMany(  cascade = CascadeType.ALL,mappedBy = "asset",fetch = FetchType.LAZY)
     private Set<AssetField> assetFields =new HashSet<>();
 
     @OneToMany(  cascade = CascadeType.ALL,mappedBy = "asset",fetch = FetchType.EAGER)
