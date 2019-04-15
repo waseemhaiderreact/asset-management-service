@@ -15,6 +15,8 @@ import com.sharklabs.ams.asset.AssetResponse;
 import com.sharklabs.ams.assetfield.AssetField;
 import com.sharklabs.ams.category.Category;
 import com.sharklabs.ams.category.CategoryRepository;
+import com.sharklabs.ams.consumption.Consumption;
+import com.sharklabs.ams.consumption.ConsumptionRepository;
 import com.sharklabs.ams.field.Field;
 import com.sharklabs.ams.fieldtemplate.FieldTemplate;
 import com.sharklabs.ams.fieldtemplate.FieldTemplateRepository;
@@ -58,6 +60,9 @@ public class AssetService {
     ActivityWallRepository activityWallRepository;
     @Autowired
     MessageRepository messageRepository;
+    @Autowired
+    ConsumptionRepository consumptionRepository;
+
     @Value("${cloud.aws.credentials.accessKey}")
     private String accessKey;
 
@@ -674,6 +679,50 @@ public class AssetService {
     }
 
     /******************************************* END Asset Functions ************************************************/
+
+    /******************************************* Consumption Functions **********************************************/
+    //this functions adds a consumption unit of an asset e.g fuel entries of vehicles AMS_UC_25
+    /*
+     * Request object contains asset uuid of which this entry is to be made. We find the asset by uuid and add consumption entry in it's array
+     * and save the updated object
+     */
+    public DefaultResponse addConsumptionUnits(AddConsumptionUnitsRequest request){
+        LOGGER.debug("Inside service function of adding consumption units of asset. AssetUUID: "+request.getAssetUUID());
+        try{
+            //find asset by uuid
+            Asset asset=assetRepository.findAssetByUuid(request.getAssetUUID());
+            //add consumption unit in the array of consumptions of asset
+            asset.addConsumption(request.getConsumption());
+            request.getConsumption().setAsset(asset);
+            request.getConsumption().setUuid(UUID.randomUUID().toString());
+            assetRepository.save(asset);
+
+            return new DefaultResponse("Success","Consumption Unit Added Successfully","200",request.getConsumption().getUuid());
+        }catch(Exception e){
+            e.printStackTrace();
+            LOGGER.error("Error while adding consumption unit of asset. AssetUUID: "+request.getAssetUUID(),e);
+            return new DefaultResponse("Failure","Error while adding consumption unit of asset. Error Message: "+e.getMessage(),"500");
+        }
+    }
+
+    //this function deletes a consumption unit by uuid AMS_UC_26
+    public DefaultResponse deleteConsumptionUnits(String uuid){
+        LOGGER.debug("Inside service function of deleting consumption unit by uuid. UUID: "+uuid);
+        try{
+            //find consumption by uuid
+            Consumption consumption=consumptionRepository.findConsumptionByUuid(uuid);
+            //delete by id
+            consumptionRepository.deleteById(consumption.getId());
+
+            return new DefaultResponse("Success","Consumption unit deleted successfully","200");
+        }catch(Exception e){
+            e.printStackTrace();
+            LOGGER.error("Error while deleting consumption unit by uuid: UUID: "+uuid,e);
+            return new DefaultResponse("Failure","Error while deleting consumption unit by uuid. Error Message: "+e.getMessage(),"500");
+        }
+    }
+
+    /******************************************* END Consumption Functions **********************************************/
 
     /******************************************** Inspection Template Functions **************************************/
     //post inspection template AMS_UC_15

@@ -5,6 +5,7 @@ import com.sharklabs.ams.AssetImage.AssetImage;
 import com.sharklabs.ams.activitywall.ActivityWall;
 import com.sharklabs.ams.assetfield.AssetField;
 import com.sharklabs.ams.category.Category;
+import com.sharklabs.ams.consumption.Consumption;
 import com.sharklabs.ams.usage.Usage;
 
 import javax.persistence.*;
@@ -43,6 +44,8 @@ public class Asset implements Serializable {
 
     private String secondaryUsageUnit;
 
+    private String consumptionUnit;
+
     @JsonIgnore
     @ManyToOne(fetch = FetchType.EAGER, cascade = {CascadeType.DETACH,CascadeType.REFRESH,CascadeType.REMOVE})
     @JoinColumn(name = "category_id",referencedColumnName = "id")
@@ -59,6 +62,9 @@ public class Asset implements Serializable {
 
     @OneToMany(  cascade = CascadeType.ALL,mappedBy = "asset",fetch = FetchType.EAGER)
     private Set<Usage> usages =new HashSet<>();
+
+    @OneToMany(  cascade = CascadeType.ALL,mappedBy = "asset",fetch = FetchType.EAGER)
+    private Set<Consumption> consumptions =new HashSet<>();
 
     public Long getId() {
         return id;
@@ -208,4 +214,26 @@ public class Asset implements Serializable {
     public void setSecondaryUsageUnit(String secondaryUsageUnit) {
         this.secondaryUsageUnit = secondaryUsageUnit;
     }
+
+    public Set<Consumption> getConsumptions() {
+        return consumptions;
+    }
+
+    public void setConsumptions(Set<Consumption> consumptions) {
+        this.consumptions = consumptions;
+    }
+
+    public void addConsumption(Consumption consumption){
+        this.consumptions.add(consumption);
+    }
+
+    public String getConsumptionUnit() {
+        return consumptionUnit;
+    }
+
+    public void setConsumptionUnit(String consumptionUnit) {
+        this.consumptionUnit = consumptionUnit;
+    }
+
+
 }

@@ -262,6 +262,48 @@ public class AssetController {
 
     /*******************************************END Asset Functions**********************************************/
 
+    /******************************************* Consumption Functions *******************************************/
+
+    //post consumption units of asset AMS_UC_25
+    @RequestMapping(method = RequestMethod.POST,value="/consumption")
+    public @ResponseBody
+    ResponseEntity postConsumptionUnit(@RequestBody AddConsumptionUnitsRequest request) throws EmptyEntityTableException {
+        Util util = new Util();
+        util.setThreadContextForLogging();
+        LOGGER.info("Request received in controller to add consumption units of asset. Asset UUID: "+request.getAssetUUID());
+        ResponseEntity responseEntity=null;
+        DefaultResponse response=assetService.addConsumptionUnits(request);
+        if(response.getResponseCode().equals("200")){
+            responseEntity=new ResponseEntity<DefaultResponse>(response,HttpStatus.OK);
+        }
+        else if(response.getResponseCode().equals("500")){
+            responseEntity=new ResponseEntity<DefaultResponse>(response,HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+        util.clearThreadContextForLogging();
+        return responseEntity;
+    }
+
+    //delete consumption units of asset AMS_UC_26
+    @RequestMapping(method = RequestMethod.DELETE,value="/consumption",params = {"uuid"})
+    public @ResponseBody
+    ResponseEntity deleteConsumptionUnit(@RequestParam String uuid) throws EmptyEntityTableException {
+        Util util = new Util();
+        util.setThreadContextForLogging();
+        LOGGER.info("Request received in controller to delete consumption unit by uuid. UUID: "+uuid);
+        ResponseEntity responseEntity=null;
+        DefaultResponse response=assetService.deleteConsumptionUnits(uuid);
+        if(response.getResponseCode().equals("200")){
+            responseEntity=new ResponseEntity<DefaultResponse>(response,HttpStatus.OK);
+        }
+        else if(response.getResponseCode().equals("500")){
+            responseEntity=new ResponseEntity<DefaultResponse>(response,HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+        util.clearThreadContextForLogging();
+        return responseEntity;
+    }
+
+    /******************************************* END Consumption Functions *******************************************/
+
     /******************************************* Inspection Template Functions***********************************/
     //post inspection template AMS_UC_15
     @RequestMapping(method = RequestMethod.POST,value="/inspectiontemplates")
@@ -387,6 +429,7 @@ public class AssetController {
     }
 
     /*******************************************END File Functions ******************************************************/
+
     //create a new vehicle
 //    @RequestMapping(method = RequestMethod.POST,value="/vehicles")
 //    public @ResponseBody
