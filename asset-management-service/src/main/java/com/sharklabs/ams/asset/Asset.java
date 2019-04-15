@@ -39,6 +39,10 @@ public class Asset implements Serializable {
 
     private String tenantUUID;
 
+    private String primaryUsageUnit;
+
+    private String secondaryUsageUnit;
+
     @JsonIgnore
     @ManyToOne(fetch = FetchType.EAGER, cascade = {CascadeType.DETACH,CascadeType.REFRESH,CascadeType.REMOVE})
     @JoinColumn(name = "category_id",referencedColumnName = "id")
@@ -187,5 +191,21 @@ public class Asset implements Serializable {
 
     public void addUsage(Usage usage){
         this.usages.add(usage);
+    }
+
+    public String getPrimaryUsageUnit() {
+        return primaryUsageUnit;
+    }
+
+    public void setPrimaryUsageUnit(String primaryUsageUnit) {
+        this.primaryUsageUnit = primaryUsageUnit;
+    }
+
+    public String getSecondaryUsageUnit() {
+        return secondaryUsageUnit;
+    }
+
+    public void setSecondaryUsageUnit(String secondaryUsageUnit) {
+        this.secondaryUsageUnit = secondaryUsageUnit;
     }
 }

@@ -1015,15 +1015,16 @@ public class AssetService {
     /******************************************* END Class Functions **************************************************/
 
     /******************************************* Kafka Functions ******************************************************/
+    //this function will add the usage units of asset e.g odometer meter values
     public void updateUsageUnits(Usage usage){
         try{
             Asset asset=assetRepository.findAssetByUuid(usage.getAssetUUID());
             //whether to update primary usage unit and secondary usage unit
             boolean update=false;
-            if(usage.getPrimaryUsageUnit()!=null && usage.getPrimaryUsageValue()!=null){
+            if(usage.getPrimaryUsageValue()!=null){
                 update=true;
             }
-            if(usage.getSecondaryUsageUnit()!=null && usage.getSecondaryUsageValue()!=null){
+            if(usage.getSecondaryUsageValue()!=null){
                 update=true;
             }
             //update

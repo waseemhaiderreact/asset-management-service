@@ -15,8 +15,6 @@ public class Usage{
 
     private String primaryUsageValue;
     private String secondaryUsageValue;
-    private String primaryUsageUnit;
-    private String secondaryUsageUnit;
     private Date primaryUsageTime;
     private Double primaryUsageLat;
     private Double primaryUsageLng;
@@ -53,22 +51,6 @@ public class Usage{
 
     public void setSecondaryUsageValue(String secondaryUsageValue) {
         this.secondaryUsageValue = secondaryUsageValue;
-    }
-
-    public String getPrimaryUsageUnit() {
-        return primaryUsageUnit;
-    }
-
-    public void setPrimaryUsageUnit(String primaryUsageUnit) {
-        this.primaryUsageUnit = primaryUsageUnit;
-    }
-
-    public String getSecondaryUsageUnit() {
-        return secondaryUsageUnit;
-    }
-
-    public void setSecondaryUsageUnit(String secondaryUsageUnit) {
-        this.secondaryUsageUnit = secondaryUsageUnit;
     }
 
     public String getAssetUUID() {

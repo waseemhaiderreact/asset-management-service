@@ -22,6 +22,10 @@ public class AssetResponse {
 
     private String tenantUUID;
 
+    private String primaryUsageUnit;
+
+    private String secondaryUsageUnit;
+
     private Usage usage;
 
     private HashMap<String, Object> assetFields=new HashMap<String, Object>();
@@ -111,6 +115,22 @@ public class AssetResponse {
         this.usage = usage;
     }
 
+    public String getPrimaryUsageUnit() {
+        return primaryUsageUnit;
+    }
+
+    public void setPrimaryUsageUnit(String primaryUsageUnit) {
+        this.primaryUsageUnit = primaryUsageUnit;
+    }
+
+    public String getSecondaryUsageUnit() {
+        return secondaryUsageUnit;
+    }
+
+    public void setSecondaryUsageUnit(String secondaryUsageUnit) {
+        this.secondaryUsageUnit = secondaryUsageUnit;
+    }
+
     public void setAsset(Asset asset){
         this.id=asset.getId();
         this.activityWall=asset.getActivityWall();
@@ -118,6 +138,8 @@ public class AssetResponse {
         this.tenantUUID=asset.getTenantUUID();
         this.uuid=asset.getUuid();
         this.description=asset.getDescription();
+        this.primaryUsageUnit=asset.getPrimaryUsageUnit();
+        this.secondaryUsageUnit=asset.getSecondaryUsageUnit();
         //getting latest entry of the usage of asset
         Usage maxUsage=null;
         Long maxId=null;
