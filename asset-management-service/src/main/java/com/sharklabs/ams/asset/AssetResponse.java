@@ -26,6 +26,8 @@ public class AssetResponse {
 
     private String secondaryUsageUnit;
 
+    private String consumptionUnit;
+
     private Usage usage;
 
     private HashMap<String, Object> assetFields=new HashMap<String, Object>();
@@ -131,6 +133,14 @@ public class AssetResponse {
         this.secondaryUsageUnit = secondaryUsageUnit;
     }
 
+    public String getConsumptionUnit() {
+        return consumptionUnit;
+    }
+
+    public void setConsumptionUnit(String consumptionUnit) {
+        this.consumptionUnit = consumptionUnit;
+    }
+
     public void setAsset(Asset asset){
         this.id=asset.getId();
         this.activityWall=asset.getActivityWall();
@@ -140,6 +150,7 @@ public class AssetResponse {
         this.description=asset.getDescription();
         this.primaryUsageUnit=asset.getPrimaryUsageUnit();
         this.secondaryUsageUnit=asset.getSecondaryUsageUnit();
+        this.consumptionUnit=asset.getConsumptionUnit();
         //getting latest entry of the usage of asset
         Usage maxUsage=null;
         Long maxId=null;
