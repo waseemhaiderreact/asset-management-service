@@ -36,10 +36,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.datasource.DriverManagerDataSource;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.PostConstruct;
+import javax.sql.DataSource;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.util.*;
@@ -74,6 +77,18 @@ public class AssetService {
 
     @Value("${cloud.aws.bucketName}")
     private String bucket;
+
+    @Value("${spring.datasource.driver-class-name}")
+    private String dataSourceDriver="";
+
+    @Value("${spring.datasource.url}")
+    private String dataSourceUrl="";
+
+    @Value("${spring.datasource.username}")
+    private String dataSourceUserName="";
+
+    @Value("${spring.datasource.password}")
+    private String dataSourcePassword="";
 
     private static final String s3EnpointUrl="https://fms-issue-assets.s3.eu-west-2.amazonaws.com";
 
@@ -657,15 +672,21 @@ public class AssetService {
         LOGGER.debug("Inside service function of get get name and type of assets by uuids");
         GetNameAndTypeOfAssetsByUUIDSResponse response=new GetNameAndTypeOfAssetsByUUIDSResponse();
         try{
-            List<Asset> assets=assetRepository.findByUuidIn(request.getUuids());
+            JdbcTemplate jt;
+            jt = new JdbcTemplate(this.dataSource());
             HashMap<String, GetNameAndTypeOfAssetResponse> assetsHashmap=new HashMap<>();
-            for(Asset asset: assets){
-                GetNameAndTypeOfAssetResponse basicAssetInfo=new GetNameAndTypeOfAssetResponse();
-                basicAssetInfo.setName(asset.getName());
-                basicAssetInfo.setType(asset.getCategory().getName());
-                basicAssetInfo.setAssetNumber(asset.getAssetNumber());
-                assetsHashmap.put(asset.getUuid(),basicAssetInfo);
+            for(String uuid: request.getUuids()){
+                String sql="select a.name as asset_name,c.name as category_name,a.asset_number,a.uuid " +
+                        "from t_asset a inner join t_category c on a.category_id=c.id " +
+                        "where a.uuid=?";
+                Map<String,Object> assetResponse=jt.queryForMap(sql,uuid);
+                GetNameAndTypeOfAssetResponse asset=new GetNameAndTypeOfAssetResponse();
+                asset.setName(String.valueOf(assetResponse.get("asset_name")));
+                asset.setType(String.valueOf(assetResponse.get("category_name")));
+                asset.setAssetNumber(String.valueOf(assetResponse.get("asset_number")));
+                assetsHashmap.put(String.valueOf(assetResponse.get("uuid")),asset);
             }
+
             response.setAssets(assetsHashmap);
             response.setResponseIdentifier("Success");
             LOGGER.info("Received assets from database. Returning to controller");
@@ -1059,6 +1080,16 @@ public class AssetService {
 
     private String generateFileName(String filename){
         return new Date().getTime() + "-" + "asset_image_"+filename;
+    }
+
+    public DataSource dataSource() {
+        DriverManagerDataSource dataSource = new DriverManagerDataSource();
+
+        dataSource.setDriverClassName(dataSourceDriver);
+        dataSource.setUrl(dataSourceUrl);
+        dataSource.setUsername(dataSourceUserName);
+        dataSource.setPassword(dataSourcePassword);
+        return dataSource;
     }
 
     /******************************************* END Class Functions **************************************************/

@@ -20,7 +20,7 @@ public class AssetField {
     private String fieldValue; // will hold JSON
 
     @JsonIgnore
-    @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @ManyToOne(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
     @JoinColumn(name = "asset_id",referencedColumnName = "id")
     private Asset asset;
 
