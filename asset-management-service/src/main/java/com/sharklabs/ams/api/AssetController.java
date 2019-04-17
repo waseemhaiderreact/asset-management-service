@@ -14,8 +14,6 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.IOException;
-import java.util.List;
 import java.util.Optional;
 
 
@@ -282,6 +280,26 @@ public class AssetController {
         util.clearThreadContextForLogging();
         return responseEntity;
     }
+
+    @RequestMapping(method=RequestMethod.GET,value="/consumption",params={"uuid","offset","limit"})
+    public @ResponseBody
+    ResponseEntity getPaginatedConsumptions(@RequestParam String uuid, @RequestParam int offset, @RequestParam int limit){
+        Util util = new Util();
+        util.setThreadContextForLogging();
+        LOGGER.info("Request received in controller to get consumption units of asset. Asset UUID: "+uuid+" with offset: "+offset+" and limit: "+limit);
+
+        GetPaginatedConsumptionsResponse response=assetService.getPaginatedConsumptions(uuid, offset,limit);
+        ResponseEntity responseEntity;
+        if(response.getResponseIdentifier().contentEquals("Success")){
+            responseEntity=new ResponseEntity<>(response,HttpStatus.OK);
+        }
+        else{
+            responseEntity=new ResponseEntity<>(response,HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+        util.clearThreadContextForLogging();
+        return responseEntity;
+    }
+
 
     //delete consumption units of asset AMS_UC_26
     @RequestMapping(method = RequestMethod.DELETE,value="/consumption",params = {"uuid"})

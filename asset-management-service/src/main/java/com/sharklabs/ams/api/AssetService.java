@@ -716,6 +716,7 @@ public class AssetService {
             asset.addConsumption(request.getConsumption());
             request.getConsumption().setAsset(asset);
             request.getConsumption().setUuid(UUID.randomUUID().toString());
+            request.getConsumption().setCreatedAt(new Date());
             assetRepository.save(asset);
 
             return new DefaultResponse("Success","Consumption Unit Added Successfully","200",request.getConsumption().getUuid());
@@ -724,6 +725,24 @@ public class AssetService {
             LOGGER.error("Error while adding consumption unit of asset. AssetUUID: "+request.getAssetUUID(),e);
             return new DefaultResponse("Failure","Error while adding consumption unit of asset. Error Message: "+e.getMessage(),"500");
         }
+    }
+
+    //get paginated consumptions
+    GetPaginatedConsumptionsResponse getPaginatedConsumptions(String uuid, int offset, int limit){
+        LOGGER.debug("Inside service to get consumption units of asset. Asset UUID: "+uuid+" with offset: "+offset+" and limit: "+limit);
+
+        GetPaginatedConsumptionsResponse response=new GetPaginatedConsumptionsResponse();
+        try{
+            Asset asset=assetRepository.findAssetByUuid(uuid);
+            Page<Consumption> consumptions=consumptionRepository.findByAsset(asset,new PageRequest(offset,limit));
+           response.setConsumptions(consumptions);
+           response.setResponseIdentifier("Success");
+
+        }
+        catch (Exception e){
+            response.setResponseIdentifier("Failure");
+        }
+        return response;
     }
 
     //this function deletes a consumption unit by uuid AMS_UC_26

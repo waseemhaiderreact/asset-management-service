@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.sharklabs.ams.asset.Asset;
 
 import javax.persistence.*;
+import java.util.Date;
 
 @Entity(name="t_consumption")
 public class Consumption {
@@ -14,6 +15,8 @@ public class Consumption {
     private String uuid;
 
     private String consumptionValue;
+
+    private Date createdAt;
 
     @JsonIgnore
     @ManyToOne(fetch = FetchType.EAGER, cascade = {CascadeType.DETACH,CascadeType.REFRESH,CascadeType.PERSIST,CascadeType.MERGE})
@@ -50,5 +53,13 @@ public class Consumption {
 
     public void setUuid(String uuid) {
         this.uuid = uuid;
+    }
+
+    public Date getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(Date createdAt) {
+        this.createdAt = createdAt;
     }
 }
