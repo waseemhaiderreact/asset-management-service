@@ -283,7 +283,7 @@ public class AssetController {
 
     @RequestMapping(method=RequestMethod.GET,value="/consumption",params={"uuid","offset","limit"})
     public @ResponseBody
-    ResponseEntity getPaginatedConsumptions(@RequestParam String uuid, @RequestParam int offset, @RequestParam int limit){
+    ResponseEntity getPaginatedConsumptions(@RequestParam String uuid, @RequestParam int offset, @RequestParam int limit) throws EmptyEntityTableException{
         Util util = new Util();
         util.setThreadContextForLogging();
         LOGGER.info("Request received in controller to get consumption units of asset. Asset UUID: "+uuid+" with offset: "+offset+" and limit: "+limit);
