@@ -1064,8 +1064,8 @@ public class AssetService {
     public UploadFileResponse uploadFile(MultipartFile file){
         UploadFileResponse response=new UploadFileResponse();
         LOGGER.debug("inside service function of uploading file to s3");
+        File convFile = new File(file.getOriginalFilename());
         try{
-            File convFile = new File(file.getOriginalFilename());
             convFile.createNewFile();
             FileOutputStream fos = new FileOutputStream(convFile);
             fos.write(file.getBytes());
@@ -1082,6 +1082,7 @@ public class AssetService {
             LOGGER.error("Error while uploading file to s3",e);
             e.printStackTrace();
             response.setResponseIdentifier("Failure");
+            convFile.delete();
             return response;
         }
     }
