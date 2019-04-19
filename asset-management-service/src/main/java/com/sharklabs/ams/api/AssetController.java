@@ -223,9 +223,14 @@ public class AssetController {
         Util util = new Util();
         util.setThreadContextForLogging();
         LOGGER.info("Request received in controller to get assets.");
-        ResponseEntity responseEntity=Optional.ofNullable(assetService.getAssets(tenantuuid))
-                .map(resp -> new ResponseEntity<GetAssetsResponse>(resp, HttpStatus.OK))
-                .orElseThrow(() -> new EmptyEntityTableException("No Asset exists",0L));
+        ResponseEntity responseEntity=null;
+        GetAssetsResponse response=assetService.getAssets(tenantuuid);
+        if(response.getResponseIdentifier().equals("Success")){
+            responseEntity=new ResponseEntity<GetAssetsResponse>(response,HttpStatus.OK);
+        }
+        else if(response.getResponseIdentifier().equals("Failure")){
+            responseEntity=new ResponseEntity<GetAssetsResponse>(response,HttpStatus.INTERNAL_SERVER_ERROR);
+        }
         util.clearThreadContextForLogging();
         return responseEntity;
     }
