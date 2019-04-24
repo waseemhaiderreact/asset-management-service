@@ -676,11 +676,23 @@ public class AssetService {
             jt = new JdbcTemplate(this.dataSource());
             HashMap<String, GetNameAndTypeOfAssetResponse> assetsHashmap=new HashMap<>();
             for(String uuid: request.getUuids()){
-                String sql="select a.name as asset_name,c.name as category_name,a.asset_number,a.uuid " +
+                String sql="select a.id as id,a.name as asset_name,c.name as category_name,a.asset_number,a.uuid " +
                         "from t_asset a inner join t_category c on a.category_id=c.id " +
                         "where a.uuid=?";
                 Map<String,Object> assetResponse=jt.queryForMap(sql,uuid);
+                sql="select i.image_url as image " +
+                        "from t_asset_images i " +
+                        "where i.asset_id=? " +
+                        "limit 1";
                 GetNameAndTypeOfAssetResponse asset=new GetNameAndTypeOfAssetResponse();
+                Map<String, Object> imageResponse=null;
+                try {
+                     imageResponse= jt.queryForMap(sql, Long.valueOf(String.valueOf(assetResponse.get("id"))));
+                     asset.setImageUrl(String.valueOf(imageResponse.get("image")));
+                }catch(org.springframework.dao.EmptyResultDataAccessException e){
+                    LOGGER.debug("There are no images of this asset.Asset UUID: "+uuid);
+                }
+
                 asset.setName(String.valueOf(assetResponse.get("asset_name")));
                 asset.setType(String.valueOf(assetResponse.get("category_name")));
                 asset.setAssetNumber(String.valueOf(assetResponse.get("asset_number")));

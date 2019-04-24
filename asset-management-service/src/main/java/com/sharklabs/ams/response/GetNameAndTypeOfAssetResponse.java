@@ -5,6 +5,7 @@ public class GetNameAndTypeOfAssetResponse {
     private String type;
     private String assetNumber;
     private String uuid;
+    private String imageUrl;
 
     public GetNameAndTypeOfAssetResponse(String name, String type, String assetNumber,String uuid) {
         this.name = name;
@@ -14,6 +15,14 @@ public class GetNameAndTypeOfAssetResponse {
     }
 
     public GetNameAndTypeOfAssetResponse() {
+    }
+
+    public String getImageUrl() {
+        return imageUrl;
+    }
+
+    public void setImageUrl(String imageUrl) {
+        this.imageUrl = imageUrl;
     }
 
     public String getName() {
