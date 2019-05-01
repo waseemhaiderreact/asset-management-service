@@ -645,11 +645,11 @@ public class AssetService {
     /*
      * This function gets limit and offset and returns page of assets
      */
-    public GetPaginatedAssetsResponse getPaginatedAssets(int offset,int limit){
+    public GetPaginatedAssetsResponse getPaginatedAssets(int offset,int limit,String tenantuuid){
         LOGGER.debug("Inside service function of get page of assets");
         GetPaginatedAssetsResponse response=new GetPaginatedAssetsResponse();
         try{
-            Page<Asset> assets=assetRepository.findByIdNotNull(new PageRequest(offset,limit));
+            Page<Asset> assets=assetRepository.findByTenantUUID(tenantuuid,new PageRequest(offset,limit));
             response.setAssets(assets);
             response.setResponseIdentifier("Success");
             LOGGER.info("Received assets from database. Returning to controller");

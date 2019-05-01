@@ -236,13 +236,13 @@ public class AssetController {
     }
 
     //get paginated assets AMS_UC_22
-    @RequestMapping(method = RequestMethod.GET,value="",params = {"offset","limit"})
+    @RequestMapping(method = RequestMethod.GET,value="",params = {"offset","limit","tenantuuid"})
     public @ResponseBody
-    ResponseEntity getPaginatedAssets(@RequestParam int offset,@RequestParam int limit) throws EmptyEntityTableException {
+    ResponseEntity getPaginatedAssets(@RequestParam int offset,@RequestParam int limit,@RequestParam String tenantuuid) throws EmptyEntityTableException {
         Util util = new Util();
         util.setThreadContextForLogging();
         LOGGER.info("Request received in controller to get page of assets.");
-        ResponseEntity responseEntity=Optional.ofNullable(assetService.getPaginatedAssets(offset, limit))
+        ResponseEntity responseEntity=Optional.ofNullable(assetService.getPaginatedAssets(offset, limit,tenantuuid))
                 .map(resp -> new ResponseEntity<GetPaginatedAssetsResponse>(resp, HttpStatus.OK))
                 .orElseThrow(() -> new EmptyEntityTableException("No Asset exists",0L));
         util.clearThreadContextForLogging();

@@ -21,7 +21,7 @@ public interface AssetRepository extends JpaRepository<Asset,Long> {
     @Transactional
     Integer deleteById(Long id);
 
-    Page<Asset> findByIdNotNull(Pageable pageable);
+    Page<Asset> findByTenantUUID(String tenantUUID,Pageable pageable);
 
 //    List<Asset> findByUuidIn(List<String> uuids);
 
