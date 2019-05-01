@@ -660,8 +660,9 @@ public class AssetService {
             sql="select a.id as id, a.asset_number as assetNumber, a.description as description, a.inventory as inventory, " +
                     " a.manufacture as manufacture, a.model_number as modelNumber, a.name as name, a.purchase_date as purchaseDate, a.tenantuuid as tenantUUID, a.uuid as uuid, " +
                     " a.warranty as warranty, a.primary_usage_unit as primaryUsageUnit, a.secondary_usage_unit as secondaryUsageUnit, a.consumption_unit as consumptionUnit " +
-                    " from t_asset a where a.tenantuuid=?";
-            List<Map<String,Object>> assetsResponse=jt.queryForList(sql,tenantuuid);
+                    " from t_asset a where a.tenantuuid=? " +
+                    "limit ?,?";
+            List<Map<String,Object>> assetsResponse=jt.queryForList(sql,tenantuuid,lowerLimit,upperLimit);
             List<AssetModelForTableView> assetModelList=new ArrayList<>();
             for(Map<String,Object> assetResponse: assetsResponse){
                 AssetModelForTableView assetModel=new AssetModelForTableView();
