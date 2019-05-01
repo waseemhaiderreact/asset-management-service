@@ -8,10 +8,7 @@ import com.amazonaws.services.s3.model.PutObjectRequest;
 import com.sharklabs.ams.AssetImage.AssetImage;
 import com.sharklabs.ams.activitywall.ActivityWall;
 import com.sharklabs.ams.activitywall.ActivityWallRepository;
-import com.sharklabs.ams.asset.Asset;
-import com.sharklabs.ams.asset.AssetModel;
-import com.sharklabs.ams.asset.AssetRepository;
-import com.sharklabs.ams.asset.AssetResponse;
+import com.sharklabs.ams.asset.*;
 import com.sharklabs.ams.assetfield.AssetField;
 import com.sharklabs.ams.category.Category;
 import com.sharklabs.ams.category.CategoryRepository;
@@ -27,6 +24,7 @@ import com.sharklabs.ams.inspectiontemplate.InspectionTemplate;
 import com.sharklabs.ams.inspectiontemplate.InspectionTemplateRepository;
 import com.sharklabs.ams.message.Message;
 import com.sharklabs.ams.message.MessageRepository;
+import com.sharklabs.ams.page.AssetPage;
 import com.sharklabs.ams.request.*;
 import com.sharklabs.ams.response.*;
 import com.sharklabs.ams.usage.Usage;
@@ -649,7 +647,41 @@ public class AssetService {
         LOGGER.debug("Inside service function of get page of assets");
         GetPaginatedAssetsResponse response=new GetPaginatedAssetsResponse();
         try{
-            Page<Asset> assets=assetRepository.findByTenantUUID(tenantuuid,new PageRequest(offset,limit));
+            JdbcTemplate jt;
+            jt = new JdbcTemplate(this.dataSource());
+            int lowerLimit=offset*limit;
+            int upperLimit=offset*limit+limit;
+            AssetPage assets=new AssetPage();
+            //get total count of assets
+            String sql="select count(*) as count from t_asset a where a.tenantuuid=?";
+            Map<String,Object> totalAssetsResponse=jt.queryForMap(sql,tenantuuid);
+            assets.setTotalElements((Long)(totalAssetsResponse.get("count")));
+            //getting page of assets
+            sql="select a.id as id, a.asset_number as assetNumber, a.description as description, a.inventory as inventory, " +
+                    " a.manufacture as manufacture, a.model_number as modelNumber, a.name as name, a.purchase_date as purchaseDate, a.tenantuuid as tenantUUID, a.uuid as uuid, " +
+                    " a.warranty as warranty, a.primary_usage_unit as primaryUsageUnit, a.secondary_usage_unit as secondaryUsageUnit, a.consumption_unit as consumptionUnit " +
+                    " from t_asset a where a.tenantuuid=?";
+            List<Map<String,Object>> assetsResponse=jt.queryForList(sql,tenantuuid);
+            List<AssetModelForTableView> assetModelList=new ArrayList<>();
+            for(Map<String,Object> assetResponse: assetsResponse){
+                AssetModelForTableView assetModel=new AssetModelForTableView();
+                assetModel.setId((Long)assetResponse.get("id"));
+                assetModel.setAssetNumber(String.valueOf(assetResponse.get("assetNumber")));
+                assetModel.setConsumptionUnit(String.valueOf(assetResponse.get("consumptionUnit")));
+                assetModel.setDescription(String.valueOf(assetResponse.get("description")));
+                assetModel.setInventory(String.valueOf(assetResponse.get("inventory")));
+                assetModel.setManufacture(String.valueOf(assetResponse.get("manufacture")));
+                assetModel.setModelNumber(String.valueOf(assetResponse.get("modelNumber")));
+                assetModel.setName(String.valueOf(assetResponse.get("name")));
+                assetModel.setPrimaryUsageUnit(String.valueOf(assetResponse.get("primaryUsageUnit")));
+                assetModel.setSecondaryUsageUnit(String.valueOf(assetResponse.get("secondaryUsageUnit")));
+                assetModel.setTenantUUID(String.valueOf(assetResponse.get("tenantUUID")));
+                assetModel.setUuid(String.valueOf(assetResponse.get("uuid")));
+                assetModel.setWarranty(String.valueOf(assetResponse.get("warranty")));
+                assetModel.setPurchaseDate((Date)assetResponse.get("purchaseDate"));
+                assetModelList.add(assetModel);
+            }
+            assets.setContent(assetModelList);
             response.setAssets(assets);
             response.setResponseIdentifier("Success");
             LOGGER.info("Received assets from database. Returning to controller");

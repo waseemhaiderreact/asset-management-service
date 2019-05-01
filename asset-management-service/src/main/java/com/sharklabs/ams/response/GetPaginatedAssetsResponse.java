@@ -1,11 +1,11 @@
 package com.sharklabs.ams.response;
 
-import com.sharklabs.ams.asset.Asset;
-import org.springframework.data.domain.Page;
+import com.sharklabs.ams.asset.AssetModelForTableView;
+import com.sharklabs.ams.page.AssetPage;
 
 public class GetPaginatedAssetsResponse {
     private String responseIdentifier;
-    private Page<Asset> assets;
+    private AssetPage assets;
 
     public String getResponseIdentifier() {
         return responseIdentifier;
@@ -15,11 +15,11 @@ public class GetPaginatedAssetsResponse {
         this.responseIdentifier = responseIdentifier;
     }
 
-    public Page<Asset> getAssets() {
+    public AssetPage getAssets() {
         return assets;
     }
 
-    public void setAssets(Page<Asset> assets) {
+    public void setAssets(AssetPage assets) {
         this.assets = assets;
     }
 }
