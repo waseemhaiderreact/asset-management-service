@@ -22,6 +22,7 @@ public class Usage{
     private Double secondaryUsageLat;
     private Double secondaryUsageLng;
 
+    private Date createdAt;
     private String assetUUID; //asset uuid (the asset of which these usage values will be stored)
 
     @JsonIgnore
@@ -117,4 +118,11 @@ public class Usage{
         this.asset = asset;
     }
 
+    public Date getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(Date createdAt) {
+        this.createdAt = createdAt;
+    }
 }

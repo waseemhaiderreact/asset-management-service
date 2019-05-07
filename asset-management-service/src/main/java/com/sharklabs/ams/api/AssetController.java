@@ -286,6 +286,7 @@ public class AssetController {
         return responseEntity;
     }
 
+
     @RequestMapping(method=RequestMethod.GET,value="/consumption",params={"uuid","offset","limit"})
     public @ResponseBody
     ResponseEntity getPaginatedConsumptions(@RequestParam String uuid, @RequestParam int offset, @RequestParam int limit) throws EmptyEntityTableException{
@@ -326,6 +327,28 @@ public class AssetController {
     }
 
     /******************************************* END Consumption Functions *******************************************/
+
+    /******************************************* Usages Functions ****************************************************/
+    //get usages by asset AMS_UC_27
+    @RequestMapping(method = RequestMethod.GET,value="/usages",params = {"assetuuid","offset","limit"})
+    public @ResponseBody
+    ResponseEntity getPaginatedUsagesByAsset(@RequestParam String assetuuid,@RequestParam int offset,@RequestParam int limit)  {
+        Util util = new Util();
+        util.setThreadContextForLogging();
+        LOGGER.info("Request received in controller to get usages by asset. AssetUUID: "+assetuuid+" Offset: "+offset+" Limit: "+limit);
+        ResponseEntity responseEntity=null;
+        GetPaginatedUsagesByAssetResponse response=assetService.getPaginatedUsagesByAsset(assetuuid,offset,limit);
+        if(response.getResponseIdentifier().equals("Success")){
+            responseEntity=new ResponseEntity<GetPaginatedUsagesByAssetResponse>(response,HttpStatus.OK);
+        }
+        else if(response.getResponseIdentifier().equals("Failure")){
+            responseEntity=new ResponseEntity<GetPaginatedUsagesByAssetResponse>(response,HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+        util.clearThreadContextForLogging();
+        return responseEntity;
+    }
+
+    /******************************************* END Usages Functions ****************************************************/
 
     /******************************************* Inspection Template Functions***********************************/
     //post inspection template AMS_UC_15

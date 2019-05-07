@@ -16,5 +16,5 @@ public interface ConsumptionRepository extends JpaRepository<Consumption,Long> {
     @Transactional
     Integer deleteById(Long id);
 
-    Page<Consumption> findByAsset(Asset asset, Pageable pageable);
+    Page<Consumption> findByAssetOrderByCreatedAt(Asset asset, Pageable pageable);
 }

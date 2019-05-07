@@ -10,6 +10,7 @@ import com.sharklabs.ams.activitywall.ActivityWall;
 import com.sharklabs.ams.activitywall.ActivityWallRepository;
 import com.sharklabs.ams.asset.*;
 import com.sharklabs.ams.assetfield.AssetField;
+import com.sharklabs.ams.attachment.Attachment;
 import com.sharklabs.ams.category.Category;
 import com.sharklabs.ams.category.CategoryRepository;
 import com.sharklabs.ams.consumption.Consumption;
@@ -28,6 +29,7 @@ import com.sharklabs.ams.page.AssetPage;
 import com.sharklabs.ams.request.*;
 import com.sharklabs.ams.response.*;
 import com.sharklabs.ams.usage.Usage;
+import com.sharklabs.ams.usage.UsageRepository;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -63,6 +65,8 @@ public class AssetService {
     MessageRepository messageRepository;
     @Autowired
     ConsumptionRepository consumptionRepository;
+    @Autowired
+    UsageRepository usageRepository;
 
     @Value("${cloud.aws.credentials.accessKey}")
     private String accessKey;
@@ -77,18 +81,18 @@ public class AssetService {
     private String bucket;
 
     @Value("${spring.datasource.driver-class-name}")
-    private String dataSourceDriver="";
+    private String dataSourceDriver = "";
 
     @Value("${spring.datasource.url}")
-    private String dataSourceUrl="";
+    private String dataSourceUrl = "";
 
     @Value("${spring.datasource.username}")
-    private String dataSourceUserName="";
+    private String dataSourceUserName = "";
 
     @Value("${spring.datasource.password}")
-    private String dataSourcePassword="";
+    private String dataSourcePassword = "";
 
-    private static final String s3EnpointUrl="https://fms-issue-assets.s3.eu-west-2.amazonaws.com";
+    private static final String s3EnpointUrl = "https://fms-issue-assets.s3.eu-west-2.amazonaws.com";
 
     private AmazonS3 s3client;
 
@@ -108,12 +112,12 @@ public class AssetService {
     UUID is also set before adding category in the db.
     Then category is saved in db
     */
-    public DefaultResponse addCategory(AddCategoryRequest addCategoryRequest){
+    DefaultResponse addCategory(AddCategoryRequest addCategoryRequest) {
         try {
             LOGGER.debug("Inside add category service function");
             addCategoryRequest.getCategory().setUuid(UUID.randomUUID().toString());
             //if children exists
-            if(addCategoryRequest.getCategory().getFieldTemplate()!=null) {
+            if (addCategoryRequest.getCategory().getFieldTemplate() != null) {
                 //if children is not already saved in db
                 if (addCategoryRequest.getCategory().getFieldTemplate().getId() == null) {
                     LOGGER.debug("Category has a field template");
@@ -126,7 +130,7 @@ public class AssetService {
                 }
             }
             //if children exists
-            if(addCategoryRequest.getCategory().getInspectionTemplate()!=null) {
+            if (addCategoryRequest.getCategory().getInspectionTemplate() != null) {
                 //if children is not already saved in db
                 if (addCategoryRequest.getCategory().getInspectionTemplate().getId() == null) {
                     LOGGER.debug("Category has an inspection template");
@@ -143,44 +147,44 @@ public class AssetService {
                 }
             }
             //if children exists
-            for(Asset asset: addCategoryRequest.getCategory().getAssets()){
+            for (Asset asset : addCategoryRequest.getCategory().getAssets()) {
                 asset.setCategory(addCategoryRequest.getCategory());
                 asset.setUuid(UUID.randomUUID().toString());
-                ActivityWall activityWall=new ActivityWall();
+                ActivityWall activityWall = new ActivityWall();
                 activityWall.setAsset(asset);
                 asset.setActivityWall(activityWall);
                 activityWall.setUuid(UUID.randomUUID().toString());
-                for(AssetField assetField: asset.getAssetFields()){
+                for (AssetField assetField : asset.getAssetFields()) {
                     assetField.setUuid(UUID.randomUUID().toString());
                     assetField.setAsset(asset);
                 }
             }
             categoryRepository.save(addCategoryRequest.getCategory());
             LOGGER.info("Category Added Successfully");
-            return new DefaultResponse("Success","Category added succssfully","200",addCategoryRequest.getCategory().getUuid());
-        }
-        catch(Exception e){
+            return new DefaultResponse("Success", "Category added succssfully", "200", addCategoryRequest.getCategory().getUuid());
+        } catch (Exception e) {
             e.printStackTrace();
-            LOGGER.error("Error while adding category" , e);
-            return new DefaultResponse("Failure","Error in add category: "+e.getMessage(),"500");
+            LOGGER.error("Error while adding category", e);
+            return new DefaultResponse("Failure", "Error in add category: " + e.getMessage(), "500");
         }
     }
+
     //delete category (AMS_UC_05)
     /*
         This function deletes a category from db and all it's children(if a category is deleted
         then it's assets,field template, inspection template will also be deleted)
      */
-    public DefaultResponse deleteCategory(String id){
+    DefaultResponse deleteCategory(String id) {
         LOGGER.debug("Inside Service function of deleting category");
-        try{
-            Category category=categoryRepository.findCategoryByUuid(id);
+        try {
+            Category category = categoryRepository.findCategoryByUuid(id);
             categoryRepository.deleteById(category.getId());
             LOGGER.info("Category deleted Successfully");
-            return new DefaultResponse("Success","Category deleted Successfully","200");
-        }catch(Exception e){
+            return new DefaultResponse("Success", "Category deleted Successfully", "200");
+        } catch (Exception e) {
             e.printStackTrace();
-            LOGGER.error("Error while deleting category" , e);
-            return new DefaultResponse("Failure","Error in deleting category: "+e.getMessage(),"500");
+            LOGGER.error("Error while deleting category", e);
+            return new DefaultResponse("Failure", "Error in deleting category: " + e.getMessage(), "500");
         }
     }
 
@@ -188,7 +192,7 @@ public class AssetService {
     /*
         This function gets a category from db. We pass it the uuid of category and in response we get a category
      */
-    public GetCategoryResponse getCategory(String id){
+    GetCategoryResponse getCategory(String id) {
         LOGGER.debug("Inside Service function of get category");
         GetCategoryResponse response = new GetCategoryResponse();
         try {
@@ -197,10 +201,10 @@ public class AssetService {
             response.getCategory().setAssets(null);
             LOGGER.info("Received Category From database. Sending it to controller");
             return response;
-        }catch(Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
             response.setResponseIdentifier("Failure");
-            LOGGER.error("Error while getting category from db. Category UUID: "+ id,e);
+            LOGGER.error("Error while getting category from db. Category UUID: " + id, e);
             return response;
         }
     }
@@ -209,21 +213,21 @@ public class AssetService {
     /*
         This function just returns all the categories (List of categories) from db
      */
-    public GetCategoriesResponse GetAllCategories(String tenantUUID){
+    GetCategoriesResponse GetAllCategories(String tenantUUID) {
         LOGGER.debug("Inside Service function of get all categories");
         GetCategoriesResponse response = new GetCategoriesResponse();
         try {
             response.setCategories(categoryRepository.findByTenantUUID(tenantUUID));
-            for(Category category: response.getCategories()){
+            for (Category category : response.getCategories()) {
                 category.setAssets(null);
             }
             response.setResponseIdentifier("Success");
             LOGGER.info("Received Categories From database. Sending it to controller");
             return response;
-        }catch(Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
             response.setResponseIdentifier("Failure");
-            LOGGER.error("Error while getting all categories from db.",e);
+            LOGGER.error("Error while getting all categories from db.", e);
             return response;
         }
     }
@@ -238,21 +242,21 @@ public class AssetService {
         when a object is created therefore, this additional code sets the id of the object. If we don't set the id of object then the old category
         won't be updated instead a new one will be created
      */
-    public EditCategoryResponse editCategory(EditCategoryRequest editCategoryRequest){
+    EditCategoryResponse editCategory(EditCategoryRequest editCategoryRequest) {
         LOGGER.debug("Inside Service function of edit category");
         EditCategoryResponse response = new EditCategoryResponse();
         try {
-            Category category=categoryRepository.findCategoryByUuid(editCategoryRequest.getCategory().getUuid());
+            Category category = categoryRepository.findCategoryByUuid(editCategoryRequest.getCategory().getUuid());
             //if id of category is null (This will be null when we execute the test library otherwise by frontend, id will be passed).
             //This if is for Test Library only
-            if(editCategoryRequest.getCategory().getId()==null){
+            if (editCategoryRequest.getCategory().getId() == null) {
                 editCategoryRequest.getCategory().setId(category.getId());
                 editCategoryRequest.getCategory().setFieldTemplate(category.getFieldTemplate());
                 editCategoryRequest.getCategory().setAssets(category.getAssets());
                 editCategoryRequest.getCategory().setInspectionTemplate(category.getInspectionTemplate());
             }
             //setting parent of children if exists
-            if(editCategoryRequest.getCategory().getInspectionTemplate() !=null) {
+            if (editCategoryRequest.getCategory().getInspectionTemplate() != null) {
                 editCategoryRequest.getCategory().getInspectionTemplate().setCategory(editCategoryRequest.getCategory());
                 for (InspectionItemCategory inspectionItemCategory : editCategoryRequest.getCategory().getInspectionTemplate().getInspectionItemCategories()) {
                     inspectionItemCategory.setInspectionTemplate(editCategoryRequest.getCategory().getInspectionTemplate());
@@ -261,16 +265,16 @@ public class AssetService {
                     }
                 }
             }
-            if(editCategoryRequest.getCategory().getFieldTemplate()!=null) {
+            if (editCategoryRequest.getCategory().getFieldTemplate() != null) {
                 editCategoryRequest.getCategory().getFieldTemplate().setCategory(editCategoryRequest.getCategory());
                 for (Field field : editCategoryRequest.getCategory().getFieldTemplate().getFields()) {
                     field.setFieldTemplate(editCategoryRequest.getCategory().getFieldTemplate());
                 }
             }
 
-            for(Asset asset: editCategoryRequest.getCategory().getAssets()){
+            for (Asset asset : editCategoryRequest.getCategory().getAssets()) {
                 asset.setCategory(editCategoryRequest.getCategory());
-                for(AssetField assetField: asset.getAssetFields()){
+                for (AssetField assetField : asset.getAssetFields()) {
                     assetField.setAsset(asset);
                 }
             }
@@ -280,10 +284,10 @@ public class AssetService {
             response.setResponseIdentifier("Success");
             LOGGER.info("Category Updated Successfully. Sending updated Category to controller");
             return response;
-        }catch(Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
             response.setResponseIdentifier("Failure");
-            LOGGER.error("Error while updating category or getting updated category from db. ",e);
+            LOGGER.error("Error while updating category or getting updated category from db. ", e);
             return response;
         }
     }
@@ -300,35 +304,34 @@ public class AssetService {
     Then we assign a new uuid to field template and set the parent of it's children and also assigning uuid of children.
     Then save the object
      */
-    public DefaultResponse addFieldTemplate(AddFieldTemplateRequest addFieldTemplateRequest){
+    DefaultResponse addFieldTemplate(AddFieldTemplateRequest addFieldTemplateRequest) {
         LOGGER.debug("Inside Service function of add field template");
         try {
             //get category from db
-            Category category=null;
-            if(addFieldTemplateRequest.getCategoryId()!=null) {
+            Category category = null;
+            if (addFieldTemplateRequest.getCategoryId() != null) {
                 category = categoryRepository.findCategoryByUuid(addFieldTemplateRequest.getCategoryId());
                 addFieldTemplateRequest.getFieldTemplate().setCategory(category);
                 category.setFieldTemplate(addFieldTemplateRequest.getFieldTemplate());
-            }
-            else{
+            } else {
                 LOGGER.error("category uuid is not given for field template");
-                return new DefaultResponse("Failure", "Category id not present in request object","500");
+                return new DefaultResponse("Failure", "Category id not present in request object", "500");
             }
             //setting uuid
             addFieldTemplateRequest.getFieldTemplate().setUuid(UUID.randomUUID().toString());
             //setting parent of all children and also setting uuid
-            for(Field field: addFieldTemplateRequest.getFieldTemplate().getFields()){
+            for (Field field : addFieldTemplateRequest.getFieldTemplate().getFields()) {
                 field.setFieldTemplate(addFieldTemplateRequest.getFieldTemplate());
                 field.setUuid(UUID.randomUUID().toString());
             }
             //saving in db
             categoryRepository.save(category);
             LOGGER.info("Field Template Added Successfully");
-            return new DefaultResponse("Success","Field Template Added Successfully","200",addFieldTemplateRequest.getFieldTemplate().getUuid());
-        }catch(Exception e){
+            return new DefaultResponse("Success", "Field Template Added Successfully", "200", addFieldTemplateRequest.getFieldTemplate().getUuid());
+        } catch (Exception e) {
             e.printStackTrace();
-            LOGGER.error("Error while adding field template ",e);
-            return new DefaultResponse("Failure", "Error in adding field template. Error: "+e.getMessage(),"500");
+            LOGGER.error("Error while adding field template ", e);
+            return new DefaultResponse("Failure", "Error in adding field template. Error: " + e.getMessage(), "500");
         }
     }
 
@@ -340,21 +343,21 @@ public class AssetService {
     Then, the parent of field template is set to null because we don't need to delete it's parent(Category)
     Then, field template is deleted
      */
-    public DefaultResponse deleteFieldTemplate(String id){
+    DefaultResponse deleteFieldTemplate(String id) {
         LOGGER.debug("Inside Service function of deleting field template");
-        try{
-            FieldTemplate fieldTemplate=fieldTemplateRepository.findByUuid(id);
+        try {
+            FieldTemplate fieldTemplate = fieldTemplateRepository.findByUuid(id);
             //setting parent of field template to null to not delete the parent alongwith the children
             fieldTemplate.setCategory(null);
             fieldTemplateRepository.save(fieldTemplate);
             //deleting
             fieldTemplateRepository.deleteById(fieldTemplate.getId());
             LOGGER.info("Field Template deleted Successfully");
-            return new DefaultResponse("Success","Field Template deleted Successfully","200");
-        }catch(Exception e){
+            return new DefaultResponse("Success", "Field Template deleted Successfully", "200");
+        } catch (Exception e) {
             e.printStackTrace();
-            LOGGER.error("Error while deleting field template" , e);
-            return new DefaultResponse("Failure","Error in deleting field template: "+e.getMessage(),"500");
+            LOGGER.error("Error while deleting field template", e);
+            return new DefaultResponse("Failure", "Error in deleting field template: " + e.getMessage(), "500");
         }
     }
 
@@ -363,7 +366,7 @@ public class AssetService {
     This function gets a field template by uuid
     UUID is passed to this function and field template is returned with that UUID
      */
-    public GetFieldTemplateResponse getFieldTemplate(String id){
+    GetFieldTemplateResponse getFieldTemplate(String id) {
         LOGGER.debug("Inside Service function of get field template");
         GetFieldTemplateResponse response = new GetFieldTemplateResponse();
         try {
@@ -371,10 +374,10 @@ public class AssetService {
             response.setResponseIdentifier("Success");
             LOGGER.info("Received Field Template From database. Sending it to controller");
             return response;
-        }catch(Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
             response.setResponseIdentifier("Failure");
-            LOGGER.error("Error while getting field template from db. Field Template UUID: "+ id,e);
+            LOGGER.error("Error while getting field template from db. Field Template UUID: " + id, e);
             return response;
         }
     }
@@ -391,31 +394,30 @@ public class AssetService {
     when a object is created therefore, this additional code sets the id of the object. If we don't set the id of object then the old field template
     won't be updated instead a new one will be created
      */
-    public EditFieldTemplateResponse editFieldTemplate(EditFieldTemplateRequest editFieldTemplateRequest){
+    EditFieldTemplateResponse editFieldTemplate(EditFieldTemplateRequest editFieldTemplateRequest) {
         LOGGER.debug("Inside Service function of edit field template");
-        EditFieldTemplateResponse response=new EditFieldTemplateResponse();
-        try{
+        EditFieldTemplateResponse response = new EditFieldTemplateResponse();
+        try {
             //get category from db
-            Category category=null;
-            if(editFieldTemplateRequest.getCategoryId()!=null) {
+            Category category = null;
+            if (editFieldTemplateRequest.getCategoryId() != null) {
                 category = categoryRepository.findCategoryByUuid(editFieldTemplateRequest.getCategoryId());
                 editFieldTemplateRequest.getFieldTemplate().setCategory(category);
                 category.setFieldTemplate(editFieldTemplateRequest.getFieldTemplate());
-            }
-            else{
+            } else {
                 LOGGER.error("category uuid is not given for field template");
                 response.setResponseIdentifier("Failure");
                 return response;
             }
             //if id of field template is null (This will be null when we execute the test library otherwise by frontend, id will be passed).
             //This if is for Test Library only
-            if(editFieldTemplateRequest.getFieldTemplate().getId()==null){
-                FieldTemplate fieldTemplate=fieldTemplateRepository.findByUuid(editFieldTemplateRequest.getFieldTemplate().getUuid());
+            if (editFieldTemplateRequest.getFieldTemplate().getId() == null) {
+                FieldTemplate fieldTemplate = fieldTemplateRepository.findByUuid(editFieldTemplateRequest.getFieldTemplate().getUuid());
                 editFieldTemplateRequest.getFieldTemplate().setId(fieldTemplate.getId());
                 editFieldTemplateRequest.getFieldTemplate().setFields(fieldTemplate.getFields());
             }
             //setting parent of all children and also setting uuid
-            for(Field field: editFieldTemplateRequest.getFieldTemplate().getFields()){
+            for (Field field : editFieldTemplateRequest.getFieldTemplate().getFields()) {
                 field.setFieldTemplate(editFieldTemplateRequest.getFieldTemplate());
             }
             //saving in db
@@ -424,10 +426,10 @@ public class AssetService {
             response.setFieldTemplate(category.getFieldTemplate());
             LOGGER.info("Field Template Edited Successfully");
             return response;
-        }catch(Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
             response.setResponseIdentifier("Failure");
-            LOGGER.error("Error while editing field template from db. Field Template UUID: "+ editFieldTemplateRequest.getFieldTemplate().getUuid(),e);
+            LOGGER.error("Error while editing field template from db. Field Template UUID: " + editFieldTemplateRequest.getFieldTemplate().getUuid(), e);
             return response;
         }
     }
@@ -443,32 +445,34 @@ public class AssetService {
     First, we get the category with that uuid and set it as a parent of asset
     The, uuid is assigned to asset and it's children. Also, parent of children is set so that children are saved automatically when parent is saved
      */
-    public DefaultResponse addAsset(AddAssetRequest addAssetRequest){
+    DefaultResponse addAsset(AddAssetRequest addAssetRequest) {
         LOGGER.debug("Inside Service function of add asset");
         try {
             //get category from db
-            Category category=null;
-            if(addAssetRequest.getCategoryId()!=null) {
+            Category category = null;
+            if (addAssetRequest.getCategoryId() != null) {
                 category = categoryRepository.findCategoryByUuid(addAssetRequest.getCategoryId());
                 addAssetRequest.getAsset().setCategory(category);
                 category.addAsset(addAssetRequest.getAsset());
-            }
-            else{
+            } else {
                 LOGGER.error("category uuid is not given for asset");
-                return new DefaultResponse("Failure", "Category id not present in request object","500");
+                return new DefaultResponse("Failure", "Category id not present in request object", "500");
             }
             //setting uuid
             addAssetRequest.getAsset().setUuid(UUID.randomUUID().toString());
             //setting parent of children and also setting uuid
-            for(AssetField assetField: addAssetRequest.getAsset().getAssetFields()){
+            for (AssetField assetField : addAssetRequest.getAsset().getAssetFields()) {
                 assetField.setAsset(addAssetRequest.getAsset());
                 assetField.setUuid(UUID.randomUUID().toString());
             }
-            for(AssetImage assetImage: addAssetRequest.getAsset().getAssetImages()){
+            for (AssetImage assetImage : addAssetRequest.getAsset().getAssetImages()) {
                 assetImage.setAsset(addAssetRequest.getAsset());
             }
+            for(Attachment attachment: addAssetRequest.getAsset().getAttachments()){
+                attachment.setAsset(addAssetRequest.getAsset());
+            }
             //creating activity wall for that asset and also setting uuid
-            ActivityWall activityWall=new ActivityWall();
+            ActivityWall activityWall = new ActivityWall();
             activityWall.setUuid(UUID.randomUUID().toString());
             activityWall.setAsset(addAssetRequest.getAsset());
             addAssetRequest.getAsset().setActivityWall(activityWall);
@@ -476,16 +480,16 @@ public class AssetService {
             categoryRepository.save(category);
 
             //set asset number
-            Asset savedAsset=assetRepository.findAssetByUuid(addAssetRequest.getAsset().getUuid());
+            Asset savedAsset = assetRepository.findAssetByUuid(addAssetRequest.getAsset().getUuid());
             savedAsset.setAssetNumber(this.genrateAssetNumber(savedAsset.getId()));
             assetRepository.save(savedAsset);
 
             LOGGER.info("Asset Added Successfully");
-            return new DefaultResponse("Success","Asset Added Successfully","200",addAssetRequest.getAsset().getUuid());
-        }catch(Exception e){
+            return new DefaultResponse("Success", "Asset Added Successfully", "200", addAssetRequest.getAsset().getUuid());
+        } catch (Exception e) {
             e.printStackTrace();
-            LOGGER.error("Error while adding asset ",e);
-            return new DefaultResponse("Failure", "Error in adding asset. Error: "+e.getMessage(),"500");
+            LOGGER.error("Error while adding asset ", e);
+            return new DefaultResponse("Failure", "Error in adding asset. Error: " + e.getMessage(), "500");
         }
     }
 
@@ -501,36 +505,35 @@ public class AssetService {
     when a object is created therefore, this additional code sets the id of the object. If we don't set the id of object then the old asset
     won't be updated instead a new one will be created
      */
-    public EditAssetResponse editAsset(EditAssetRequest editAssetRequest){
+    EditAssetResponse editAsset(EditAssetRequest editAssetRequest) {
         LOGGER.debug("Inside Service function of edit asset");
-        EditAssetResponse response=new EditAssetResponse();
-        try{
+        EditAssetResponse response = new EditAssetResponse();
+        try {
             //get category from db
-            Category category=null;
-            if(editAssetRequest.getCategoryId()!=null) {
+            Category category = null;
+            if (editAssetRequest.getCategoryId() != null) {
                 category = categoryRepository.findCategoryByUuid(editAssetRequest.getCategoryId());
                 editAssetRequest.getAsset().setCategory(category);
                 //this code is for test library. This condition wont be true when request is sent by FE
-                if(editAssetRequest.getAsset().getId()==null){
-                    for(Asset asset: category.getAssets()){
-                        if(asset.getUuid().equals(editAssetRequest.getAsset().getUuid())){
+                if (editAssetRequest.getAsset().getId() == null) {
+                    for (Asset asset : category.getAssets()) {
+                        if (asset.getUuid().equals(editAssetRequest.getAsset().getUuid())) {
                             editAssetRequest.getAsset().setId(asset.getId());
                         }
                     }
                 }
-            }
-            else{
+            } else {
                 LOGGER.error("category uuid is not given for asset");
                 response.setResponseIdentifier("Failure");
                 return response;
             }
             //setting parent of children
-            for(AssetField assetField: editAssetRequest.getAsset().getAssetFields()){
+            for (AssetField assetField : editAssetRequest.getAsset().getAssetFields()) {
                 assetField.setAsset(editAssetRequest.getAsset());
             }
-            if(editAssetRequest.getAsset().getActivityWall()!=null) {
+            if (editAssetRequest.getAsset().getActivityWall() != null) {
                 editAssetRequest.getAsset().getActivityWall().setAsset(editAssetRequest.getAsset());
-                for (Message message : editAssetRequest.getAsset().getActivityWall().getMessages()){
+                for (Message message : editAssetRequest.getAsset().getActivityWall().getMessages()) {
                     message.setActivityWall(editAssetRequest.getAsset().getActivityWall());
                 }
             }
@@ -541,10 +544,10 @@ public class AssetService {
             response.setAsset(editAssetRequest.getAsset());
             LOGGER.info("Asset Edited Successfully");
             return response;
-        }catch(Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
             response.setResponseIdentifier("Failure");
-            LOGGER.error("Error while editing asset from db. Asset UUID: "+ editAssetRequest.getAsset().getUuid(),e);
+            LOGGER.error("Error while editing asset from db. Asset UUID: " + editAssetRequest.getAsset().getUuid(), e);
             return response;
         }
     }
@@ -557,7 +560,7 @@ public class AssetService {
     then, we set it's parent to null and save it because we don't want to delete parent alongwith the children
     then, asset is deleted by id
      */
-    public DefaultResponse deleteAsset(String id) {
+    DefaultResponse deleteAsset(String id) {
         LOGGER.debug("Inside Service function of deleting asset");
         try {
             Asset asset = assetRepository.findAssetByUuid(id);
@@ -570,7 +573,7 @@ public class AssetService {
             return new DefaultResponse("Success", "Asset deleted Successfully", "200");
         } catch (Exception e) {
             e.printStackTrace();
-            LOGGER.error("Error while deleting asset" , e);
+            LOGGER.error("Error while deleting asset", e);
             return new DefaultResponse("Failure", "Error in deleting asset: " + e.getMessage(), "500");
 
         }
@@ -582,19 +585,19 @@ public class AssetService {
     uuid of asset is passed to this function
     We get the asset with that uuid from db and return it
      */
-    public GetAssetResponse getAsset(String id){
+    GetAssetResponse getAsset(String id) {
         LOGGER.debug("Inside Service function of get asset");
-        GetAssetResponse response=new GetAssetResponse();
-        try{
+        GetAssetResponse response = new GetAssetResponse();
+        try {
             //find asset with that uuid
-            Asset asset=assetRepository.findAssetByUuid(id);
+            Asset asset = assetRepository.findAssetByUuid(id);
             //map it to a new object
-            AssetResponse assetResponse=new AssetResponse();
+            AssetResponse assetResponse = new AssetResponse();
             assetResponse.setAsset(asset);
             response.setAsset(assetResponse);
             //set field template of asset
-            FieldTemplateResponse fieldTemplate=new FieldTemplateResponse();
-            if(asset.getCategory().getFieldTemplate()!=null) {
+            FieldTemplateResponse fieldTemplate = new FieldTemplateResponse();
+            if (asset.getCategory().getFieldTemplate() != null) {
                 fieldTemplate.setFieldTemplate(asset.getCategory().getFieldTemplate());
                 Collections.sort(fieldTemplate.getFields());
             }
@@ -602,10 +605,10 @@ public class AssetService {
             response.setResponseIdentifier("Success");
             LOGGER.info("Received Asset From database. Sending it to controller");
             return response;
-        }catch(Exception e) {
+        } catch (Exception e) {
             e.printStackTrace();
             response.setResponseIdentifier("Failure");
-            LOGGER.error("Error while getting asset from db. Asset UUID: "+ id,e);
+            LOGGER.error("Error while getting asset from db. Asset UUID: " + id, e);
             return response;
         }
     }
@@ -615,14 +618,14 @@ public class AssetService {
     This function gets all assets
     It simply fetches all assets from db and return it
      */
-    public GetAssetsResponse getAssets(String tenantUUID){
+    GetAssetsResponse getAssets(String tenantUUID) {
         LOGGER.debug("Inside Service function of get assets");
-        GetAssetsResponse response=new GetAssetsResponse();
+        GetAssetsResponse response = new GetAssetsResponse();
         try {
-            List<Asset> assets=assetRepository.findByTenantUUID(tenantUUID);
-            List<AssetModel> assetModels=new ArrayList<>();
-            for(Asset asset: assets){
-                AssetModel assetModel=new AssetModel();
+            List<Asset> assets = assetRepository.findByTenantUUID(tenantUUID);
+            List<AssetModel> assetModels = new ArrayList<>();
+            for (Asset asset : assets) {
+                AssetModel assetModel = new AssetModel();
                 assetModel.setAsset(asset);
                 assetModels.add(assetModel);
             }
@@ -630,10 +633,10 @@ public class AssetService {
             response.setResponseIdentifier("Success");
             LOGGER.info("Received assets From database. Sending it to controller");
             return response;
-        }catch(Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
             response.setResponseIdentifier("Failure");
-            LOGGER.error("Error while getting all categories from db.",e);
+            LOGGER.error("Error while getting all categories from db.", e);
             return response;
         }
 
@@ -643,30 +646,30 @@ public class AssetService {
     /*
      * This function gets limit and offset and returns page of assets
      */
-    public GetPaginatedAssetsResponse getPaginatedAssets(int offset,int limit,String tenantuuid){
+    GetPaginatedAssetsResponse getPaginatedAssets(int offset, int limit, String tenantuuid) {
         LOGGER.debug("Inside service function of get page of assets");
-        GetPaginatedAssetsResponse response=new GetPaginatedAssetsResponse();
-        try{
+        GetPaginatedAssetsResponse response = new GetPaginatedAssetsResponse();
+        try {
             JdbcTemplate jt;
             jt = new JdbcTemplate(this.dataSource());
-            int lowerLimit=offset*limit;
-            int upperLimit=offset*limit+limit;
-            AssetPage assets=new AssetPage();
+            int lowerLimit = offset * limit;
+            int upperLimit = offset * limit + limit;
+            AssetPage assets = new AssetPage();
             //get total count of assets
-            String sql="select count(*) as count from t_asset a where a.tenantuuid=?";
-            Map<String,Object> totalAssetsResponse=jt.queryForMap(sql,tenantuuid);
-            assets.setTotalElements((Long)(totalAssetsResponse.get("count")));
+            String sql = "select count(*) as count from t_asset a where a.tenantuuid=?";
+            Map<String, Object> totalAssetsResponse = jt.queryForMap(sql, tenantuuid);
+            assets.setTotalElements((Long) (totalAssetsResponse.get("count")));
             //getting page of assets
-            sql="select a.id as id, a.asset_number as assetNumber, a.description as description, a.inventory as inventory, " +
+            sql = "select a.id as id, a.asset_number as assetNumber, a.description as description, a.inventory as inventory, " +
                     " a.manufacture as manufacture, a.model_number as modelNumber, a.name as name, a.purchase_date as purchaseDate, a.tenantuuid as tenantUUID, a.uuid as uuid, " +
                     " a.warranty as warranty, a.primary_usage_unit as primaryUsageUnit, a.secondary_usage_unit as secondaryUsageUnit, a.consumption_unit as consumptionUnit " +
                     " from t_asset a where a.tenantuuid=? " +
                     "limit ?,?";
-            List<Map<String,Object>> assetsResponse=jt.queryForList(sql,tenantuuid,lowerLimit,upperLimit);
-            List<AssetModelForTableView> assetModelList=new ArrayList<>();
-            for(Map<String,Object> assetResponse: assetsResponse){
-                AssetModelForTableView assetModel=new AssetModelForTableView();
-                assetModel.setId((Long)assetResponse.get("id"));
+            List<Map<String, Object>> assetsResponse = jt.queryForList(sql, tenantuuid, lowerLimit, upperLimit);
+            List<AssetModelForTableView> assetModelList = new ArrayList<>();
+            for (Map<String, Object> assetResponse : assetsResponse) {
+                AssetModelForTableView assetModel = new AssetModelForTableView();
+                assetModel.setId((Long) assetResponse.get("id"));
                 assetModel.setAssetNumber(String.valueOf(assetResponse.get("assetNumber")));
                 assetModel.setConsumptionUnit(String.valueOf(assetResponse.get("consumptionUnit")));
                 assetModel.setDescription(String.valueOf(assetResponse.get("description")));
@@ -679,7 +682,7 @@ public class AssetService {
                 assetModel.setTenantUUID(String.valueOf(assetResponse.get("tenantUUID")));
                 assetModel.setUuid(String.valueOf(assetResponse.get("uuid")));
                 assetModel.setWarranty(String.valueOf(assetResponse.get("warranty")));
-                assetModel.setPurchaseDate((Date)assetResponse.get("purchaseDate"));
+                assetModel.setPurchaseDate((Date) assetResponse.get("purchaseDate"));
                 assetModelList.add(assetModel);
             }
             assets.setContent(assetModelList);
@@ -687,9 +690,9 @@ public class AssetService {
             response.setResponseIdentifier("Success");
             LOGGER.info("Received assets from database. Returning to controller");
             return response;
-        }catch (Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
-            LOGGER.error("Error while getting page of assets",e);
+            LOGGER.error("Error while getting page of assets", e);
             response.setResponseIdentifier("Failure");
             return response;
         }
@@ -701,44 +704,44 @@ public class AssetService {
      * This function gets a list of uuids. First, it finds assets by those uuids from db and then creates a hashmap of assets
      * inwhich a name and type of asset is stored against uuid of asset and returned
      */
-    public GetNameAndTypeOfAssetsByUUIDSResponse getNameAndTypeOfAssetsByUUIDS(GetNameAndTypeOfAssetsByUUIDSRequest request){
+    GetNameAndTypeOfAssetsByUUIDSResponse getNameAndTypeOfAssetsByUUIDS(GetNameAndTypeOfAssetsByUUIDSRequest request) {
         LOGGER.debug("Inside service function of get get name and type of assets by uuids");
-        GetNameAndTypeOfAssetsByUUIDSResponse response=new GetNameAndTypeOfAssetsByUUIDSResponse();
-        try{
+        GetNameAndTypeOfAssetsByUUIDSResponse response = new GetNameAndTypeOfAssetsByUUIDSResponse();
+        try {
             JdbcTemplate jt;
             jt = new JdbcTemplate(this.dataSource());
-            HashMap<String, GetNameAndTypeOfAssetResponse> assetsHashmap=new HashMap<>();
-            for(String uuid: request.getUuids()){
-                String sql="select a.id as id,a.name as asset_name,c.name as category_name,a.asset_number,a.uuid " +
+            HashMap<String, GetNameAndTypeOfAssetResponse> assetsHashmap = new HashMap<>();
+            for (String uuid : request.getUuids()) {
+                String sql = "select a.id as id,a.name as asset_name,c.name as category_name,a.asset_number,a.uuid " +
                         "from t_asset a inner join t_category c on a.category_id=c.id " +
                         "where a.uuid=?";
-                Map<String,Object> assetResponse=jt.queryForMap(sql,uuid);
-                sql="select i.image_url as image " +
+                Map<String, Object> assetResponse = jt.queryForMap(sql, uuid);
+                sql = "select i.image_url as image " +
                         "from t_asset_images i " +
                         "where i.asset_id=? " +
                         "limit 1";
-                GetNameAndTypeOfAssetResponse asset=new GetNameAndTypeOfAssetResponse();
-                Map<String, Object> imageResponse=null;
+                GetNameAndTypeOfAssetResponse asset = new GetNameAndTypeOfAssetResponse();
+                Map<String, Object> imageResponse = null;
                 try {
-                     imageResponse= jt.queryForMap(sql, Long.valueOf(String.valueOf(assetResponse.get("id"))));
-                     asset.setImageUrl(String.valueOf(imageResponse.get("image")));
-                }catch(org.springframework.dao.EmptyResultDataAccessException e){
-                    LOGGER.debug("There are no images of this asset.Asset UUID: "+uuid);
+                    imageResponse = jt.queryForMap(sql, Long.valueOf(String.valueOf(assetResponse.get("id"))));
+                    asset.setImageUrl(String.valueOf(imageResponse.get("image")));
+                } catch (org.springframework.dao.EmptyResultDataAccessException e) {
+                    LOGGER.debug("There are no images of this asset.Asset UUID: " + uuid);
                 }
 
                 asset.setName(String.valueOf(assetResponse.get("asset_name")));
                 asset.setType(String.valueOf(assetResponse.get("category_name")));
                 asset.setAssetNumber(String.valueOf(assetResponse.get("asset_number")));
-                assetsHashmap.put(String.valueOf(assetResponse.get("uuid")),asset);
+                assetsHashmap.put(String.valueOf(assetResponse.get("uuid")), asset);
             }
 
             response.setAssets(assetsHashmap);
             response.setResponseIdentifier("Success");
             LOGGER.info("Received assets from database. Returning to controller");
             return response;
-        }catch (Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
-            LOGGER.error("Error while getting assets by uuids",e);
+            LOGGER.error("Error while getting assets by uuids", e);
             response.setResponseIdentifier("Failure");
             return response;
         }
@@ -752,11 +755,11 @@ public class AssetService {
      * Request object contains asset uuid of which this entry is to be made. We find the asset by uuid and add consumption entry in it's array
      * and save the updated object
      */
-    public DefaultResponse addConsumptionUnits(AddConsumptionUnitsRequest request){
-        LOGGER.debug("Inside service function of adding consumption units of asset. AssetUUID: "+request.getAssetUUID());
-        try{
+    DefaultResponse addConsumptionUnits(AddConsumptionUnitsRequest request) {
+        LOGGER.debug("Inside service function of adding consumption units of asset. AssetUUID: " + request.getAssetUUID());
+        try {
             //find asset by uuid
-            Asset asset=assetRepository.findAssetByUuid(request.getAssetUUID());
+            Asset asset = assetRepository.findAssetByUuid(request.getAssetUUID());
             //add consumption unit in the array of consumptions of asset
             asset.addConsumption(request.getConsumption());
             request.getConsumption().setAsset(asset);
@@ -764,50 +767,74 @@ public class AssetService {
             request.getConsumption().setCreatedAt(new Date());
             assetRepository.save(asset);
 
-            return new DefaultResponse("Success","Consumption Unit Added Successfully","200",request.getConsumption().getUuid());
-        }catch(Exception e){
+            return new DefaultResponse("Success", "Consumption Unit Added Successfully", "200", request.getConsumption().getUuid());
+        } catch (Exception e) {
             e.printStackTrace();
-            LOGGER.error("Error while adding consumption unit of asset. AssetUUID: "+request.getAssetUUID(),e);
-            return new DefaultResponse("Failure","Error while adding consumption unit of asset. Error Message: "+e.getMessage(),"500");
+            LOGGER.error("Error while adding consumption unit of asset. AssetUUID: " + request.getAssetUUID(), e);
+            return new DefaultResponse("Failure", "Error while adding consumption unit of asset. Error Message: " + e.getMessage(), "500");
         }
     }
 
     //get paginated consumptions
-    GetPaginatedConsumptionsResponse getPaginatedConsumptions(String uuid, int offset, int limit){
-        LOGGER.debug("Inside service to get consumption units of asset. Asset UUID: "+uuid+" with offset: "+offset+" and limit: "+limit);
+    GetPaginatedConsumptionsResponse getPaginatedConsumptions(String uuid, int offset, int limit) {
+        LOGGER.debug("Inside service to get consumption units of asset. Asset UUID: " + uuid + " with offset: " + offset + " and limit: " + limit);
 
-        GetPaginatedConsumptionsResponse response=new GetPaginatedConsumptionsResponse();
-        try{
-            Asset asset=assetRepository.findAssetByUuid(uuid);
-            Page<Consumption> consumptions=consumptionRepository.findByAsset(asset,new PageRequest(offset,limit));
-           response.setConsumptions(consumptions);
-           response.setResponseIdentifier("Success");
+        GetPaginatedConsumptionsResponse response = new GetPaginatedConsumptionsResponse();
+        try {
+            Asset asset = assetRepository.findAssetByUuid(uuid);
+            Page<Consumption> consumptions = consumptionRepository.findByAssetOrderByCreatedAt(asset, new PageRequest(offset, limit));
+            response.setConsumptions(consumptions);
+            response.setResponseIdentifier("Success");
 
-        }
-        catch (Exception e){
+        } catch (Exception e) {
             response.setResponseIdentifier("Failure");
         }
         return response;
     }
 
     //this function deletes a consumption unit by uuid AMS_UC_26
-    public DefaultResponse deleteConsumptionUnits(String uuid){
-        LOGGER.debug("Inside service function of deleting consumption unit by uuid. UUID: "+uuid);
-        try{
+    DefaultResponse deleteConsumptionUnits(String uuid) {
+        LOGGER.debug("Inside service function of deleting consumption unit by uuid. UUID: " + uuid);
+        try {
             //find consumption by uuid
-            Consumption consumption=consumptionRepository.findConsumptionByUuid(uuid);
+            Consumption consumption = consumptionRepository.findConsumptionByUuid(uuid);
             //delete by id
             consumptionRepository.deleteById(consumption.getId());
 
-            return new DefaultResponse("Success","Consumption unit deleted successfully","200");
-        }catch(Exception e){
+            return new DefaultResponse("Success", "Consumption unit deleted successfully", "200");
+        } catch (Exception e) {
             e.printStackTrace();
-            LOGGER.error("Error while deleting consumption unit by uuid: UUID: "+uuid,e);
-            return new DefaultResponse("Failure","Error while deleting consumption unit by uuid. Error Message: "+e.getMessage(),"500");
+            LOGGER.error("Error while deleting consumption unit by uuid: UUID: " + uuid, e);
+            return new DefaultResponse("Failure", "Error while deleting consumption unit by uuid. Error Message: " + e.getMessage(), "500");
         }
     }
 
     /******************************************* END Consumption Functions **********************************************/
+
+    /******************************************* Usages Functions ****************************************************/
+    //get usages by asset AMS_UC_27
+    /*
+     * this function will get a page of usages by asset uuid. asset uuid, offset and limit are passed to this function
+     * this function finds the usages by asset and returns them
+     */
+    GetPaginatedUsagesByAssetResponse getPaginatedUsagesByAsset(String assetUUID,int offset,int limit){
+        LOGGER.debug("Inside service function of getting paginated usages by asset. Asset UUID: "+assetUUID+" Offset: "+offset+"Limit: "+limit);
+        GetPaginatedUsagesByAssetResponse response=new GetPaginatedUsagesByAssetResponse();
+        try{
+            Page<Usage> usages=usageRepository.findByAssetUUIDOrderByCreatedAt(assetUUID,new PageRequest(offset,limit));
+            response.setUsages(usages);
+            response.setResponseIdentifier("Success");
+            LOGGER.info("Paginated Usages by asset got successfully.");
+            return response;
+        }catch(Exception e){
+            e.printStackTrace();
+            LOGGER.error("Error while getting paginated usages by asset. Asset UUID: "+assetUUID,e);
+            response.setResponseIdentifier("Failure");
+            return response;
+        }
+    }
+
+    /******************************************* END Usages Functions ****************************************************/
 
     /******************************************** Inspection Template Functions **************************************/
     //post inspection template AMS_UC_15
@@ -819,27 +846,26 @@ public class AssetService {
     Then, we set uuid of inspection template and it's children and also we set the parent of children so that children are saved automatically when parent is saved
     Then, we save the inspection template
      */
-    public DefaultResponse postInspectionTemplate(PostInspectionTemplateRequest postInspectionTemplateRequest){
+    DefaultResponse postInspectionTemplate(PostInspectionTemplateRequest postInspectionTemplateRequest) {
         LOGGER.debug("Inside Service function of post inspection template");
-        try{
+        try {
             //get category from db
-            Category category=null;
-            if(postInspectionTemplateRequest.getCategoryId()!=null) {
+            Category category = null;
+            if (postInspectionTemplateRequest.getCategoryId() != null) {
                 category = categoryRepository.findCategoryByUuid(postInspectionTemplateRequest.getCategoryId());
                 postInspectionTemplateRequest.getInspectionTemplate().setCategory(category);
                 category.setInspectionTemplate(postInspectionTemplateRequest.getInspectionTemplate());
-            }
-            else{
+            } else {
                 LOGGER.error("category uuid is not given for inspection template");
-                return new DefaultResponse("Failure", "Category id not present in request object","500");
+                return new DefaultResponse("Failure", "Category id not present in request object", "500");
             }
             //setting uuid
             postInspectionTemplateRequest.getInspectionTemplate().setUuid(UUID.randomUUID().toString());
             //setting parent of children and also setting uuid
-            for(InspectionItemCategory inspectionItemCategory: postInspectionTemplateRequest.getInspectionTemplate().getInspectionItemCategories()){
+            for (InspectionItemCategory inspectionItemCategory : postInspectionTemplateRequest.getInspectionTemplate().getInspectionItemCategories()) {
                 inspectionItemCategory.setInspectionTemplate(postInspectionTemplateRequest.getInspectionTemplate());
                 inspectionItemCategory.setUuid(UUID.randomUUID().toString());
-                for(InspectionItem inspectionItem: inspectionItemCategory.getInspectionItems()){
+                for (InspectionItem inspectionItem : inspectionItemCategory.getInspectionItems()) {
                     inspectionItem.setInspectionItemCategory(inspectionItemCategory);
                     inspectionItem.setUuid(UUID.randomUUID().toString());
                 }
@@ -847,11 +873,11 @@ public class AssetService {
             //saving in db
             categoryRepository.save(category);
             LOGGER.info("Inspection Template Added Successfully");
-            return new DefaultResponse("Success","Inspection Template Added Successfully","200",postInspectionTemplateRequest.getInspectionTemplate().getUuid());
-        }catch (Exception e){
+            return new DefaultResponse("Success", "Inspection Template Added Successfully", "200", postInspectionTemplateRequest.getInspectionTemplate().getUuid());
+        } catch (Exception e) {
             e.printStackTrace();
-            LOGGER.error("Error while adding inspection template",e);
-            return new DefaultResponse("Failure","Error while adding inspection template. Reason: "+e.getMessage(),"500");
+            LOGGER.error("Error while adding inspection template", e);
+            return new DefaultResponse("Failure", "Error while adding inspection template. Reason: " + e.getMessage(), "500");
         }
     }
 
@@ -861,17 +887,17 @@ public class AssetService {
     uuid of inspection template is passed to this function
     then, we get inspection template with that uuid from db and return it
      */
-    public GetInspectionTemplateResponse getInspectionTemplate(String id){
+    GetInspectionTemplateResponse getInspectionTemplate(String id) {
         LOGGER.debug("Inside Service function of get inspection template");
-        GetInspectionTemplateResponse response=new GetInspectionTemplateResponse();
-        try{
+        GetInspectionTemplateResponse response = new GetInspectionTemplateResponse();
+        try {
             response.setInspectionTemplate(inspectionTemplateRepository.findInspectionTemplateByUuid(id));
             response.setResponseIdentifier("Success");
             LOGGER.info("Received Inspection Template from database. Sending it to controller");
             return response;
-        }catch (Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
-            LOGGER.error("Error while getting inspection template",e);
+            LOGGER.error("Error while getting inspection template", e);
             response.setResponseIdentifier("Failure");
             return response;
         }
@@ -889,33 +915,32 @@ public class AssetService {
     when a object is created therefore, this additional code sets the id of the object. If we don't set the id of object then the old inspection template
     won't be updated instead a new one will be created
      */
-    public EditInspectionTemplateResponse editInspectionTemplate(EditInspectionTemplateRequest editInspectionTemplateRequest){
+    EditInspectionTemplateResponse editInspectionTemplate(EditInspectionTemplateRequest editInspectionTemplateRequest) {
         LOGGER.debug("Inside Service function of edit inspection template");
-        EditInspectionTemplateResponse response=new EditInspectionTemplateResponse();
-        try{
+        EditInspectionTemplateResponse response = new EditInspectionTemplateResponse();
+        try {
             //get category from db
-            Category category=null;
-            if(editInspectionTemplateRequest.getCategoryId()!=null) {
+            Category category = null;
+            if (editInspectionTemplateRequest.getCategoryId() != null) {
                 category = categoryRepository.findCategoryByUuid(editInspectionTemplateRequest.getCategoryId());
                 editInspectionTemplateRequest.getInspectionTemplate().setCategory(category);
                 category.setInspectionTemplate(editInspectionTemplateRequest.getInspectionTemplate());
-            }
-            else{
+            } else {
                 LOGGER.error("category uuid is not given for inspection template");
                 response.setResponseIdentifier("Failure");
                 return response;
             }
             //if id of inspection template is null (This will be null when we execute the test library otherwise by frontend, id will be passed).
             //This if is for Test Library only
-            if(editInspectionTemplateRequest.getInspectionTemplate().getId()==null){
-                InspectionTemplate inspectionTemplate=inspectionTemplateRepository.findInspectionTemplateByUuid(editInspectionTemplateRequest.getInspectionTemplate().getUuid());
+            if (editInspectionTemplateRequest.getInspectionTemplate().getId() == null) {
+                InspectionTemplate inspectionTemplate = inspectionTemplateRepository.findInspectionTemplateByUuid(editInspectionTemplateRequest.getInspectionTemplate().getUuid());
                 editInspectionTemplateRequest.getInspectionTemplate().setId(inspectionTemplate.getId());
                 editInspectionTemplateRequest.getInspectionTemplate().setInspectionItemCategories(inspectionTemplate.getInspectionItemCategories());
             }
             //setting parent of all children
-            for(InspectionItemCategory inspectionItemCategory: editInspectionTemplateRequest.getInspectionTemplate().getInspectionItemCategories()){
+            for (InspectionItemCategory inspectionItemCategory : editInspectionTemplateRequest.getInspectionTemplate().getInspectionItemCategories()) {
                 inspectionItemCategory.setInspectionTemplate(editInspectionTemplateRequest.getInspectionTemplate());
-                for(InspectionItem inspectionItem: inspectionItemCategory.getInspectionItems()){
+                for (InspectionItem inspectionItem : inspectionItemCategory.getInspectionItems()) {
                     inspectionItem.setInspectionItemCategory(inspectionItemCategory);
                 }
             }
@@ -925,9 +950,9 @@ public class AssetService {
             response.setResponseIdentifier("Success");
             LOGGER.info("Inspection Template Edited Successfully");
             return response;
-        }catch (Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
-            LOGGER.error("Error while editing inspection template",e);
+            LOGGER.error("Error while editing inspection template", e);
             response.setResponseIdentifier("Failure");
             return response;
         }
@@ -941,9 +966,9 @@ public class AssetService {
     Then, we set it's parent to null because we don't want to delete it's parent alongwith the children
     Then, we delete inspection template by id
      */
-    public DefaultResponse deleteInspectionTemplate(String id){
+    DefaultResponse deleteInspectionTemplate(String id) {
         LOGGER.debug("Inside service function of deleting inspection template");
-        try{
+        try {
             InspectionTemplate inspectionTemplate = inspectionTemplateRepository.findInspectionTemplateByUuid(id);
             //setting parent of inspection template to null to not delete the parent alongwith the children
             inspectionTemplate.setCategory(null);
@@ -951,11 +976,11 @@ public class AssetService {
             //deleting
             inspectionTemplateRepository.deleteById(inspectionTemplate.getId());
             LOGGER.info("Inspection Template deleted Successfully");
-            return new DefaultResponse("Success","Inspection Template deleted Successfully","200");
-        }catch(Exception e){
+            return new DefaultResponse("Success", "Inspection Template deleted Successfully", "200");
+        } catch (Exception e) {
             e.printStackTrace();
-            LOGGER.error("Error while deleting inspection template",e);
-            return new DefaultResponse("Failure","Error while deleting inspection template. Reason: "+e.getMessage(),"500");
+            LOGGER.error("Error while deleting inspection template", e);
+            return new DefaultResponse("Failure", "Error while deleting inspection template. Reason: " + e.getMessage(), "500");
         }
     }
 
@@ -970,30 +995,29 @@ public class AssetService {
     First, We find the asset with that asset uuid and set parent of message (Set activity wall of asset as parent)
     Then, we set the uuid of asset and save it in db
     */
-    public DefaultResponse addMessage(AddMessageRequest addMessageRequest){
+    DefaultResponse addMessage(AddMessageRequest addMessageRequest) {
         LOGGER.debug("Inside service function of adding message");
-        try{
-            Asset asset=null;
+        try {
+            Asset asset = null;
             //if activity wall uuid is passed in the request then set parent of message
-            if(addMessageRequest.getAssetId()!=null){
-                asset=assetRepository.findAssetByUuid(addMessageRequest.getAssetId());
+            if (addMessageRequest.getAssetId() != null) {
+                asset = assetRepository.findAssetByUuid(addMessageRequest.getAssetId());
                 asset.getActivityWall().addMessage(addMessageRequest.getMessage());
                 addMessageRequest.getMessage().setActivityWall(asset.getActivityWall());
-            }
-            else{
+            } else {
                 LOGGER.error("Asset uuid is not passed in the request");
-                return new DefaultResponse("Failure","Asset uuid is not passed in the request","500");
+                return new DefaultResponse("Failure", "Asset uuid is not passed in the request", "500");
             }
             //setting uuid
             addMessageRequest.getMessage().setUuid(UUID.randomUUID().toString());
             //saving it in db
             activityWallRepository.save(asset.getActivityWall());
             LOGGER.info("Message Added Successfully");
-            return new DefaultResponse("Success","Message Added Successfully","200",addMessageRequest.getMessage().getUuid());
-        }catch(Exception e){
+            return new DefaultResponse("Success", "Message Added Successfully", "200", addMessageRequest.getMessage().getUuid());
+        } catch (Exception e) {
             e.printStackTrace();
-            LOGGER.error("Error while adding message",e);
-            return new DefaultResponse("Failure","Error while adding message. Reason "+e.getMessage(),"500");
+            LOGGER.error("Error while adding message", e);
+            return new DefaultResponse("Failure", "Error while adding message. Reason " + e.getMessage(), "500");
         }
     }
 
@@ -1008,25 +1032,24 @@ public class AssetService {
     when a object is created therefore, this additional code sets the id of the object. If we don't set the id of object then the old message
     won't be updated instead a new one will be created
      */
-    public EditMessageResponse editMessage(EditMessageRequest editMessageRequest){
+    EditMessageResponse editMessage(EditMessageRequest editMessageRequest) {
         LOGGER.debug("Inside service function of adding message");
-        EditMessageResponse response=new EditMessageResponse();
-        try{
-            Asset asset=null;
+        EditMessageResponse response = new EditMessageResponse();
+        try {
+            Asset asset = null;
             //if activity wall uuid is passed in the request then set parent of message
-            if(editMessageRequest.getAssetId()!=null){
-                asset=assetRepository.findAssetByUuid(editMessageRequest.getAssetId());
+            if (editMessageRequest.getAssetId() != null) {
+                asset = assetRepository.findAssetByUuid(editMessageRequest.getAssetId());
                 editMessageRequest.getMessage().setActivityWall(asset.getActivityWall());
                 //This if will be executed for test library
-                if(editMessageRequest.getMessage().getId()==null) {
+                if (editMessageRequest.getMessage().getId() == null) {
                     for (Message message : asset.getActivityWall().getMessages()) {
                         if (message.getUuid().equals(editMessageRequest.getMessage().getUuid())) {
                             editMessageRequest.getMessage().setId(message.getId());
                         }
                     }
                 }
-            }
-            else{
+            } else {
                 LOGGER.error("Asset uuid is not passed in the request");
                 response.setResponseIdentifier("Failure");
                 return response;
@@ -1037,9 +1060,9 @@ public class AssetService {
             response.setMessage(editMessageRequest.getMessage());
             response.setResponseIdentifier("Success");
             return response;
-        }catch(Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
-            LOGGER.error("Error while editing message",e);
+            LOGGER.error("Error while editing message", e);
             response.setResponseIdentifier("Failure");
             return response;
         }
@@ -1053,11 +1076,11 @@ public class AssetService {
     Then, we set the parent of message to null because we don't want to delete the parent alongwith the children
     we save this change and then delete the message
      */
-    public DefaultResponse deleteMessage(String id){
+    DefaultResponse deleteMessage(String id) {
         LOGGER.debug("Inside Service function of delete message");
-        try{
+        try {
             //get message by uuid
-            Message message=messageRepository.findMessageByUuid(id);
+            Message message = messageRepository.findMessageByUuid(id);
             //setting parent of message to null so that it does not delete the parent along with it
             message.setActivityWall(null);
             //saving the change
@@ -1065,11 +1088,11 @@ public class AssetService {
             //now deleting it
             messageRepository.deleteById(message.getId());
             LOGGER.info("Message deleted Successfully");
-            return new DefaultResponse("Success","Message deleted Successfully","200");
-        }catch(Exception e){
+            return new DefaultResponse("Success", "Message deleted Successfully", "200");
+        } catch (Exception e) {
             e.printStackTrace();
-            LOGGER.error("Error while deleting message",e);
-            return new DefaultResponse("Failure","Ërror while deleting message","500");
+            LOGGER.error("Error while deleting message", e);
+            return new DefaultResponse("Failure", "Ërror while deleting message", "500");
         }
     }
 
@@ -1105,26 +1128,25 @@ public class AssetService {
 ////            byteFile.delete();
 //        }
 //    }
-
-    public UploadFileResponse uploadFile(MultipartFile file){
-        UploadFileResponse response=new UploadFileResponse();
+    public UploadFileResponse uploadFile(MultipartFile file) {
+        UploadFileResponse response = new UploadFileResponse();
         LOGGER.debug("inside service function of uploading file to s3");
         File convFile = new File(file.getOriginalFilename());
-        try{
+        try {
             convFile.createNewFile();
             FileOutputStream fos = new FileOutputStream(convFile);
             fos.write(file.getBytes());
             fos.close();
             String fileName = generateFileName(file.getOriginalFilename());
-            String fileUrl=s3EnpointUrl+"/asset-images/"+fileName;
-            this.s3client.putObject(new PutObjectRequest(this.bucket+"/asset-images",fileName,convFile));
+            String fileUrl = s3EnpointUrl + "/asset-images/" + fileName;
+            this.s3client.putObject(new PutObjectRequest(this.bucket + "/asset-images", fileName, convFile));
             response.setResponseIdentifier("Success");
             response.setFileUrl(fileUrl);
             LOGGER.info("File uploaded Successfully");
             convFile.delete();
             return response;
-        }catch(Exception e){
-            LOGGER.error("Error while uploading file to s3",e);
+        } catch (Exception e) {
+            LOGGER.error("Error while uploading file to s3", e);
             e.printStackTrace();
             response.setResponseIdentifier("Failure");
             convFile.delete();
@@ -1136,15 +1158,15 @@ public class AssetService {
 
     /******************************************* Class Functions *****************************************************/
     //generate asset number
-    private String genrateAssetNumber(Long id){
-        String assetNumber="AMS-ASSET-";
-        Long myId=1000L+id;
-        String formatted = String.format("%06d",myId);
-        return assetNumber+formatted;
+    private String genrateAssetNumber(Long id) {
+        String assetNumber = "AMS-ASSET-";
+        Long myId = 1000L + id;
+        String formatted = String.format("%06d", myId);
+        return assetNumber + formatted;
     }
 
-    private String generateFileName(String filename){
-        return new Date().getTime() + "-" + "asset_image_"+filename;
+    private String generateFileName(String filename) {
+        return new Date().getTime() + "-" + "asset_image_" + filename;
     }
 
     public DataSource dataSource() {
@@ -1161,26 +1183,27 @@ public class AssetService {
 
     /******************************************* Kafka Functions ******************************************************/
     //this function will add the usage units of asset e.g odometer meter values
-    public void updateUsageUnits(Usage usage){
-        try{
-            Asset asset=assetRepository.findAssetByUuid(usage.getAssetUUID());
+    public void updateUsageUnits(Usage usage) {
+        try {
+            Asset asset = assetRepository.findAssetByUuid(usage.getAssetUUID());
             //whether to update primary usage unit and secondary usage unit
-            boolean update=false;
-            if(usage.getPrimaryUsageValue()!=null){
-                update=true;
+            boolean update = false;
+            if (usage.getPrimaryUsageValue() != null) {
+                update = true;
             }
-            if(usage.getSecondaryUsageValue()!=null){
-                update=true;
+            if (usage.getSecondaryUsageValue() != null) {
+                update = true;
             }
             //update
-            if(update){
+            if (update) {
                 asset.addUsage(usage);
                 usage.setAsset(asset);
+                usage.setCreatedAt(new Date());
                 assetRepository.save(asset);
             }
-        }catch (Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
-            LOGGER.error("Error while updating usage units of asset",e);
+            LOGGER.error("Error while updating usage units of asset", e);
         }
     }
 

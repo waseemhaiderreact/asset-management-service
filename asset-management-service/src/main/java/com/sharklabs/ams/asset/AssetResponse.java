@@ -3,11 +3,10 @@ package com.sharklabs.ams.asset;
 import com.sharklabs.ams.AssetImage.AssetImage;
 import com.sharklabs.ams.activitywall.ActivityWall;
 import com.sharklabs.ams.assetfield.AssetField;
+import com.sharklabs.ams.attachment.Attachment;
 import com.sharklabs.ams.usage.Usage;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 
 public class AssetResponse {
     private Long id;
@@ -19,6 +18,16 @@ public class AssetResponse {
     private String name;
 
     private String description;
+
+    private String modelNumber;
+
+    private String inventory;
+
+    private String manufacture;
+
+    private Date purchaseDate;
+
+    private String warranty;
 
     private String tenantUUID;
 
@@ -33,6 +42,8 @@ public class AssetResponse {
     private HashMap<String, Object> assetFields=new HashMap<String, Object>();
 
     private Set<AssetImage> assetImages=new HashSet<>();
+
+    private Set<Attachment> attachments=new HashSet<>();
 
     private ActivityWall activityWall;
 
@@ -141,6 +152,54 @@ public class AssetResponse {
         this.consumptionUnit = consumptionUnit;
     }
 
+    public String getModelNumber() {
+        return modelNumber;
+    }
+
+    public void setModelNumber(String modelNumber) {
+        this.modelNumber = modelNumber;
+    }
+
+    public String getInventory() {
+        return inventory;
+    }
+
+    public void setInventory(String inventory) {
+        this.inventory = inventory;
+    }
+
+    public String getManufacture() {
+        return manufacture;
+    }
+
+    public void setManufacture(String manufacture) {
+        this.manufacture = manufacture;
+    }
+
+    public Date getPurchaseDate() {
+        return purchaseDate;
+    }
+
+    public void setPurchaseDate(Date purchaseDate) {
+        this.purchaseDate = purchaseDate;
+    }
+
+    public String getWarranty() {
+        return warranty;
+    }
+
+    public void setWarranty(String warranty) {
+        this.warranty = warranty;
+    }
+
+    public Set<Attachment> getAttachments() {
+        return attachments;
+    }
+
+    public void setAttachments(Set<Attachment> attachments) {
+        this.attachments = attachments;
+    }
+
     public void setAsset(Asset asset){
         this.id=asset.getId();
         this.activityWall=asset.getActivityWall();
@@ -151,6 +210,11 @@ public class AssetResponse {
         this.primaryUsageUnit=asset.getPrimaryUsageUnit();
         this.secondaryUsageUnit=asset.getSecondaryUsageUnit();
         this.consumptionUnit=asset.getConsumptionUnit();
+        this.inventory=asset.getInventory();
+        this.manufacture=asset.getManufacture();
+        this.modelNumber=asset.getModelNumber();
+        this.purchaseDate=asset.getPurchaseDate();
+        this.warranty=asset.getWarranty();
         //getting latest entry of the usage of asset
         Usage maxUsage=null;
         Long maxId=null;
@@ -172,5 +236,6 @@ public class AssetResponse {
             this.assetFields.put(assetField.getFieldId(),assetField);
         }
         this.assetImages=asset.getAssetImages();
+        this.attachments=asset.getAttachments();
     }
 }

@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.sharklabs.ams.AssetImage.AssetImage;
 import com.sharklabs.ams.activitywall.ActivityWall;
 import com.sharklabs.ams.assetfield.AssetField;
+import com.sharklabs.ams.attachment.Attachment;
 import com.sharklabs.ams.category.Category;
 import com.sharklabs.ams.consumption.Consumption;
 import com.sharklabs.ams.usage.Usage;
@@ -56,6 +57,9 @@ public class Asset implements Serializable {
 
     @OneToMany(  cascade = CascadeType.ALL,mappedBy = "asset",fetch = FetchType.EAGER)
     private Set<AssetImage> assetImages =new HashSet<>();
+
+    @OneToMany(  cascade = CascadeType.ALL,mappedBy = "asset",fetch = FetchType.EAGER)
+    private Set<Attachment> attachments =new HashSet<>();
 
     @OneToOne(mappedBy = "asset", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     private ActivityWall activityWall;
@@ -235,5 +239,11 @@ public class Asset implements Serializable {
         this.consumptionUnit = consumptionUnit;
     }
 
+    public Set<Attachment> getAttachments() {
+        return attachments;
+    }
 
+    public void setAttachments(Set<Attachment> attachments) {
+        this.attachments = attachments;
+    }
 }
