@@ -653,7 +653,7 @@ public class AssetService {
             JdbcTemplate jt;
             jt = new JdbcTemplate(this.dataSource());
             int lowerLimit = offset * limit;
-            int upperLimit = offset * limit + limit;
+            int upperLimit = limit;
             AssetPage assets = new AssetPage();
             //get total count of assets
             String sql = "select count(*) as count from t_asset a where a.tenantuuid=?";
