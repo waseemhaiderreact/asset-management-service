@@ -16,7 +16,25 @@ public class Consumption {
 
     private String consumptionValue;
 
+    private Long price;
+
+    private String currency;
+
+    private int updatedConsumptionLevel;
+
+    //meter fields
+    private String meterType;
+    private String meterValue;
+
+    //location
+    private String lat;
+    private String lng;
+
     private Date createdAt;
+
+    private String tenantUUID;
+
+    private String assetUUID;
 
     @JsonIgnore
     @ManyToOne(fetch = FetchType.EAGER, cascade = {CascadeType.DETACH,CascadeType.REFRESH,CascadeType.PERSIST,CascadeType.MERGE})
@@ -61,5 +79,77 @@ public class Consumption {
 
     public void setCreatedAt(Date createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public Long getPrice() {
+        return price;
+    }
+
+    public void setPrice(Long price) {
+        this.price = price;
+    }
+
+    public String getCurrency() {
+        return currency;
+    }
+
+    public void setCurrency(String currency) {
+        this.currency = currency;
+    }
+
+    public int getUpdatedConsumptionLevel() {
+        return updatedConsumptionLevel;
+    }
+
+    public void setUpdatedConsumptionLevel(int updatedConsumptionLevel) {
+        this.updatedConsumptionLevel = updatedConsumptionLevel;
+    }
+
+    public String getMeterType() {
+        return meterType;
+    }
+
+    public void setMeterType(String meterType) {
+        this.meterType = meterType;
+    }
+
+    public String getMeterValue() {
+        return meterValue;
+    }
+
+    public void setMeterValue(String meterValue) {
+        this.meterValue = meterValue;
+    }
+
+    public String getTenantUUID() {
+        return tenantUUID;
+    }
+
+    public void setTenantUUID(String tenantUUID) {
+        this.tenantUUID = tenantUUID;
+    }
+
+    public String getAssetUUID() {
+        return assetUUID;
+    }
+
+    public void setAssetUUID(String assetUUID) {
+        this.assetUUID = assetUUID;
+    }
+
+    public String getLat() {
+        return lat;
+    }
+
+    public void setLat(String lat) {
+        this.lat = lat;
+    }
+
+    public String getLng() {
+        return lng;
+    }
+
+    public void setLng(String lng) {
+        this.lng = lng;
     }
 }

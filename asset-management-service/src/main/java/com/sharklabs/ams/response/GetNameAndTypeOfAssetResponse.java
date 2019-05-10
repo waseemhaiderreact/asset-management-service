@@ -6,6 +6,11 @@ public class GetNameAndTypeOfAssetResponse {
     private String assetNumber;
     private String uuid;
     private String imageUrl;
+    private String primaryUsageUnit;
+    private String secondaryUsageUnit;
+    private String consumptionUnit;
+    private int maximumConsumptionLevel;
+
 
     public GetNameAndTypeOfAssetResponse(String name, String type, String assetNumber,String uuid) {
         this.name = name;
@@ -55,5 +60,37 @@ public class GetNameAndTypeOfAssetResponse {
 
     public void setUuid(String uuid) {
         this.uuid = uuid;
+    }
+
+    public String getPrimaryUsageUnit() {
+        return primaryUsageUnit;
+    }
+
+    public void setPrimaryUsageUnit(String primaryUsageUnit) {
+        this.primaryUsageUnit = primaryUsageUnit;
+    }
+
+    public String getSecondaryUsageUnit() {
+        return secondaryUsageUnit;
+    }
+
+    public void setSecondaryUsageUnit(String secondaryUsageUnit) {
+        this.secondaryUsageUnit = secondaryUsageUnit;
+    }
+
+    public String getConsumptionUnit() {
+        return consumptionUnit;
+    }
+
+    public void setConsumptionUnit(String consumptionUnit) {
+        this.consumptionUnit = consumptionUnit;
+    }
+
+    public int getMaximumConsumptionLevel() {
+        return maximumConsumptionLevel;
+    }
+
+    public void setMaximumConsumptionLevel(int maximumConsumptionLevel) {
+        this.maximumConsumptionLevel = maximumConsumptionLevel;
     }
 }

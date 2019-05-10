@@ -47,6 +47,8 @@ public class Asset implements Serializable {
 
     private String consumptionUnit;
 
+    private int maximumConsumptionLevel;
+
     @JsonIgnore
     @ManyToOne(fetch = FetchType.EAGER, cascade = {CascadeType.DETACH,CascadeType.REFRESH,CascadeType.REMOVE})
     @JoinColumn(name = "category_id",referencedColumnName = "id")
@@ -245,5 +247,13 @@ public class Asset implements Serializable {
 
     public void setAttachments(Set<Attachment> attachments) {
         this.attachments = attachments;
+    }
+
+    public int getMaximumConsumptionLevel() {
+        return maximumConsumptionLevel;
+    }
+
+    public void setMaximumConsumptionLevel(int maximumConsumptionLevel) {
+        this.maximumConsumptionLevel = maximumConsumptionLevel;
     }
 }

@@ -712,7 +712,7 @@ public class AssetService {
             jt = new JdbcTemplate(this.dataSource());
             HashMap<String, GetNameAndTypeOfAssetResponse> assetsHashmap = new HashMap<>();
             for (String uuid : request.getUuids()) {
-                String sql = "select a.id as id,a.name as asset_name,c.name as category_name,a.asset_number,a.uuid " +
+                String sql = "select a.id as id,a.name as asset_name,a.primary_usage_unit as primary_usage_unit,a.secondary_usage_unit as secondary_usage_unit,a.consumption_unit as consumption_unit,a.maximum_consumption_level as maximum_consumption_level,c.name as category_name,a.asset_number,a.uuid " +
                         "from t_asset a inner join t_category c on a.category_id=c.id " +
                         "where a.uuid=?";
                 Map<String, Object> assetResponse = jt.queryForMap(sql, uuid);
@@ -732,6 +732,10 @@ public class AssetService {
                 asset.setName(String.valueOf(assetResponse.get("asset_name")));
                 asset.setType(String.valueOf(assetResponse.get("category_name")));
                 asset.setAssetNumber(String.valueOf(assetResponse.get("asset_number")));
+                asset.setConsumptionUnit(String.valueOf(assetResponse.get("consumption_unit")));
+                asset.setPrimaryUsageUnit(String.valueOf(assetResponse.get("primary_usage_unit")));
+                asset.setSecondaryUsageUnit(String.valueOf(assetResponse.get("secondary_usage_unit")));
+                asset.setMaximumConsumptionLevel((int)assetResponse.get("maximum_consumption_level"));
                 assetsHashmap.put(String.valueOf(assetResponse.get("uuid")), asset);
             }
 
@@ -763,6 +767,7 @@ public class AssetService {
             //add consumption unit in the array of consumptions of asset
             asset.addConsumption(request.getConsumption());
             request.getConsumption().setAsset(asset);
+            request.getConsumption().setAssetUUID(request.getAssetUUID());
             request.getConsumption().setUuid(UUID.randomUUID().toString());
             request.getConsumption().setCreatedAt(new Date());
             assetRepository.save(asset);
@@ -776,7 +781,7 @@ public class AssetService {
     }
 
     //get paginated consumptions
-    GetPaginatedConsumptionsResponse getPaginatedConsumptions(String uuid, int offset, int limit) {
+    GetPaginatedConsumptionsResponse getPaginatedConsumptionsByAsset(String uuid, int offset, int limit) {
         LOGGER.debug("Inside service to get consumption units of asset. Asset UUID: " + uuid + " with offset: " + offset + " and limit: " + limit);
 
         GetPaginatedConsumptionsResponse response = new GetPaginatedConsumptionsResponse();
@@ -809,6 +814,44 @@ public class AssetService {
         }
     }
 
+    //get paginated consumptions AMS_UC_29
+    GetPaginatedConsumptionsResponse getPaginatedConsumptions(GetPaginatedConsumptionsRequest request){
+        LOGGER.debug("Inside service function of getting paginated consumptions.  TenantUUID: "+request.getTenantUUID()+" Offset: "+request.getOffset()+" Limit: "+request.getLimit()+"  AssetID: "+request.getAssetUUID()+" Start Date: "+request.getStartDate()+" End Date: "+request.getEndDate());
+        GetPaginatedConsumptionsResponse response=new GetPaginatedConsumptionsResponse();
+        try{
+            Page<Consumption> consumptions=consumptionRepository.filterConsumptions(request.getAssetUUID(),request.getTenantUUID(),request.getStartDate(),request.getEndDate(),new PageRequest(request.getOffset(),request.getLimit()));
+
+            response.setConsumptions(consumptions);
+            response.setResponseIdentifier("Success");
+            LOGGER.info("Page of consumptions got successfully.");
+            return response;
+        }catch(Exception e){
+            e.printStackTrace();
+            LOGGER.error("Error while getting paginated consumptions",e);
+            response.setResponseIdentifier("Failure");
+            return response;
+        }
+    }
+
+    //get consumption by id AMS_UC_39
+    GetConsumptionByIdResponse getConsumptionById(Long id){
+        LOGGER.debug("Inside service function of getting consumption by id. ID: "+id);
+        GetConsumptionByIdResponse response=new GetConsumptionByIdResponse();
+        try{
+            //find consumption by id
+            Consumption consumption=consumptionRepository.findOne(id);
+
+            response.setConsumption(consumption);
+            response.setResponseIdentifier("Success");
+            return response;
+        }catch(Exception e){
+            e.printStackTrace();
+            LOGGER.error("Error while getting consumption by id",e);
+            response.setResponseIdentifier("Failure");
+            return response;
+        }
+    }
+
     /******************************************* END Consumption Functions **********************************************/
 
     /******************************************* Usages Functions ****************************************************/
@@ -829,6 +872,46 @@ public class AssetService {
         }catch(Exception e){
             e.printStackTrace();
             LOGGER.error("Error while getting paginated usages by asset. Asset UUID: "+assetUUID,e);
+            response.setResponseIdentifier("Failure");
+            return response;
+        }
+    }
+
+    //get paginated usages AMS_UC_28
+    /*
+     * this function is used to get usages by tenant or filter usages by asset uuid and date
+     */
+    GetPaginatedUsagesResponse getPaginatedUsages(GetPaginatedUsagesRequest request){
+        LOGGER.debug("Inside service function of getting paginated usages. TenantUUID: "+request.getTenantUUID()+" Offset: "+request.getOffset()+" Limit: "+request.getLimit()+"  AssetUUID: "+request.getAssetUUID()+" Start Date: "+request.getStartDate()+" End Date: "+request.getEndDate());
+        GetPaginatedUsagesResponse response=new GetPaginatedUsagesResponse();
+        try{
+            Page<Usage> usages=usageRepository.filterUsages(request.getAssetUUID(),request.getTenantUUID(),request.getStartDate(),request.getEndDate(),new PageRequest(request.getOffset(),request.getLimit()));
+
+            response.setUsages(usages);
+            response.setResponseIdentifier("Success");
+            LOGGER.info("Usages got successfully");
+            return response;
+        }catch(Exception e){
+            e.printStackTrace();
+            LOGGER.error("Error while getting paginated usages",e);
+            response.setResponseIdentifier("Failure");
+            return response;
+        }
+    }
+
+    //get usage by id
+    GetUsageByIdResponse getUsageById(Long id){
+        LOGGER.debug("Inside service function of getting usage by id.Id: "+id);
+        GetUsageByIdResponse response=new GetUsageByIdResponse();
+        try{
+            Usage usage=usageRepository.findOne(id);
+            response.setUsage(usage);
+            response.setResponseIdentifier("Success");
+            LOGGER.info("Usage by id got successfully");
+            return response;
+        }catch(Exception e){
+            e.printStackTrace();
+            LOGGER.error("Error while getting usage by id",e);
             response.setResponseIdentifier("Failure");
             return response;
         }

@@ -31,13 +31,18 @@ public class AssetController {
     //add a category AMS_UC_01
     @RequestMapping(method = RequestMethod.POST,value="/categories")
     public @ResponseBody
-    ResponseEntity addCategory(@RequestBody AddCategoryRequest addCategoryRequest) throws EmptyEntityTableException {
+    ResponseEntity addCategory(@RequestBody AddCategoryRequest addCategoryRequest) {
         Util util = new Util();
         util.setThreadContextForLogging();
         LOGGER.info("Request received in controller to add category");
-        ResponseEntity responseEntity=Optional.ofNullable(assetService.addCategory(addCategoryRequest))
-                .map(resp -> new ResponseEntity<DefaultResponse>(resp, HttpStatus.OK))
-                .orElseThrow(() -> new EmptyEntityTableException("No Category exists",0L));
+        ResponseEntity responseEntity=null;
+        DefaultResponse response=assetService.addCategory(addCategoryRequest);
+        if(response.getResponseCode().equals("200")){
+            responseEntity=new ResponseEntity<DefaultResponse>(response,HttpStatus.OK);
+        }
+        else if(response.getResponseCode().equals("500")){
+            responseEntity=new ResponseEntity<DefaultResponse>(response,HttpStatus.INTERNAL_SERVER_ERROR);
+        }
         util.clearThreadContextForLogging();
         return responseEntity;
     }
@@ -45,13 +50,18 @@ public class AssetController {
     //delete a category AMS_UC_05
     @RequestMapping(method = RequestMethod.DELETE,value="/categories",params = {"id"})
     public @ResponseBody
-    ResponseEntity deleteCategory(@RequestParam String id) throws EmptyEntityTableException {
+    ResponseEntity deleteCategory(@RequestParam String id) {
         Util util = new Util();
         util.setThreadContextForLogging();
         LOGGER.info("Request received in controller to delete category. UUID: "+id);
-        ResponseEntity responseEntity=Optional.ofNullable(assetService.deleteCategory(id))
-                .map(resp -> new ResponseEntity<DefaultResponse>(resp, HttpStatus.OK))
-                .orElseThrow(() -> new EmptyEntityTableException("No Category exists",0L));
+        ResponseEntity responseEntity=null;
+        DefaultResponse response=assetService.deleteCategory(id);
+        if(response.getResponseCode().equals("200")){
+            responseEntity=new ResponseEntity<DefaultResponse>(response,HttpStatus.OK);
+        }
+        else if(response.getResponseCode().equals("500")){
+            responseEntity=new ResponseEntity<DefaultResponse>(response,HttpStatus.INTERNAL_SERVER_ERROR);
+        }
         util.clearThreadContextForLogging();
         return responseEntity;
     }
@@ -59,13 +69,18 @@ public class AssetController {
     //get a category AMS_UC_02
     @RequestMapping(method = RequestMethod.GET,value="/categories",params = {"id"})
     public @ResponseBody
-    ResponseEntity getCategory(@RequestParam String id) throws EmptyEntityTableException {
+    ResponseEntity getCategory(@RequestParam String id) {
         Util util = new Util();
         util.setThreadContextForLogging();
         LOGGER.info("Request received in controller to get category. UUID: "+id);
-        ResponseEntity responseEntity=Optional.ofNullable(assetService.getCategory(id))
-                .map(resp -> new ResponseEntity<GetCategoryResponse>(resp, HttpStatus.OK))
-                .orElseThrow(() -> new EmptyEntityTableException("No Category exists",0L));
+        ResponseEntity responseEntity=null;
+        GetCategoryResponse response=assetService.getCategory(id);
+        if(response.getResponseIdentifier().equals("Success")){
+            responseEntity=new ResponseEntity<GetCategoryResponse>(response,HttpStatus.OK);
+        }
+        else if(response.getResponseIdentifier().equals("Failure")){
+            responseEntity=new ResponseEntity<GetCategoryResponse>(response,HttpStatus.INTERNAL_SERVER_ERROR);
+        }
         util.clearThreadContextForLogging();
         return responseEntity;
     }
@@ -73,13 +88,18 @@ public class AssetController {
     //get all categories AMS_UC_03
     @RequestMapping(method = RequestMethod.GET,value="/categories",params = {"tenantuuid"})
     public @ResponseBody
-    ResponseEntity getAllCategories(@RequestParam String tenantuuid) throws EmptyEntityTableException {
+    ResponseEntity getAllCategories(@RequestParam String tenantuuid) {
         Util util = new Util();
         util.setThreadContextForLogging();
         LOGGER.info("Request received in controller to get all categories.");
-        ResponseEntity responseEntity=Optional.ofNullable(assetService.GetAllCategories(tenantuuid))
-                .map(resp -> new ResponseEntity<GetCategoriesResponse>(resp, HttpStatus.OK))
-                .orElseThrow(() -> new EmptyEntityTableException("No Category exists",0L));
+        ResponseEntity responseEntity=null;
+        GetCategoriesResponse response=assetService.GetAllCategories(tenantuuid);
+        if(response.getResponseIdentifier().equals("Success")){
+            responseEntity=new ResponseEntity<GetCategoriesResponse>(response,HttpStatus.OK);
+        }
+        else if(response.getResponseIdentifier().equals("Failure")){
+            responseEntity=new ResponseEntity<GetCategoriesResponse>(response,HttpStatus.INTERNAL_SERVER_ERROR);
+        }
         util.clearThreadContextForLogging();
         return responseEntity;
     }
@@ -87,13 +107,18 @@ public class AssetController {
     //edit categories AMS_UC_04
     @RequestMapping(method = RequestMethod.PUT,value="/categories")
     public @ResponseBody
-    ResponseEntity editCategory(@RequestBody EditCategoryRequest editCategoryRequest) throws EmptyEntityTableException {
+    ResponseEntity editCategory(@RequestBody EditCategoryRequest editCategoryRequest) {
         Util util = new Util();
         util.setThreadContextForLogging();
         LOGGER.info("Request received in controller to edit category.");
-        ResponseEntity responseEntity=Optional.ofNullable(assetService.editCategory(editCategoryRequest))
-                .map(resp -> new ResponseEntity<EditCategoryResponse>(resp, HttpStatus.OK))
-                .orElseThrow(() -> new EmptyEntityTableException("No Category exists",0L));
+        ResponseEntity responseEntity=null;
+        EditCategoryResponse response=assetService.editCategory(editCategoryRequest);
+        if(response.getResponseIdentifier().equals("Success")){
+            responseEntity=new ResponseEntity<EditCategoryResponse>(response,HttpStatus.OK);
+        }
+        else if(response.getResponseIdentifier().equals("Failure")){
+            responseEntity=new ResponseEntity<EditCategoryResponse>(response,HttpStatus.INTERNAL_SERVER_ERROR);
+        }
         util.clearThreadContextForLogging();
         return responseEntity;
     }
@@ -104,13 +129,18 @@ public class AssetController {
     //add a field template AMS_UC_06
     @RequestMapping(method = RequestMethod.POST,value="/fieldtemplate")
     public @ResponseBody
-    ResponseEntity addFieldTemplate(@RequestBody AddFieldTemplateRequest addFieldTemplateRequest) throws EmptyEntityTableException {
+    ResponseEntity addFieldTemplate(@RequestBody AddFieldTemplateRequest addFieldTemplateRequest) {
         Util util = new Util();
         util.setThreadContextForLogging();
         LOGGER.info("Request received in controller to add field template");
-        ResponseEntity responseEntity=Optional.ofNullable(assetService.addFieldTemplate(addFieldTemplateRequest))
-                .map(resp -> new ResponseEntity<DefaultResponse>(resp, HttpStatus.OK))
-                .orElseThrow(() -> new EmptyEntityTableException("No Field Template exists",0L));
+        ResponseEntity responseEntity=null;
+        DefaultResponse response=assetService.addFieldTemplate(addFieldTemplateRequest);
+        if(response.getResponseCode().equals("200")){
+            responseEntity=new ResponseEntity<DefaultResponse>(response,HttpStatus.OK);
+        }
+        else if(response.getResponseCode().equals("500")){
+            responseEntity=new ResponseEntity<DefaultResponse>(response,HttpStatus.INTERNAL_SERVER_ERROR);
+        }
         util.clearThreadContextForLogging();
         return responseEntity;
     }
@@ -118,13 +148,18 @@ public class AssetController {
     //delete a field template AMS_UC_09
     @RequestMapping(method = RequestMethod.DELETE,value="/fieldtemplate",params={"id"})
     public @ResponseBody
-    ResponseEntity deleteFieldTemplate(@RequestParam String id) throws EmptyEntityTableException {
+    ResponseEntity deleteFieldTemplate(@RequestParam String id) {
         Util util = new Util();
         util.setThreadContextForLogging();
         LOGGER.info("Request received in controller to delete field template. UUID: "+id);
-        ResponseEntity responseEntity=Optional.ofNullable(assetService.deleteFieldTemplate(id))
-                .map(resp -> new ResponseEntity<DefaultResponse>(resp, HttpStatus.OK))
-                .orElseThrow(() -> new EmptyEntityTableException("No Field Template exists",0L));
+        ResponseEntity responseEntity=null;
+        DefaultResponse response=assetService.deleteFieldTemplate(id);
+        if(response.getResponseCode().equals("200")){
+            responseEntity=new ResponseEntity<DefaultResponse>(response,HttpStatus.OK);
+        }
+        else if(response.getResponseCode().equals("500")){
+            responseEntity=new ResponseEntity<DefaultResponse>(response,HttpStatus.INTERNAL_SERVER_ERROR);
+        }
         util.clearThreadContextForLogging();
         return responseEntity;
     }
@@ -132,13 +167,18 @@ public class AssetController {
     //get field template by uuid AMS_UC_07
     @RequestMapping(method = RequestMethod.GET,value="/fieldtemplate",params={"id"})
     public @ResponseBody
-    ResponseEntity getFieldTemplate(@RequestParam String id) throws EmptyEntityTableException {
+    ResponseEntity getFieldTemplate(@RequestParam String id){
         Util util = new Util();
         util.setThreadContextForLogging();
         LOGGER.info("Request received in controller to get field template. UUID: "+id);
-        ResponseEntity responseEntity=Optional.ofNullable(assetService.getFieldTemplate(id))
-                .map(resp -> new ResponseEntity<GetFieldTemplateResponse>(resp, HttpStatus.OK))
-                .orElseThrow(() -> new EmptyEntityTableException("No Field Template exists",0L));
+        ResponseEntity responseEntity=null;
+        GetFieldTemplateResponse response=assetService.getFieldTemplate(id);
+        if(response.getResponseIdentifier().equals("Success")){
+            responseEntity=new ResponseEntity<GetFieldTemplateResponse>(response,HttpStatus.OK);
+        }
+        else if(response.getResponseIdentifier().equals("Failure")){
+            responseEntity=new ResponseEntity<GetFieldTemplateResponse>(response,HttpStatus.INTERNAL_SERVER_ERROR);
+        }
         util.clearThreadContextForLogging();
         return responseEntity;
     }
@@ -150,9 +190,14 @@ public class AssetController {
         Util util = new Util();
         util.setThreadContextForLogging();
         LOGGER.info("Request received in controller to edit field template.");
-        ResponseEntity responseEntity=Optional.ofNullable(assetService.editFieldTemplate(editFieldTemplateRequest))
-                .map(resp -> new ResponseEntity<EditFieldTemplateResponse>(resp, HttpStatus.OK))
-                .orElseThrow(() -> new EmptyEntityTableException("No Field Template exists",0L));
+        ResponseEntity responseEntity=null;
+        EditFieldTemplateResponse response=assetService.editFieldTemplate(editFieldTemplateRequest);
+        if(response.getResponseIdentifier().equals("Success")){
+            responseEntity=new ResponseEntity<EditFieldTemplateResponse>(response,HttpStatus.OK);
+        }
+        else if(response.getResponseIdentifier().equals("Failure")){
+            responseEntity=new ResponseEntity<EditFieldTemplateResponse>(response,HttpStatus.INTERNAL_SERVER_ERROR);
+        }
         util.clearThreadContextForLogging();
         return responseEntity;
     }
@@ -163,13 +208,18 @@ public class AssetController {
     //add asset AMS_UC_10
     @RequestMapping(method = RequestMethod.POST,value="")
     public @ResponseBody
-    ResponseEntity addAsset(@RequestBody AddAssetRequest addAssetRequest) throws EmptyEntityTableException {
+    ResponseEntity addAsset(@RequestBody AddAssetRequest addAssetRequest) {
         Util util = new Util();
         util.setThreadContextForLogging();
         LOGGER.info("Request received in controller to add asset.");
-        ResponseEntity responseEntity=Optional.ofNullable(assetService.addAsset(addAssetRequest))
-                .map(resp -> new ResponseEntity<DefaultResponse>(resp, HttpStatus.OK))
-                .orElseThrow(() -> new EmptyEntityTableException("No Asset exists",0L));
+        ResponseEntity responseEntity=null;
+        DefaultResponse response=assetService.addAsset(addAssetRequest);
+        if(response.getResponseCode().equals("200")){
+            responseEntity=new ResponseEntity<DefaultResponse>(response,HttpStatus.OK);
+        }
+        else if(response.getResponseCode().equals("500")){
+            responseEntity=new ResponseEntity<DefaultResponse>(response,HttpStatus.INTERNAL_SERVER_ERROR);
+        }
         util.clearThreadContextForLogging();
         return responseEntity;
     }
@@ -177,13 +227,18 @@ public class AssetController {
     //edit asset AMS_UC_11
     @RequestMapping(method = RequestMethod.PUT,value="")
     public @ResponseBody
-    ResponseEntity editAsset(@RequestBody EditAssetRequest editAssetRequest) throws EmptyEntityTableException {
+    ResponseEntity editAsset(@RequestBody EditAssetRequest editAssetRequest){
         Util util = new Util();
         util.setThreadContextForLogging();
         LOGGER.info("Request received in controller to edit asset.");
-        ResponseEntity responseEntity=Optional.ofNullable(assetService.editAsset(editAssetRequest))
-                .map(resp -> new ResponseEntity<EditAssetResponse>(resp, HttpStatus.OK))
-                .orElseThrow(() -> new EmptyEntityTableException("No Asset exists",0L));
+        ResponseEntity responseEntity=null;
+        EditAssetResponse response=assetService.editAsset(editAssetRequest);
+        if(response.getResponseIdentifier().equals("Success")){
+            responseEntity=new ResponseEntity<EditAssetResponse>(response,HttpStatus.OK);
+        }
+        else if(response.getResponseIdentifier().equals("Failure")){
+            responseEntity=new ResponseEntity<EditAssetResponse>(response,HttpStatus.INTERNAL_SERVER_ERROR);
+        }
         util.clearThreadContextForLogging();
         return responseEntity;
     }
@@ -191,13 +246,18 @@ public class AssetController {
     //delete asset AMS_UC_12
     @RequestMapping(method = RequestMethod.DELETE,value="",params={"id"})
     public @ResponseBody
-    ResponseEntity deleteAsset(@RequestParam String id) throws EmptyEntityTableException {
+    ResponseEntity deleteAsset(@RequestParam String id) {
         Util util = new Util();
         util.setThreadContextForLogging();
         LOGGER.info("Request received in controller to delete asset. UUID: "+id);
-        ResponseEntity responseEntity=Optional.ofNullable(assetService.deleteAsset(id))
-                .map(resp -> new ResponseEntity<DefaultResponse>(resp, HttpStatus.OK))
-                .orElseThrow(() -> new EmptyEntityTableException("No Asset exists",0L));
+        ResponseEntity responseEntity=null;
+        DefaultResponse response=assetService.deleteAsset(id);
+        if(response.getResponseCode().equals("200")){
+            responseEntity=new ResponseEntity<DefaultResponse>(response,HttpStatus.OK);
+        }
+        else if(response.getResponseCode().equals("500")){
+            responseEntity=new ResponseEntity<DefaultResponse>(response,HttpStatus.INTERNAL_SERVER_ERROR);
+        }
         util.clearThreadContextForLogging();
         return responseEntity;
     }
@@ -205,13 +265,18 @@ public class AssetController {
     //get asset AMS_UC_13
     @RequestMapping(method = RequestMethod.GET,value="",params={"id"})
     public @ResponseBody
-    ResponseEntity getAsset(@RequestParam String id) throws EmptyEntityTableException {
+    ResponseEntity getAsset(@RequestParam String id) {
         Util util = new Util();
         util.setThreadContextForLogging();
         LOGGER.info("Request received in controller to get asset. UUID: "+id);
-        ResponseEntity responseEntity=Optional.ofNullable(assetService.getAsset(id))
-                .map(resp -> new ResponseEntity<GetAssetResponse>(resp, HttpStatus.OK))
-                .orElseThrow(() -> new EmptyEntityTableException("No Asset exists",0L));
+        ResponseEntity responseEntity=null;
+        GetAssetResponse response=assetService.getAsset(id);
+        if(response.getResponseIdentifier().equals("Success")){
+            responseEntity=new ResponseEntity<GetAssetResponse>(response,HttpStatus.OK);
+        }
+        else if(response.getResponseIdentifier().equals("Failure")){
+            responseEntity=new ResponseEntity<GetAssetResponse>(response,HttpStatus.INTERNAL_SERVER_ERROR);
+        }
         util.clearThreadContextForLogging();
         return responseEntity;
     }
@@ -219,7 +284,7 @@ public class AssetController {
     //get assets AMS_UC_14
     @RequestMapping(method = RequestMethod.GET,value="",params = {"tenantuuid"})
     public @ResponseBody
-    ResponseEntity getAssets(@RequestParam String tenantuuid) throws EmptyEntityTableException {
+    ResponseEntity getAssets(@RequestParam String tenantuuid) {
         Util util = new Util();
         util.setThreadContextForLogging();
         LOGGER.info("Request received in controller to get assets.");
@@ -238,13 +303,18 @@ public class AssetController {
     //get paginated assets AMS_UC_22
     @RequestMapping(method = RequestMethod.GET,value="",params = {"offset","limit","tenantuuid"})
     public @ResponseBody
-    ResponseEntity getPaginatedAssets(@RequestParam int offset,@RequestParam int limit,@RequestParam String tenantuuid) throws EmptyEntityTableException {
+    ResponseEntity getPaginatedAssets(@RequestParam int offset,@RequestParam int limit,@RequestParam String tenantuuid) {
         Util util = new Util();
         util.setThreadContextForLogging();
         LOGGER.info("Request received in controller to get page of assets.");
-        ResponseEntity responseEntity=Optional.ofNullable(assetService.getPaginatedAssets(offset, limit,tenantuuid))
-                .map(resp -> new ResponseEntity<GetPaginatedAssetsResponse>(resp, HttpStatus.OK))
-                .orElseThrow(() -> new EmptyEntityTableException("No Asset exists",0L));
+        ResponseEntity responseEntity=null;
+        GetPaginatedAssetsResponse response=assetService.getPaginatedAssets(offset, limit,tenantuuid);
+        if(response.getResponseIdentifier().equals("Success")){
+            responseEntity=new ResponseEntity<GetPaginatedAssetsResponse>(response,HttpStatus.OK);
+        }
+        else if(response.getResponseIdentifier().equals("Failure")){
+            responseEntity=new ResponseEntity<GetPaginatedAssetsResponse>(response,HttpStatus.INTERNAL_SERVER_ERROR);
+        }
         util.clearThreadContextForLogging();
         return responseEntity;
     }
@@ -252,13 +322,18 @@ public class AssetController {
     //get name of types of assets by uuids AMS_UC_23
     @RequestMapping(method = RequestMethod.POST,value="/inspections/listview")
     public @ResponseBody
-    ResponseEntity getNameAndTypeOfAssetsByUUIDS(@RequestBody GetNameAndTypeOfAssetsByUUIDSRequest request) throws EmptyEntityTableException {
+    ResponseEntity getNameAndTypeOfAssetsByUUIDS(@RequestBody GetNameAndTypeOfAssetsByUUIDSRequest request) {
         Util util = new Util();
         util.setThreadContextForLogging();
         LOGGER.info("Request received in controller to get name and type of assets by uuids.");
-        ResponseEntity responseEntity=Optional.ofNullable(assetService.getNameAndTypeOfAssetsByUUIDS(request))
-                .map(resp -> new ResponseEntity<GetNameAndTypeOfAssetsByUUIDSResponse>(resp, HttpStatus.OK))
-                .orElseThrow(() -> new EmptyEntityTableException("No Asset exists",0L));
+        ResponseEntity responseEntity=null;
+        GetNameAndTypeOfAssetsByUUIDSResponse response=assetService.getNameAndTypeOfAssetsByUUIDS(request);
+        if(response.getResponseIdentifier().equals("Success")){
+            responseEntity=new ResponseEntity<GetNameAndTypeOfAssetsByUUIDSResponse>(response,HttpStatus.OK);
+        }
+        else if(response.getResponseIdentifier().equals("Failure")){
+            responseEntity=new ResponseEntity<GetNameAndTypeOfAssetsByUUIDSResponse>(response,HttpStatus.INTERNAL_SERVER_ERROR);
+        }
         util.clearThreadContextForLogging();
         return responseEntity;
     }
@@ -270,7 +345,7 @@ public class AssetController {
     //post consumption units of asset AMS_UC_25
     @RequestMapping(method = RequestMethod.POST,value="/consumption")
     public @ResponseBody
-    ResponseEntity postConsumptionUnit(@RequestBody AddConsumptionUnitsRequest request) throws EmptyEntityTableException {
+    ResponseEntity postConsumptionUnit(@RequestBody AddConsumptionUnitsRequest request) {
         Util util = new Util();
         util.setThreadContextForLogging();
         LOGGER.info("Request received in controller to add consumption units of asset. Asset UUID: "+request.getAssetUUID());
@@ -289,12 +364,12 @@ public class AssetController {
 
     @RequestMapping(method=RequestMethod.GET,value="/consumption",params={"uuid","offset","limit"})
     public @ResponseBody
-    ResponseEntity getPaginatedConsumptions(@RequestParam String uuid, @RequestParam int offset, @RequestParam int limit) throws EmptyEntityTableException{
+    ResponseEntity getPaginatedConsumptionsByAsset(@RequestParam String uuid, @RequestParam int offset, @RequestParam int limit) throws EmptyEntityTableException{
         Util util = new Util();
         util.setThreadContextForLogging();
         LOGGER.info("Request received in controller to get consumption units of asset. Asset UUID: "+uuid+" with offset: "+offset+" and limit: "+limit);
 
-        GetPaginatedConsumptionsResponse response=assetService.getPaginatedConsumptions(uuid, offset,limit);
+        GetPaginatedConsumptionsResponse response=assetService.getPaginatedConsumptionsByAsset(uuid, offset,limit);
         ResponseEntity responseEntity;
         if(response.getResponseIdentifier().contentEquals("Success")){
             responseEntity=new ResponseEntity<>(response,HttpStatus.OK);
@@ -326,6 +401,45 @@ public class AssetController {
         return responseEntity;
     }
 
+    //get paginated consumptions AMS_UC_29
+    @RequestMapping(method = RequestMethod.POST,value="/consumption/filter")
+    public @ResponseBody
+    ResponseEntity getPaginatedConsumptions(@RequestBody GetPaginatedConsumptionsRequest request){
+        Util util = new Util();
+        util.setThreadContextForLogging();
+        LOGGER.info("Request received in controller to get paginated consumptions. TenantUUID: "+request.getTenantUUID()+" Offset: "+request.getOffset()+" Limit: "+request.getLimit()+"  AssetID: "+request.getAssetUUID()+" Start Date: "+request.getStartDate()+" End Date: "+request.getEndDate());
+        ResponseEntity responseEntity=null;
+        GetPaginatedConsumptionsResponse response=assetService.getPaginatedConsumptions(request);
+        if(response.getResponseIdentifier().equals("Success")){
+            responseEntity=new ResponseEntity<GetPaginatedConsumptionsResponse>(response,HttpStatus.OK);
+        }
+        else if(response.getResponseIdentifier().equals("Failure")){
+            responseEntity=new ResponseEntity<GetPaginatedConsumptionsResponse>(response,HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+        util.clearThreadContextForLogging();
+        return responseEntity;
+    }
+
+    //get consumption by id AMS_UC_39
+    @RequestMapping(method = RequestMethod.GET,value="/consumption",params = {"id"})
+    public @ResponseBody
+    ResponseEntity getConsumptionById(@RequestParam Long id) {
+        Util util = new Util();
+        util.setThreadContextForLogging();
+        LOGGER.info("Request received in controller to get consumption by id. ID: "+id);
+        ResponseEntity responseEntity=null;
+        GetConsumptionByIdResponse response=assetService.getConsumptionById(id);
+        if(response.getResponseIdentifier().equals("Success")){
+            responseEntity=new ResponseEntity<GetConsumptionByIdResponse>(response,HttpStatus.OK);
+        }
+        else if(response.getResponseIdentifier().equals("Failure")){
+            responseEntity=new ResponseEntity<GetConsumptionByIdResponse>(response,HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+        util.clearThreadContextForLogging();
+        return responseEntity;
+    }
+
+
     /******************************************* END Consumption Functions *******************************************/
 
     /******************************************* Usages Functions ****************************************************/
@@ -343,6 +457,44 @@ public class AssetController {
         }
         else if(response.getResponseIdentifier().equals("Failure")){
             responseEntity=new ResponseEntity<GetPaginatedUsagesByAssetResponse>(response,HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+        util.clearThreadContextForLogging();
+        return responseEntity;
+    }
+
+    //get paginated usages AMS_UC_28
+    @RequestMapping(method = RequestMethod.POST,value = "/usages/filter")
+    public @ResponseBody
+    ResponseEntity getPaginatedUsages(@RequestBody GetPaginatedUsagesRequest request){
+        Util util = new Util();
+        util.setThreadContextForLogging();
+        LOGGER.info("Request received in controller to get paginated usages. TenantUUID: "+request.getTenantUUID()+" Offset: "+request.getOffset()+" Limit: "+request.getLimit()+"  AssetUUID: "+request.getAssetUUID()+" Start Date: "+request.getStartDate()+" End Date: "+request.getEndDate());
+        ResponseEntity responseEntity=null;
+        GetPaginatedUsagesResponse response=assetService.getPaginatedUsages(request);
+        if(response.getResponseIdentifier().equals("Success")){
+            responseEntity=new ResponseEntity<GetPaginatedUsagesResponse>(response,HttpStatus.OK);
+        }
+        else if(response.getResponseIdentifier().equals("Failure")){
+            responseEntity=new ResponseEntity<GetPaginatedUsagesResponse>(response,HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+        util.clearThreadContextForLogging();
+        return responseEntity;
+    }
+
+    //get usage by id
+    @RequestMapping(method = RequestMethod.GET,value = "/usages", params = {"id"})
+    public @ResponseBody
+    ResponseEntity getusageById(@RequestParam Long id){
+        Util util = new Util();
+        util.setThreadContextForLogging();
+        LOGGER.info("Request received in controller to get usage by id. Id: "+id);
+        ResponseEntity responseEntity=null;
+        GetUsageByIdResponse response=assetService.getUsageById(id);
+        if(response.getResponseIdentifier().equals("Success")){
+            responseEntity=new ResponseEntity<GetUsageByIdResponse>(response,HttpStatus.OK);
+        }
+        else if(response.getResponseIdentifier().equals("Failure")){
+            responseEntity=new ResponseEntity<GetUsageByIdResponse>(response,HttpStatus.INTERNAL_SERVER_ERROR);
         }
         util.clearThreadContextForLogging();
         return responseEntity;

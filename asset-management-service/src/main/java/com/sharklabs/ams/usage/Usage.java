@@ -22,8 +22,15 @@ public class Usage{
     private Double secondaryUsageLat;
     private Double secondaryUsageLng;
 
+    // trip fields
+    private String category;
+    private Date startTime;
+    private Date stopTime;
+
     private Date createdAt;
     private String assetUUID; //asset uuid (the asset of which these usage values will be stored)
+
+    private String tenantUUID;
 
     @JsonIgnore
     @ManyToOne(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
@@ -124,5 +131,37 @@ public class Usage{
 
     public void setCreatedAt(Date createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public String getCategory() {
+        return category;
+    }
+
+    public void setCategory(String category) {
+        this.category = category;
+    }
+
+    public Date getStartTime() {
+        return startTime;
+    }
+
+    public void setStartTime(Date startTime) {
+        this.startTime = startTime;
+    }
+
+    public Date getStopTime() {
+        return stopTime;
+    }
+
+    public void setStopTime(Date stopTime) {
+        this.stopTime = stopTime;
+    }
+
+    public String getTenantUUID() {
+        return tenantUUID;
+    }
+
+    public void setTenantUUID(String tenantUUID) {
+        this.tenantUUID = tenantUUID;
     }
 }
