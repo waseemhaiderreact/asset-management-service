@@ -664,6 +664,7 @@ public class AssetService {
                 asset.setPrimaryUsageUnit(String.valueOf(assetResponse.get("primary_usage_unit")));
                 asset.setSecondaryUsageUnit(String.valueOf(assetResponse.get("secondary_usage_unit")));
                 asset.setMaximumConsumptionLevel((int)assetResponse.get("maximum_consumption_level"));
+                assets.add(asset);
             }
 
             response.setAssets(assets);
