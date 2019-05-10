@@ -300,6 +300,25 @@ public class AssetController {
         return responseEntity;
     }
 
+    //get asset basic detail by tenant AMS_UC_31
+    @RequestMapping(method = RequestMethod.GET,value="/basicinfo",params = {"tenantuuid"})
+    public @ResponseBody
+    ResponseEntity getBasicAssetDetailByTenant(@RequestParam String tenantuuid) {
+        Util util = new Util();
+        util.setThreadContextForLogging();
+        LOGGER.info("Request received in controller to get basic asset detail by tenant uuid. TenantUUID: "+tenantuuid);
+        ResponseEntity responseEntity=null;
+        GetBasicAssetDetailByTenantResponse response=assetService.getBasicAssetDetailByTenant(tenantuuid);
+        if(response.getResponseIdentifier().equals("Success")){
+            responseEntity=new ResponseEntity<GetBasicAssetDetailByTenantResponse>(response,HttpStatus.OK);
+        }
+        else if(response.getResponseIdentifier().equals("Failure")){
+            responseEntity=new ResponseEntity<GetBasicAssetDetailByTenantResponse>(response,HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+        util.clearThreadContextForLogging();
+        return responseEntity;
+    }
+
     //get paginated assets AMS_UC_22
     @RequestMapping(method = RequestMethod.GET,value="",params = {"offset","limit","tenantuuid"})
     public @ResponseBody

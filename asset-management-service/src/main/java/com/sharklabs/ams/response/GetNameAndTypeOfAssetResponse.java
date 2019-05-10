@@ -3,6 +3,7 @@ package com.sharklabs.ams.response;
 public class GetNameAndTypeOfAssetResponse {
     private String name;
     private String type;
+    private String categoryUUID;
     private String assetNumber;
     private String uuid;
     private String imageUrl;
@@ -92,5 +93,13 @@ public class GetNameAndTypeOfAssetResponse {
 
     public void setMaximumConsumptionLevel(int maximumConsumptionLevel) {
         this.maximumConsumptionLevel = maximumConsumptionLevel;
+    }
+
+    public String getCategoryUUID() {
+        return categoryUUID;
+    }
+
+    public void setCategoryUUID(String categoryUUID) {
+        this.categoryUUID = categoryUUID;
     }
 }

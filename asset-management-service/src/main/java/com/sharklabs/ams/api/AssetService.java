@@ -639,7 +639,43 @@ public class AssetService {
             LOGGER.error("Error while getting all categories from db.", e);
             return response;
         }
+    }
 
+    //get asset basic detail by tenant AMS_UC_31
+    GetBasicAssetDetailByTenantResponse getBasicAssetDetailByTenant(String tenantUUID){
+        LOGGER.debug("Inside service function of getting basic details of asset by tenant. Tenant UUID: "+tenantUUID);
+        GetBasicAssetDetailByTenantResponse response=new GetBasicAssetDetailByTenantResponse();
+        try{
+            JdbcTemplate jt;
+            jt = new JdbcTemplate(this.dataSource());
+
+            String sql = "select a.id as id,a.uuid as uuid,a.asset_number as asset_number,a.name as asset_name,a.primary_usage_unit as primary_usage_unit,a.secondary_usage_unit as secondary_usage_unit,a.consumption_unit as consumption_unit,a.maximum_consumption_level as maximum_consumption_level,c.uuid as category_uuid " +
+                        "from t_asset a inner join t_category c on a.category_id=c.id " +
+                        "where a.tenantuuid=?";
+            List<Map<String, Object>> assetsResponse = jt.queryForList(sql, tenantUUID);
+            List<GetNameAndTypeOfAssetResponse> assets=new ArrayList<>();
+            for(Map<String,Object> assetResponse: assetsResponse) {
+                GetNameAndTypeOfAssetResponse asset = new GetNameAndTypeOfAssetResponse();
+                asset.setName(String.valueOf(assetResponse.get("asset_name")));
+                asset.setCategoryUUID(String.valueOf(assetResponse.get("category_uuid")));
+                asset.setUuid(String.valueOf(assetResponse.get("uuid")));
+                asset.setAssetNumber(String.valueOf(assetResponse.get("asset_number")));
+                asset.setConsumptionUnit(String.valueOf(assetResponse.get("consumption_unit")));
+                asset.setPrimaryUsageUnit(String.valueOf(assetResponse.get("primary_usage_unit")));
+                asset.setSecondaryUsageUnit(String.valueOf(assetResponse.get("secondary_usage_unit")));
+                asset.setMaximumConsumptionLevel((int)assetResponse.get("maximum_consumption_level"));
+            }
+
+            response.setAssets(assets);
+            response.setResponseIdentifier("Success");
+            LOGGER.info("Basic detail of asset got successfully");
+            return response;
+        }catch(Exception e){
+            e.printStackTrace();
+            response.setResponseIdentifier("Failure");
+            LOGGER.error("Error while getting basic detail of asset by tenant. TenantUUID: "+tenantUUID);
+            return response;
+        }
     }
 
     //get page of assets AMS_UC_22
