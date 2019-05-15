@@ -19,6 +19,7 @@ import com.sharklabs.ams.field.Field;
 import com.sharklabs.ams.fieldtemplate.FieldTemplate;
 import com.sharklabs.ams.fieldtemplate.FieldTemplateRepository;
 import com.sharklabs.ams.fieldtemplate.FieldTemplateResponse;
+import com.sharklabs.ams.imagevoice.ImageVoiceRepository;
 import com.sharklabs.ams.inspectionitem.InspectionItem;
 import com.sharklabs.ams.inspectionitemcategory.InspectionItemCategory;
 import com.sharklabs.ams.inspectiontemplate.InspectionTemplate;
@@ -67,6 +68,8 @@ public class AssetService {
     ConsumptionRepository consumptionRepository;
     @Autowired
     UsageRepository usageRepository;
+    @Autowired
+    ImageVoiceRepository imageVoiceRepository;
 
     @Value("${cloud.aws.credentials.accessKey}")
     private String accessKey;
@@ -93,6 +96,10 @@ public class AssetService {
     private String dataSourcePassword = "";
 
     private static final String s3EnpointUrl = "https://fms-issue-assets.s3.eu-west-2.amazonaws.com";
+
+    private static final String primaryUsageType = "1";
+
+    private static final String secondaryUsageType = "2";
 
     private AmazonS3 s3client;
 
@@ -805,9 +812,31 @@ public class AssetService {
             asset.addConsumption(request.getConsumption());
             request.getConsumption().setAsset(asset);
             request.getConsumption().setAssetUUID(request.getAssetUUID());
-            request.getConsumption().setUuid(UUID.randomUUID().toString());
             request.getConsumption().setCreatedAt(new Date());
+
+            Usage usage=new Usage();
+            usage.setCreatedAt(new Date());
+            usage.setAsset(asset);
+            usage.setAssetUUID(request.getAssetUUID());
+            usage.setTenantUUID(request.getConsumption().getTenantUUID());
+            if(request.getConsumption().getMeterType().equals(primaryUsageType)){
+                usage.setPrimaryUsageLat(request.getConsumption().getLat());
+                usage.setPrimaryUsageLng(request.getConsumption().getLng());
+                usage.setPrimaryUsageTime(request.getConsumption().getCreatedAt());
+                usage.setPrimaryUsageValue(request.getConsumption().getMeterValue());
+            }
+            else if(request.getConsumption().getMeterType().equals(secondaryUsageType)){
+                usage.setSecondaryUsageLat(request.getConsumption().getLat());
+                usage.setSecondaryUsageLng(request.getConsumption().getLng());
+                usage.setSecondaryUsageTime(request.getConsumption().getCreatedAt());
+                usage.setSecondaryUsageValue(request.getConsumption().getMeterValue());
+            }
+            asset.addUsage(usage);
+
             assetRepository.save(asset);
+
+            //save attachments
+            imageVoiceRepository.save(request.getImageVoices());
 
             return new DefaultResponse("Success", "Consumption Unit Added Successfully", "200", request.getConsumption().getUuid());
         } catch (Exception e) {
