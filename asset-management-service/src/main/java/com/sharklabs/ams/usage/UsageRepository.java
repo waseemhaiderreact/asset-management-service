@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.util.Date;
+import java.util.List;
 
 public interface UsageRepository extends JpaRepository<Usage,Long> {
 
@@ -25,4 +26,6 @@ public interface UsageRepository extends JpaRepository<Usage,Long> {
                              @Param("startDate") Date startDate,
                              @Param("endDate") Date endDate,
                              Pageable pageable);
+
+    Page<Usage> findByAssetUUIDIn(List<String> assetUUIDS, Pageable pageable);
 }

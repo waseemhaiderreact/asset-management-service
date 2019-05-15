@@ -11,6 +11,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.util.Date;
+import java.util.List;
 
 public interface ConsumptionRepository extends JpaRepository<Consumption,Long> {
     Consumption findConsumptionByUuid(String uuid);
@@ -35,4 +36,6 @@ public interface ConsumptionRepository extends JpaRepository<Consumption,Long> {
                              @Param("startDate") Date startDate,
                              @Param("endDate") Date endDate,
                              Pageable pageable);
+
+    Page<Consumption> findByAssetUUIDIn(List<String> assetUUIDS, Pageable pageable);
 }

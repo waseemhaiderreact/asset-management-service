@@ -439,6 +439,25 @@ public class AssetController {
         return responseEntity;
     }
 
+    //get paginated consumptions by asset uuids AMS_UC_31
+    @RequestMapping(method = RequestMethod.POST,value="/consumption/filter/assets")
+    public @ResponseBody
+    ResponseEntity getPaginatedConsumptionsByAssets(@RequestBody GetPaginatedConsumptionsByAssetsRequest request){
+        Util util = new Util();
+        util.setThreadContextForLogging();
+        LOGGER.info("Request received in controller to get paginated consumptions by asset uuids. Offset: "+request.getOffset()+" Limit: "+request.getLimit());
+        ResponseEntity responseEntity=null;
+        GetPaginatedConsumptionsByAssetsResponse response=assetService.getPaginatedConsumptionsByAssets(request);
+        if(response.getResponseIdentifier().equals("Success")){
+            responseEntity=new ResponseEntity<GetPaginatedConsumptionsByAssetsResponse>(response,HttpStatus.OK);
+        }
+        else if(response.getResponseIdentifier().equals("Failure")){
+            responseEntity=new ResponseEntity<GetPaginatedConsumptionsByAssetsResponse>(response,HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+        util.clearThreadContextForLogging();
+        return responseEntity;
+    }
+
     //get consumption by id AMS_UC_39
     @RequestMapping(method = RequestMethod.GET,value="/consumption",params = {"id"})
     public @ResponseBody
@@ -495,6 +514,25 @@ public class AssetController {
         }
         else if(response.getResponseIdentifier().equals("Failure")){
             responseEntity=new ResponseEntity<GetPaginatedUsagesResponse>(response,HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+        util.clearThreadContextForLogging();
+        return responseEntity;
+    }
+
+    //get paginated usages by asset uuids AMS_UC_33
+    @RequestMapping(method = RequestMethod.POST,value = "/usages/filter/assets")
+    public @ResponseBody
+    ResponseEntity getPaginatedUsagesByAssets(@RequestBody GetPaginatedUsagesByAssetsRequest request){
+        Util util = new Util();
+        util.setThreadContextForLogging();
+        LOGGER.info("Request received in controller to get paginated usages by asset uuids. Offset: "+request.getOffset()+" Limit: "+request.getLimit());
+        ResponseEntity responseEntity=null;
+        GetPaginatedUsagesByAssetsResponse response=assetService.getPaginatedUsagesByAssets(request);
+        if(response.getResponseIdentifier().equals("Success")){
+            responseEntity=new ResponseEntity<GetPaginatedUsagesByAssetsResponse>(response,HttpStatus.OK);
+        }
+        else if(response.getResponseIdentifier().equals("Failure")){
+            responseEntity=new ResponseEntity<GetPaginatedUsagesByAssetsResponse>(response,HttpStatus.INTERNAL_SERVER_ERROR);
         }
         util.clearThreadContextForLogging();
         return responseEntity;

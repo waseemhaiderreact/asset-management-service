@@ -899,6 +899,25 @@ public class AssetService {
         }
     }
 
+    //get paginated consumptions by asset uuids AMS_UC_31
+    GetPaginatedConsumptionsByAssetsResponse getPaginatedConsumptionsByAssets(GetPaginatedConsumptionsByAssetsRequest request){
+        LOGGER.debug("Inside service function of getting paginated consumptions by asset uuids. Offset: "+request.getOffset()+ "Limit: "+request.getLimit());
+        GetPaginatedConsumptionsByAssetsResponse response=new GetPaginatedConsumptionsByAssetsResponse();
+        try{
+            Page<Consumption> consumptions=consumptionRepository.findByAssetUUIDIn(request.getAssetUUIDS(),new PageRequest(request.getOffset(),request.getLimit()));
+
+            LOGGER.info("Page of consumptions by asset uuids got successfully.");
+            response.setConsumptions(consumptions);
+            response.setResponseIdentifier("Success");
+            return response;
+        }catch(Exception e){
+            e.printStackTrace();
+            LOGGER.error("Error while getting paginated consumptions by asset uuids. Offset: "+request.getOffset()+ " Limit: "+request.getLimit());
+            response.setResponseIdentifier("Failure");
+            return response;
+        }
+    }
+
     //get consumption by id AMS_UC_39
     GetConsumptionByIdResponse getConsumptionById(Long id){
         LOGGER.debug("Inside service function of getting consumption by id. ID: "+id);
@@ -960,6 +979,25 @@ public class AssetService {
         }catch(Exception e){
             e.printStackTrace();
             LOGGER.error("Error while getting paginated usages",e);
+            response.setResponseIdentifier("Failure");
+            return response;
+        }
+    }
+
+    //get paginated usages by asset uuids AMS_UC_33
+    GetPaginatedUsagesByAssetsResponse getPaginatedUsagesByAssets(GetPaginatedUsagesByAssetsRequest request){
+        LOGGER.debug("Inside service function of getting paginated usages by asset uuids. Offset: "+request.getOffset()+ "Limit: "+request.getLimit());
+        GetPaginatedUsagesByAssetsResponse response=new GetPaginatedUsagesByAssetsResponse();
+        try{
+            Page<Usage> usages=usageRepository.findByAssetUUIDIn(request.getAssetUUIDS(),new PageRequest(request.getOffset(),request.getLimit()));
+
+            response.setUsages(usages);
+            response.setResponseIdentifier("Success");
+            LOGGER.info("Page of usages by asset uuids got successfully");
+            return response;
+        }catch (Exception e){
+            e.printStackTrace();
+            LOGGER.error("Error while getting paginated usages by asset uuids. Offset: "+request.getOffset()+" Limit: "+request.getLimit());
             response.setResponseIdentifier("Failure");
             return response;
         }
@@ -1348,6 +1386,7 @@ public class AssetService {
                 asset.addUsage(usage);
                 usage.setAsset(asset);
                 usage.setCreatedAt(new Date());
+                usage.setTenantUUID(asset.getTenantUUID());
                 assetRepository.save(asset);
             }
         } catch (Exception e) {
