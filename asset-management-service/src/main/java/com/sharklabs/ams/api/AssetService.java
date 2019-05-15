@@ -813,23 +813,25 @@ public class AssetService {
             request.getConsumption().setAsset(asset);
             request.getConsumption().setAssetUUID(request.getAssetUUID());
             request.getConsumption().setCreatedAt(new Date());
+            request.getConsumption().setUuid(UUID.randomUUID().toString());
 
             Usage usage=new Usage();
             usage.setCreatedAt(new Date());
             usage.setAsset(asset);
             usage.setAssetUUID(request.getAssetUUID());
             usage.setTenantUUID(request.getConsumption().getTenantUUID());
-            if(request.getConsumption().getMeterType().equals(primaryUsageType)){
-                usage.setPrimaryUsageLat(request.getConsumption().getLat());
-                usage.setPrimaryUsageLng(request.getConsumption().getLng());
-                usage.setPrimaryUsageTime(request.getConsumption().getCreatedAt());
-                usage.setPrimaryUsageValue(request.getConsumption().getMeterValue());
-            }
-            else if(request.getConsumption().getMeterType().equals(secondaryUsageType)){
-                usage.setSecondaryUsageLat(request.getConsumption().getLat());
-                usage.setSecondaryUsageLng(request.getConsumption().getLng());
-                usage.setSecondaryUsageTime(request.getConsumption().getCreatedAt());
-                usage.setSecondaryUsageValue(request.getConsumption().getMeterValue());
+            if(request.getConsumption().getMeterType()!=null) {
+                if (request.getConsumption().getMeterType().equals(primaryUsageType)) {
+                    usage.setPrimaryUsageLat(request.getConsumption().getLat());
+                    usage.setPrimaryUsageLng(request.getConsumption().getLng());
+                    usage.setPrimaryUsageTime(request.getConsumption().getCreatedAt());
+                    usage.setPrimaryUsageValue(request.getConsumption().getMeterValue());
+                } else if (request.getConsumption().getMeterType().equals(secondaryUsageType)) {
+                    usage.setSecondaryUsageLat(request.getConsumption().getLat());
+                    usage.setSecondaryUsageLng(request.getConsumption().getLng());
+                    usage.setSecondaryUsageTime(request.getConsumption().getCreatedAt());
+                    usage.setSecondaryUsageValue(request.getConsumption().getMeterValue());
+                }
             }
             asset.addUsage(usage);
 
