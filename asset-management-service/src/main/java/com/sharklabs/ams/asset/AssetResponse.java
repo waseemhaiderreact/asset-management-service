@@ -47,6 +47,8 @@ public class AssetResponse {
 
     private ActivityWall activityWall;
 
+    private int maximumConsumptionLevel;
+
     public Long getId() {
         return id;
     }
@@ -237,5 +239,14 @@ public class AssetResponse {
         }
         this.assetImages=asset.getAssetImages();
         this.attachments=asset.getAttachments();
+        this.maximumConsumptionLevel=asset.getMaximumConsumptionLevel();
+    }
+
+    public int getMaximumConsumptionLevel() {
+        return maximumConsumptionLevel;
+    }
+
+    public void setMaximumConsumptionLevel(int maximumConsumptionLevel) {
+        this.maximumConsumptionLevel = maximumConsumptionLevel;
     }
 }
