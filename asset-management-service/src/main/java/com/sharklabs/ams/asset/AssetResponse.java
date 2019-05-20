@@ -47,7 +47,7 @@ public class AssetResponse {
 
     private ActivityWall activityWall;
 
-    private int maximumConsumptionLevel;
+    private int consumptionPoints;
 
     public Long getId() {
         return id;
@@ -226,7 +226,7 @@ public class AssetResponse {
                 maxId=usage.getId();
             }
             else{
-                if(usage.getId()>maxId){
+                if(usage.getId()>maxId && usage.getPrimaryUsageValue()!=null){
                     maxUsage=usage;
                     maxId=usage.getId();
                 }
@@ -239,14 +239,14 @@ public class AssetResponse {
         }
         this.assetImages=asset.getAssetImages();
         this.attachments=asset.getAttachments();
-        this.maximumConsumptionLevel=asset.getMaximumConsumptionLevel();
+        this.consumptionPoints=asset.getConsumptionPoints();
     }
 
-    public int getMaximumConsumptionLevel() {
-        return maximumConsumptionLevel;
+    public int getConsumptionPoints() {
+        return consumptionPoints;
     }
 
-    public void setMaximumConsumptionLevel(int maximumConsumptionLevel) {
-        this.maximumConsumptionLevel = maximumConsumptionLevel;
+    public void setConsumptionPoints(int consumptionPoints) {
+        this.consumptionPoints = consumptionPoints;
     }
 }

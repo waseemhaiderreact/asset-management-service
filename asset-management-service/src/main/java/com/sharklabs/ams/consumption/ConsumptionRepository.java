@@ -37,5 +37,5 @@ public interface ConsumptionRepository extends JpaRepository<Consumption,Long> {
                              @Param("endDate") Date endDate,
                              Pageable pageable);
 
-    Page<Consumption> findByAssetUUIDIn(List<String> assetUUIDS, Pageable pageable);
+    Page<Consumption> findByAssetUUIDInOrderByIdDesc(List<String> assetUUIDS, Pageable pageable);
 }

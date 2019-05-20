@@ -20,7 +20,7 @@ public class Consumption {
 
     private String currency;
 
-    private int updatedConsumptionLevel;
+    private int updatedConsumptionPoints;
 
     //meter fields
     private String meterType;
@@ -97,12 +97,12 @@ public class Consumption {
         this.currency = currency;
     }
 
-    public int getUpdatedConsumptionLevel() {
-        return updatedConsumptionLevel;
+    public int getUpdatedConsumptionPoints() {
+        return updatedConsumptionPoints;
     }
 
-    public void setUpdatedConsumptionLevel(int updatedConsumptionLevel) {
-        this.updatedConsumptionLevel = updatedConsumptionLevel;
+    public void setUpdatedConsumptionPoints(int updatedConsumptionPoints) {
+        this.updatedConsumptionPoints = updatedConsumptionPoints;
     }
 
     public String getMeterType() {

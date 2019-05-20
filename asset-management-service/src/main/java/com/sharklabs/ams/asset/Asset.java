@@ -47,7 +47,7 @@ public class Asset implements Serializable {
 
     private String consumptionUnit;
 
-    private int maximumConsumptionLevel;
+    private int consumptionPoints;
 
     @JsonIgnore
     @ManyToOne(fetch = FetchType.EAGER, cascade = {CascadeType.DETACH,CascadeType.REFRESH,CascadeType.REMOVE})
@@ -249,11 +249,11 @@ public class Asset implements Serializable {
         this.attachments = attachments;
     }
 
-    public int getMaximumConsumptionLevel() {
-        return maximumConsumptionLevel;
+    public int getConsumptionPoints() {
+        return consumptionPoints;
     }
 
-    public void setMaximumConsumptionLevel(int maximumConsumptionLevel) {
-        this.maximumConsumptionLevel = maximumConsumptionLevel;
+    public void setConsumptionPoints(int consumptionPoints) {
+        this.consumptionPoints = consumptionPoints;
     }
 }

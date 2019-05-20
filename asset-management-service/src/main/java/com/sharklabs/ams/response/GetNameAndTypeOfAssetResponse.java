@@ -10,7 +10,7 @@ public class GetNameAndTypeOfAssetResponse {
     private String primaryUsageUnit;
     private String secondaryUsageUnit;
     private String consumptionUnit;
-    private int maximumConsumptionLevel;
+    private int consumptionPoints;
 
 
     public GetNameAndTypeOfAssetResponse(String name, String type, String assetNumber,String uuid) {
@@ -87,12 +87,12 @@ public class GetNameAndTypeOfAssetResponse {
         this.consumptionUnit = consumptionUnit;
     }
 
-    public int getMaximumConsumptionLevel() {
-        return maximumConsumptionLevel;
+    public int getConsumptionPoints() {
+        return consumptionPoints;
     }
 
-    public void setMaximumConsumptionLevel(int maximumConsumptionLevel) {
-        this.maximumConsumptionLevel = maximumConsumptionLevel;
+    public void setConsumptionPoints(int consumptionPoints) {
+        this.consumptionPoints = consumptionPoints;
     }
 
     public String getCategoryUUID() {
