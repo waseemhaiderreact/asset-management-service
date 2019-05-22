@@ -942,6 +942,54 @@ public class AssetService {
     /******************************************* END Consumption Functions **********************************************/
 
     /******************************************* Usages Functions ****************************************************/
+
+    //add usage
+    DefaultResponse addUsage(AddUsageRequest request){
+        LOGGER.debug("Inside service function to add usage in asset. AssetUUID: " + request.getUsage().getAssetUUID());
+        DefaultResponse response=new DefaultResponse();
+        try{
+            Asset asset=assetRepository.findAssetByUuid(request.getUsage().getAssetUUID());
+            request.getUsage().setAsset(asset);
+            request.getUsage().setCreatedAt(new Date());
+            asset.addUsage(request.getUsage());
+            assetRepository.save(asset);
+            response.setResponseIdentifier("Success");
+            response.setDescription("Usage added successfully");
+            response.setResponseCode("200");
+            return response;
+        }
+        catch (Exception e){
+            e.printStackTrace();
+            LOGGER.error("Error while saving usage",e);
+            response.setResponseIdentifier("Failure");
+            response.setResponseCode("500");
+            return response;
+        }
+
+    }
+
+    //edit usage
+
+    DefaultResponse editUsage(EditUsageRequest request){
+        LOGGER.debug("Inside service function to edit usage in asset. AssetUUID: " + request.getUsage().getAssetUUID());
+        DefaultResponse response=new DefaultResponse();
+        try{
+            usageRepository.save(request.getUsage());
+            response.setResponseIdentifier("Success");
+            response.setDescription("Usage edited successfully");
+            response.setResponseCode("200");
+            return response;
+        }
+        catch (Exception e){
+            e.printStackTrace();
+            LOGGER.error("Error while editing usage",e);
+            response.setResponseIdentifier("Failure");
+            response.setResponseCode("500");
+            return response;
+        }
+
+    }
+
     //get usages by asset AMS_UC_27
     /*
      * this function will get a page of usages by asset uuid. asset uuid, offset and limit are passed to this function
@@ -987,19 +1035,18 @@ public class AssetService {
     }
 
     //get paginated usages by asset uuids AMS_UC_33
-    GetPaginatedUsagesByAssetsResponse getPaginatedUsagesByAssets(GetPaginatedUsagesByAssetsRequest request){
+    GetPaginatedUsagesByAssetsAndCategoryResponse getPaginatedUsagesByAssetsAndType(GetPaginatedUsagesByAssetsAndCategoryRequest request){
         LOGGER.debug("Inside service function of getting paginated usages by asset uuids. Offset: "+request.getOffset()+ "Limit: "+request.getLimit());
-        GetPaginatedUsagesByAssetsResponse response=new GetPaginatedUsagesByAssetsResponse();
+        GetPaginatedUsagesByAssetsAndCategoryResponse response=new GetPaginatedUsagesByAssetsAndCategoryResponse();
         try{
-            Page<Usage> usages=usageRepository.findByAssetUUIDIn(request.getAssetUUIDS(),new PageRequest(request.getOffset(),request.getLimit()));
-
+            Page<Usage> usages=usageRepository.findByAssetUUIDInAndCategoryOrderByIdDesc(request.getAssetUUIDS(),request.getCategory(),new PageRequest(request.getOffset(),request.getLimit()));
             response.setUsages(usages);
             response.setResponseIdentifier("Success");
             LOGGER.info("Page of usages by asset uuids got successfully");
             return response;
         }catch (Exception e){
             e.printStackTrace();
-            LOGGER.error("Error while getting paginated usages by asset uuids. Offset: "+request.getOffset()+" Limit: "+request.getLimit());
+            LOGGER.error("Error while getting paginated usages by asset uuids. Offset: "+request.getOffset()+" Limit: "+request.getLimit()+" and category: "+request.getCategory());
             response.setResponseIdentifier("Failure");
             return response;
         }
@@ -1385,6 +1432,7 @@ public class AssetService {
             }
             //update
             if (update) {
+                usage.setCategory("normal");//default category is normal when usage is added through inspection
                 asset.addUsage(usage);
                 usage.setAsset(asset);
                 usage.setCreatedAt(new Date());

@@ -481,6 +481,47 @@ public class AssetController {
     /******************************************* END Consumption Functions *******************************************/
 
     /******************************************* Usages Functions ****************************************************/
+    //add usage
+
+    @RequestMapping(method = RequestMethod.POST, value="/usages")
+    public @ResponseBody
+    ResponseEntity addUsages(@RequestBody AddUsageRequest request){
+        Util util=new Util();
+        util.setThreadContextForLogging();
+        LOGGER.info("Request received in controller to add usage");
+        ResponseEntity responseEntity;
+        DefaultResponse defaultResponse=assetService.addUsage(request);
+        if(defaultResponse.getResponseIdentifier().contentEquals("Success")){
+            responseEntity=new ResponseEntity<>(defaultResponse,HttpStatus.OK);
+        }
+        else{
+            responseEntity=new ResponseEntity<>(defaultResponse,HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+        util.clearThreadContextForLogging();
+        return responseEntity;
+    }
+
+
+    //finish trip.
+
+    @RequestMapping(method=RequestMethod.PUT, value="/usages")
+    public @ResponseBody
+    ResponseEntity editUsage(@RequestBody EditUsageRequest request){
+        Util util=new Util();
+        util.setThreadContextForLogging();
+        LOGGER.info("Request received in controller to edit usage");
+        ResponseEntity responseEntity;
+        DefaultResponse defaultResponse=assetService.editUsage(request);
+        if(defaultResponse.getResponseIdentifier().contentEquals("Success")){
+            responseEntity=new ResponseEntity<>(defaultResponse,HttpStatus.OK);
+        }
+        else{
+            responseEntity=new ResponseEntity<>(defaultResponse,HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+        util.clearThreadContextForLogging();
+        return responseEntity;
+    }
+
     //get usages by asset AMS_UC_27
     @RequestMapping(method = RequestMethod.GET,value="/usages",params = {"assetuuid","offset","limit"})
     public @ResponseBody
@@ -522,17 +563,17 @@ public class AssetController {
     //get paginated usages by asset uuids AMS_UC_33
     @RequestMapping(method = RequestMethod.POST,value = "/usages/filter/assets")
     public @ResponseBody
-    ResponseEntity getPaginatedUsagesByAssets(@RequestBody GetPaginatedUsagesByAssetsRequest request){
+    ResponseEntity getPaginatedUsagesByAssetsAndType(@RequestBody GetPaginatedUsagesByAssetsAndCategoryRequest request){
         Util util = new Util();
         util.setThreadContextForLogging();
         LOGGER.info("Request received in controller to get paginated usages by asset uuids. Offset: "+request.getOffset()+" Limit: "+request.getLimit());
         ResponseEntity responseEntity=null;
-        GetPaginatedUsagesByAssetsResponse response=assetService.getPaginatedUsagesByAssets(request);
+        GetPaginatedUsagesByAssetsAndCategoryResponse response=assetService.getPaginatedUsagesByAssetsAndType(request);
         if(response.getResponseIdentifier().equals("Success")){
-            responseEntity=new ResponseEntity<GetPaginatedUsagesByAssetsResponse>(response,HttpStatus.OK);
+            responseEntity=new ResponseEntity<GetPaginatedUsagesByAssetsAndCategoryResponse>(response,HttpStatus.OK);
         }
         else if(response.getResponseIdentifier().equals("Failure")){
-            responseEntity=new ResponseEntity<GetPaginatedUsagesByAssetsResponse>(response,HttpStatus.INTERNAL_SERVER_ERROR);
+            responseEntity=new ResponseEntity<GetPaginatedUsagesByAssetsAndCategoryResponse>(response,HttpStatus.INTERNAL_SERVER_ERROR);
         }
         util.clearThreadContextForLogging();
         return responseEntity;

@@ -27,5 +27,6 @@ public interface UsageRepository extends JpaRepository<Usage,Long> {
                              @Param("endDate") Date endDate,
                              Pageable pageable);
 
-    Page<Usage> findByAssetUUIDIn(List<String> assetUUIDS, Pageable pageable);
+    Page<Usage> findByAssetUUIDInOrderByIdDesc(List<String> assetUUIDS, Pageable pageable);
+    Page<Usage> findByAssetUUIDInAndCategoryOrderByIdDesc(List<String> assetUUIDS,String category, Pageable pageable);
 }

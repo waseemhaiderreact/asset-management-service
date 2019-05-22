@@ -3,7 +3,7 @@ package com.sharklabs.ams.response;
 import com.sharklabs.ams.usage.Usage;
 import org.springframework.data.domain.Page;
 
-public class GetPaginatedUsagesByAssetsResponse {
+public class GetPaginatedUsagesByAssetsAndCategoryResponse {
     private Page<Usage> usages;
     private String responseIdentifier;
 
