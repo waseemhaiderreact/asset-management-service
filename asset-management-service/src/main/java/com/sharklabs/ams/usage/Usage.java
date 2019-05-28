@@ -26,6 +26,7 @@ public class Usage{
     private String category;
     private Date startTime;
     private Date stopTime;
+    private Double tripEndUsageValue;
 
     private Date createdAt;
     private String assetUUID; //asset uuid (the asset of which these usage values will be stored)
@@ -163,5 +164,13 @@ public class Usage{
 
     public void setTenantUUID(String tenantUUID) {
         this.tenantUUID = tenantUUID;
+    }
+
+    public Double getTripEndUsageValue() {
+        return tripEndUsageValue;
+    }
+
+    public void setTripEndUsageValue(Double tripEndUsageValue) {
+        this.tripEndUsageValue = tripEndUsageValue;
     }
 }
