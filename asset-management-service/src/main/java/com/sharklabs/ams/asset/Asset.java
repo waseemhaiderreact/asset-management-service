@@ -35,6 +35,8 @@ public class Asset implements Serializable {
 
     private Date purchaseDate;
 
+    private Date expiryDate;
+
     private String warranty;
 
     private String description;
@@ -175,6 +177,14 @@ public class Asset implements Serializable {
 
     public void setPurchaseDate(Date purchaseDate) {
         this.purchaseDate = purchaseDate;
+    }
+
+    public Date getExpiryDate() {
+        return expiryDate;
+    }
+
+    public void setExpiryDate(Date expiryDate) {
+        this.expiryDate = expiryDate;
     }
 
     public String getWarranty() {

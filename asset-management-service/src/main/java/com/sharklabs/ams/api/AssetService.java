@@ -727,6 +727,8 @@ public class AssetService {
                 assetModel.setUuid(String.valueOf(assetResponse.get("uuid")));
                 assetModel.setWarranty(String.valueOf(assetResponse.get("warranty")));
                 assetModel.setPurchaseDate((Date) assetResponse.get("purchaseDate"));
+                assetModel.setExpiryDate((Date) assetResponse.get("expiryDate"));
+
                 assetModelList.add(assetModel);
             }
             assets.setContent(assetModelList);

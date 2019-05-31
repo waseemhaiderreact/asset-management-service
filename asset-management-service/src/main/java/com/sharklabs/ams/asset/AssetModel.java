@@ -26,6 +26,8 @@ public class AssetModel {
 
     private Date purchaseDate;
 
+    private Date expiryDate;
+
     private String warranty;
 
     private String description;
@@ -104,6 +106,14 @@ public class AssetModel {
         this.purchaseDate = purchaseDate;
     }
 
+    public Date getExpiryDate() {
+        return expiryDate;
+    }
+
+    public void setExpiryDate(Date expiryDate) {
+        this.expiryDate = expiryDate;
+    }
+
     public String getWarranty() {
         return warranty;
     }
@@ -177,4 +187,6 @@ public class AssetModel {
         this.uuid=asset.getUuid();
         this.warranty=asset.getWarranty();
     }
+
+
 }

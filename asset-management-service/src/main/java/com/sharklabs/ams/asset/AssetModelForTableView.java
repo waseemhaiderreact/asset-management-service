@@ -18,6 +18,8 @@ public class AssetModelForTableView {
 
     private Date purchaseDate;
 
+    private Date expiryDate;
+
     private String warranty;
 
     private String description;
@@ -93,6 +95,14 @@ public class AssetModelForTableView {
 
     public void setPurchaseDate(Date purchaseDate) {
         this.purchaseDate = purchaseDate;
+    }
+
+    public Date getExpiryDate() {
+        return expiryDate;
+    }
+
+    public void setExpiryDate(Date expiryDate) {
+        this.expiryDate = expiryDate;
     }
 
     public String getWarranty() {
