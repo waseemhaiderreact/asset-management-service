@@ -12,6 +12,8 @@ public interface AssetRepository extends JpaRepository<Asset,Long>, PagingAndSor
     Asset findAssetByUuid(String uuid);
     List<Asset> findByTenantUUID(String tenantUUID);
 
+    Asset findByUuid(String uuid);
+
     @Modifying
     @Transactional
     Integer deleteById(Long id);
