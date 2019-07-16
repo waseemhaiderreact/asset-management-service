@@ -6,10 +6,12 @@ import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.model.PutObjectRequest;
 import com.sharklabs.ams.AssetImage.AssetImage;
+import com.sharklabs.ams.AssetImage.AssetImageRepository;
 import com.sharklabs.ams.activitywall.ActivityWall;
 import com.sharklabs.ams.activitywall.ActivityWallRepository;
 import com.sharklabs.ams.asset.*;
 import com.sharklabs.ams.assetfield.AssetField;
+import com.sharklabs.ams.assetfield.AssetFieldRepository;
 import com.sharklabs.ams.attachment.Attachment;
 import com.sharklabs.ams.category.Category;
 import com.sharklabs.ams.category.CategoryRepository;
@@ -70,6 +72,10 @@ public class AssetService {
     UsageRepository usageRepository;
     @Autowired
     ImageVoiceRepository imageVoiceRepository;
+    @Autowired
+    AssetFieldRepository assetFieldRepository;
+    @Autowired
+    AssetImageRepository assetImageRepository;
 
     @Value("${cloud.aws.credentials.accessKey}")
     private String accessKey;
@@ -618,6 +624,57 @@ public class AssetService {
             LOGGER.error("Error while getting asset from db. Asset UUID: " + id, e);
             return response;
         }
+    }
+
+    // Get Asset with provided Asset Detail
+    /* The function retrieves selective Asset Detail
+     * @Parmm - Asset Uuid
+     * @Param - Requested Asset Detail
+     */
+    GetAssetDetailResponse getAssetDetail(AssetDetailRequest assetDetailRequest,String uuid){
+        GetAssetDetailResponse response = new GetAssetDetailResponse();
+        AssetDetailResponse assetDetailResponse = new AssetDetailResponse();
+        AssetDetail assetDetail = null;
+        try {
+
+            //Retrieve Basic Detail of Asset
+            assetDetail = assetRepository.getBasicAssetDetailByUuid(uuid);
+            assetDetailResponse.setAssetDetail(assetDetail);
+
+            // Additions as requested by AssetDetail
+
+            if(assetDetailRequest.isActivityWall())
+                assetDetailResponse.setActivityWall(activityWallRepository.findActivityWallByAssetUuid(uuid));
+
+            if(assetDetailRequest.isAssetFields())
+                assetDetailResponse.setAssetField(assetFieldRepository.findAllByAssetUuid(uuid));
+
+            if(assetDetailRequest.isAssetImages())
+                assetDetailResponse.setAssetImage(assetImageRepository.findAllByAssetUuid(uuid));
+
+            if(assetDetailRequest.isAttachments())
+                assetDetailResponse.setAssetImage(assetImageRepository.findAllByAssetUuid(uuid));
+
+            if(assetDetailRequest.isConsumptions())
+                assetDetailResponse.setConsumption(consumptionRepository.findByAssetUUID(uuid));
+
+            if(assetDetailRequest.isUsages())
+                assetDetailResponse.setUsage(usageRepository.findByAssetUUID(uuid));
+
+            if(assetDetailRequest.isCategory())
+                assetDetailResponse.setCategory(categoryRepository.findByAssetsUuid(uuid));
+
+            response.setAssetDetail(assetDetailResponse);
+            response.setResponseIdentifier("Success");
+            LOGGER.info("Received Asset Detail From database. Sending it to controller");
+        }catch(Exception e){
+            response.setResponseIdentifier("Failure");
+            LOGGER.error("Error while getting asset detail from db. Asset UUID: " + uuid, e);
+        }finally{
+            assetDetail = null;
+            assetDetailResponse = null;
+        }
+        return response;
     }
 
     //get assets AMS_UC_14

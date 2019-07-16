@@ -281,6 +281,21 @@ public class AssetController {
         return responseEntity;
     }
 
+    //get asset with provided desired detail
+    @PostMapping(value="",consumes = "application/json")
+    public @ResponseBody
+    ResponseEntity getAssetwithDetail(@RequestBody AssetDetailRequest assetDetail){
+
+        Util util = new Util();
+        util.setThreadContextForLogging();
+        LOGGER.info("Request received in controller to get asset with detail. UUID: "+assetDetail.getUuid());
+        ResponseEntity responseEntity= new ResponseEntity<GetAssetDetailResponse>(assetService.getAssetDetail(assetDetail,assetDetail.getUuid()),HttpStatus.OK);
+        util.clearThreadContextForLogging();
+        util = null;
+
+        return responseEntity;
+    }
+
     //get assets AMS_UC_14
     @RequestMapping(method = RequestMethod.GET,value="",params = {"tenantuuid"})
     public @ResponseBody

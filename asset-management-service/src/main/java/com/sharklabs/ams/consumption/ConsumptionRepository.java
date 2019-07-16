@@ -12,9 +12,12 @@ import org.springframework.data.repository.query.Param;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Set;
 
 public interface ConsumptionRepository extends JpaRepository<Consumption,Long> {
     Consumption findConsumptionByUuid(String uuid);
+
+    Set<Consumption> findByAssetUUID(String uuid);
 
 
     @Modifying

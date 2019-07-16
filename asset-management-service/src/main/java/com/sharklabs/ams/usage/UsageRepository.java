@@ -8,8 +8,11 @@ import org.springframework.data.repository.query.Param;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Set;
 
 public interface UsageRepository extends JpaRepository<Usage,Long> {
+
+    Set<Usage> findByAssetUUID(String uuid);
 
     Page<Usage> findByAssetUUIDOrderByCreatedAt(String assetUUID, Pageable pageable);
 

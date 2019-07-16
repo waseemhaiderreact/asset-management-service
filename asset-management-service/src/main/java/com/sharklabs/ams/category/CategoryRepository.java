@@ -8,6 +8,8 @@ import java.util.List;
 
 public interface CategoryRepository extends JpaRepository<Category,Long> {
 
+    Category findByAssetsUuid(String uuid);
+
     Category findCategoryByUuid(String uuid);
 
     List<Category> findByTenantUUID(String tenantUUID);
