@@ -4,8 +4,11 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.PagingAndSortingRepository;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+
 import javax.transaction.Transactional;
+import java.util.ArrayList;
 import java.util.List;
 @Repository
 public interface AssetRepository extends JpaRepository<Asset,Long>, PagingAndSortingRepository<Asset,Long> {
@@ -38,4 +41,10 @@ public interface AssetRepository extends JpaRepository<Asset,Long>, PagingAndSor
 //            "FROM Asset a " +
 //            "WHERE a.uuid in :uuids ")
 //    List<GetNameAndTypeOfAssetResponse> findByUuidIn(@Param("uuids") List<String> uuids);
+
+    @Query(value = "SELECT uuid FROM t_asset WHERE name LIKE %:assetName%", nativeQuery = true)
+    List<Object> findAssetUUIDByAssetName(@Param("assetName") String assetName);
+
+    @Query(value = "SELECT * FROM t_asset t WHERE t.uuid LIKE :assetUUID",nativeQuery = true)
+    Asset findAsset(@Param("assetUUID")String assetUUID);
 }

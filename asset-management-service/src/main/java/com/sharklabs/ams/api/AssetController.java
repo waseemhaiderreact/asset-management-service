@@ -372,6 +372,26 @@ public class AssetController {
         return responseEntity;
     }
 
+    @RequestMapping(method = RequestMethod.GET,value = "",params = {"name"})
+    public @ResponseBody
+    ResponseEntity getAssetUUIDsByName(@RequestParam String name) throws EmptyEntityTableException{
+        Util util=new Util();
+        util.setThreadContextForLogging();
+        LOGGER.info("Request received in controller to get asset uuids by name. name: "+name);
+
+
+        ResponseEntity responseEntity;
+        GetAssetUUIDsByNameResponse response=assetService.getAssetUUIDsByName(name);
+        if(response.getResponseIdentifier().contentEquals("Success")){
+            responseEntity=new ResponseEntity<>(response,HttpStatus.OK);
+        }
+        else{
+            responseEntity=new ResponseEntity<>(response,HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+
+        return responseEntity;
+    }
+
     /*******************************************END Asset Functions**********************************************/
 
     /******************************************* Consumption Functions *******************************************/

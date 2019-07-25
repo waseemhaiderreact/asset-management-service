@@ -9,6 +9,7 @@ public class GetPaginatedUsagesRequest {
     private Date endDate;
     private int offset;
     private int limit;
+    private String category;//trip, normal, null
 
     public String getTenantUUID() {
         return tenantUUID;
@@ -56,5 +57,13 @@ public class GetPaginatedUsagesRequest {
 
     public void setLimit(int limit) {
         this.limit = limit;
+    }
+
+    public String getCategory() {
+        return category;
+    }
+
+    public void setCategory(String category) {
+        this.category = category;
     }
 }

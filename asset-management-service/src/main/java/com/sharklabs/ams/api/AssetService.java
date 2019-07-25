@@ -854,6 +854,25 @@ public class AssetService {
         }
     }
 
+    //get asset uuids by name
+
+    GetAssetUUIDsByNameResponse getAssetUUIDsByName(String name){
+        LOGGER.info("Inside service function to get asset uuids by name");
+        GetAssetUUIDsByNameResponse response=new GetAssetUUIDsByNameResponse();
+        try{
+            List<Object> assetUUIDs=assetRepository.findAssetUUIDByAssetName(name);
+            response.setAssetUUIDs(assetUUIDs);
+            response.setResponseIdentifier("Success");
+            LOGGER.info("Received assets uuids from database. Returning to controller");
+            return response;
+        }catch (Exception e) {
+            e.printStackTrace();
+            LOGGER.error("Error while getting assets by uuids", e);
+            response.setResponseIdentifier("Failure");
+            return response;
+        }
+    }
+
     /******************************************* END Asset Functions ************************************************/
 
     /******************************************* Consumption Functions **********************************************/
@@ -1079,7 +1098,7 @@ public class AssetService {
         LOGGER.debug("Inside service function of getting paginated usages. TenantUUID: "+request.getTenantUUID()+" Offset: "+request.getOffset()+" Limit: "+request.getLimit()+"  AssetUUID: "+request.getAssetUUID()+" Start Date: "+request.getStartDate()+" End Date: "+request.getEndDate());
         GetPaginatedUsagesResponse response=new GetPaginatedUsagesResponse();
         try{
-            Page<Usage> usages=usageRepository.filterUsages(request.getAssetUUID(),request.getTenantUUID(),request.getStartDate(),request.getEndDate(),new PageRequest(request.getOffset(),request.getLimit()));
+            Page<Usage> usages=usageRepository.filterUsages(request.getAssetUUID(),request.getTenantUUID(),request.getCategory(),request.getStartDate(),request.getEndDate(),new PageRequest(request.getOffset(),request.getLimit()));
 
             response.setUsages(usages);
             response.setResponseIdentifier("Success");

@@ -19,13 +19,16 @@ public interface UsageRepository extends JpaRepository<Usage,Long> {
     @Query(value = "SELECT * FROM t_usages u "+
             "WHERE ((:assetUUID is null) or (u.assetuuid=:assetUUID)) "+
             "AND ((:tenantUUID is null) or (u.tenantuuid=:tenantUUID)) "+
+            "AND ((:category is null) or (u.category=:category)) "+
             "AND ((:startDate is null) or (u.created_at BETWEEN :startDate AND :endDate)) \n#pageable\n",
             countQuery = "SELECT count(*) FROM t_usages u "+
                     "WHERE ((:assetUUID is null) or (u.assetuuid=:assetUUID)) "+
                     "AND ((:tenantUUID is null) or (u.tenantuuid=:tenantUUID)) "+
+                    "AND ((:category is null) or (u.category=:category)) "+
                     "AND ((:startDate is null) or (u.created_at BETWEEN :startDate AND :endDate)) \n#pageable\n",nativeQuery = true)
     Page<Usage> filterUsages(@Param("assetUUID") String assetUUID,
                              @Param("tenantUUID") String tenantUUID,
+                             @Param("category") String category,
                              @Param("startDate") Date startDate,
                              @Param("endDate") Date endDate,
                              Pageable pageable);
