@@ -33,7 +33,7 @@ public interface ConsumptionRepository extends JpaRepository<Consumption,Long> {
             countQuery = "SELECT count(*) FROM t_consumption c "+
                     "WHERE ((:assetUUID is null) or (c.assetuuid=:assetUUID)) "+
                     "AND ((:tenantUUID is null) or (c.tenantuuid=:tenantUUID)) "+
-                    "AND ((:startDate is null) or (c.created_at BETWEEN :startDate AND :endDate)) \n#pageable\n",nativeQuery = true)
+                    "AND ((:startDate is null && :endDate is null) or (c.created_at BETWEEN :startDate AND :endDate)) \n#pageable\n",nativeQuery = true)
     Page<Consumption> filterConsumptions(@Param("assetUUID") String assetUUID,
                              @Param("tenantUUID") String tenantUUID,
                              @Param("startDate") Date startDate,

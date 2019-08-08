@@ -965,6 +965,13 @@ public class AssetService {
         LOGGER.debug("Inside service function of getting paginated consumptions.  TenantUUID: "+request.getTenantUUID()+" Offset: "+request.getOffset()+" Limit: "+request.getLimit()+"  AssetID: "+request.getAssetUUID()+" Start Date: "+request.getStartDate()+" End Date: "+request.getEndDate());
         GetPaginatedConsumptionsResponse response=new GetPaginatedConsumptionsResponse();
         try{
+            if(request.getEndDate()!=null){
+                request.setEndDate(setTimeToEnd(request.getEndDate()));
+            }
+            if(request.getStartDate()!=null){
+                request.setStartDate(setTimeToEnd(request.getStartDate()));
+            }
+
             Page<Consumption> consumptions=consumptionRepository.filterConsumptions(request.getAssetUUID(),request.getTenantUUID(),request.getStartDate(),request.getEndDate(),new PageRequest(request.getOffset(),request.getLimit()));
 
             response.setConsumptions(consumptions);
@@ -1297,6 +1304,7 @@ public class AssetService {
             return new DefaultResponse("Failure", "Error while deleting inspection template. Reason: " + e.getMessage(), "500");
         }
     }
+
 
 
     /********************************************END Inspection Template Functions ***********************************/
@@ -1969,6 +1977,17 @@ public class AssetService {
 //
 //        return new ResponseEntity<>(bytes, httpHeaders, HttpStatus.OK);
 //    }
+
+
+    public static Date setTimeToEnd(Date date) {
+        Calendar cal = Calendar.getInstance();
+        cal.setTime(date);
+        cal.set(Calendar.HOUR_OF_DAY, 23);
+        cal.set(Calendar.MINUTE, 59);
+        cal.set(Calendar.SECOND, 59);
+        cal.set(Calendar.MILLISECOND, 0);
+        return cal.getTime();
+    }
 
 }
 
