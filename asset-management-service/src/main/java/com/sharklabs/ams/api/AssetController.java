@@ -10,6 +10,7 @@ import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -282,7 +283,7 @@ public class AssetController {
     }
 
     //get asset with provided desired detail
-    @PostMapping(value="",consumes = "application/json")
+    @PostMapping(value="/detail",consumes = "application/json")
     public @ResponseBody
     ResponseEntity getAssetwithDetail(@RequestBody AssetDetailRequest assetDetail){
 

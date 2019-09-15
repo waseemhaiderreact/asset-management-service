@@ -31,6 +31,10 @@ import com.sharklabs.ams.message.MessageRepository;
 import com.sharklabs.ams.page.AssetPage;
 import com.sharklabs.ams.request.*;
 import com.sharklabs.ams.response.*;
+import com.sharklabs.ams.security.HasCreate;
+import com.sharklabs.ams.security.HasDelete;
+import com.sharklabs.ams.security.HasRead;
+import com.sharklabs.ams.security.HasUpdate;
 import com.sharklabs.ams.usage.Usage;
 import com.sharklabs.ams.usage.UsageRepository;
 import org.apache.logging.log4j.LogManager;
@@ -41,6 +45,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -51,7 +56,7 @@ import java.io.FileOutputStream;
 import java.util.*;
 
 @Service
-public class AssetService {
+public class   AssetService {
     private static final Logger LOGGER = LogManager.getLogger(AssetService.class);
 
     @Autowired
@@ -125,6 +130,7 @@ public class AssetService {
     UUID is also set before adding category in the db.
     Then category is saved in db
     */
+    @HasUpdate
     DefaultResponse addCategory(AddCategoryRequest addCategoryRequest) {
         try {
             LOGGER.debug("Inside add category service function");
@@ -187,6 +193,7 @@ public class AssetService {
         This function deletes a category from db and all it's children(if a category is deleted
         then it's assets,field template, inspection template will also be deleted)
      */
+    @HasDelete
     DefaultResponse deleteCategory(String id) {
         LOGGER.debug("Inside Service function of deleting category");
         try {
@@ -205,6 +212,7 @@ public class AssetService {
     /*
         This function gets a category from db. We pass it the uuid of category and in response we get a category
      */
+    @HasRead
     GetCategoryResponse getCategory(String id) {
         LOGGER.debug("Inside Service function of get category");
         GetCategoryResponse response = new GetCategoryResponse();
@@ -226,6 +234,7 @@ public class AssetService {
     /*
         This function just returns all the categories (List of categories) from db
      */
+    @HasRead
     GetCategoriesResponse GetAllCategories(String tenantUUID) {
         LOGGER.debug("Inside Service function of get all categories");
         GetCategoriesResponse response = new GetCategoriesResponse();
@@ -255,6 +264,7 @@ public class AssetService {
         when a object is created therefore, this additional code sets the id of the object. If we don't set the id of object then the old category
         won't be updated instead a new one will be created
      */
+    @HasUpdate
     EditCategoryResponse editCategory(EditCategoryRequest editCategoryRequest) {
         LOGGER.debug("Inside Service function of edit category");
         EditCategoryResponse response = new EditCategoryResponse();
@@ -317,6 +327,7 @@ public class AssetService {
     Then we assign a new uuid to field template and set the parent of it's children and also assigning uuid of children.
     Then save the object
      */
+    @HasRead
     DefaultResponse addFieldTemplate(AddFieldTemplateRequest addFieldTemplateRequest) {
         LOGGER.debug("Inside Service function of add field template");
         try {
@@ -356,6 +367,7 @@ public class AssetService {
     Then, the parent of field template is set to null because we don't need to delete it's parent(Category)
     Then, field template is deleted
      */
+    @HasDelete
     DefaultResponse deleteFieldTemplate(String id) {
         LOGGER.debug("Inside Service function of deleting field template");
         try {
@@ -379,6 +391,7 @@ public class AssetService {
     This function gets a field template by uuid
     UUID is passed to this function and field template is returned with that UUID
      */
+    @HasRead
     GetFieldTemplateResponse getFieldTemplate(String id) {
         LOGGER.debug("Inside Service function of get field template");
         GetFieldTemplateResponse response = new GetFieldTemplateResponse();
@@ -407,6 +420,7 @@ public class AssetService {
     when a object is created therefore, this additional code sets the id of the object. If we don't set the id of object then the old field template
     won't be updated instead a new one will be created
      */
+    @HasUpdate
     EditFieldTemplateResponse editFieldTemplate(EditFieldTemplateRequest editFieldTemplateRequest) {
         LOGGER.debug("Inside Service function of edit field template");
         EditFieldTemplateResponse response = new EditFieldTemplateResponse();
@@ -458,6 +472,7 @@ public class AssetService {
     First, we get the category with that uuid and set it as a parent of asset
     The, uuid is assigned to asset and it's children. Also, parent of children is set so that children are saved automatically when parent is saved
      */
+    @HasCreate
     DefaultResponse addAsset(AddAssetRequest addAssetRequest) {
         LOGGER.debug("Inside Service function of add asset");
         try {
@@ -518,6 +533,7 @@ public class AssetService {
     when a object is created therefore, this additional code sets the id of the object. If we don't set the id of object then the old asset
     won't be updated instead a new one will be created
      */
+    @HasUpdate
     EditAssetResponse editAsset(EditAssetRequest editAssetRequest) {
         LOGGER.debug("Inside Service function of edit asset");
         EditAssetResponse response = new EditAssetResponse();
@@ -573,6 +589,7 @@ public class AssetService {
     then, we set it's parent to null and save it because we don't want to delete parent alongwith the children
     then, asset is deleted by id
      */
+    @HasDelete
     DefaultResponse deleteAsset(String id) {
         LOGGER.debug("Inside Service function of deleting asset");
         try {
@@ -598,6 +615,7 @@ public class AssetService {
     uuid of asset is passed to this function
     We get the asset with that uuid from db and return it
      */
+    @HasRead
     GetAssetResponse getAsset(String id) {
         LOGGER.debug("Inside Service function of get asset");
         GetAssetResponse response = new GetAssetResponse();
@@ -608,6 +626,7 @@ public class AssetService {
             AssetResponse assetResponse = new AssetResponse();
             assetResponse.setAsset(asset);
             response.setAsset(assetResponse);
+            response.setCategoryId(asset.getCategory().getUuid());
             //set field template of asset
             FieldTemplateResponse fieldTemplate = new FieldTemplateResponse();
             if (asset.getCategory().getFieldTemplate() != null) {
@@ -631,6 +650,7 @@ public class AssetService {
      * @Parmm - Asset Uuid
      * @Param - Requested Asset Detail
      */
+    @HasRead
     GetAssetDetailResponse getAssetDetail(AssetDetailRequest assetDetailRequest,String uuid){
         GetAssetDetailResponse response = new GetAssetDetailResponse();
         AssetDetailResponse assetDetailResponse = new AssetDetailResponse();
@@ -682,6 +702,7 @@ public class AssetService {
     This function gets all assets
     It simply fetches all assets from db and return it
      */
+    @HasRead
     GetAssetsResponse getAssets(String tenantUUID) {
         LOGGER.debug("Inside Service function of get assets");
         GetAssetsResponse response = new GetAssetsResponse();
@@ -706,6 +727,7 @@ public class AssetService {
     }
 
     //get asset basic detail by tenant AMS_UC_31
+    @HasRead
     GetBasicAssetDetailByTenantResponse getBasicAssetDetailByTenant(String tenantUUID){
         LOGGER.debug("Inside service function of getting basic details of asset by tenant. Tenant UUID: "+tenantUUID);
         GetBasicAssetDetailByTenantResponse response=new GetBasicAssetDetailByTenantResponse();
@@ -747,6 +769,7 @@ public class AssetService {
     /*
      * This function gets limit and offset and returns page of assets
      */
+    @HasRead
     GetPaginatedAssetsResponse getPaginatedAssets(int offset, int limit, String tenantuuid) {
         LOGGER.debug("Inside service function of get page of assets");
         GetPaginatedAssetsResponse response = new GetPaginatedAssetsResponse();
@@ -807,6 +830,7 @@ public class AssetService {
      * This function gets a list of uuids. First, it finds assets by those uuids from db and then creates a hashmap of assets
      * inwhich a name and type of asset is stored against uuid of asset and returned
      */
+    @HasRead
     GetNameAndTypeOfAssetsByUUIDSResponse getNameAndTypeOfAssetsByUUIDS(GetNameAndTypeOfAssetsByUUIDSRequest request) {
         LOGGER.debug("Inside service function of get get name and type of assets by uuids");
         GetNameAndTypeOfAssetsByUUIDSResponse response = new GetNameAndTypeOfAssetsByUUIDSResponse();
@@ -855,7 +879,7 @@ public class AssetService {
     }
 
     //get asset uuids by name
-
+    @HasRead
     GetAssetUUIDsByNameResponse getAssetUUIDsByName(String name){
         LOGGER.info("Inside service function to get asset uuids by name");
         GetAssetUUIDsByNameResponse response=new GetAssetUUIDsByNameResponse();
@@ -881,6 +905,7 @@ public class AssetService {
      * Request object contains asset uuid of which this entry is to be made. We find the asset by uuid and add consumption entry in it's array
      * and save the updated object
      */
+    @HasCreate
     DefaultResponse addConsumptionUnits(AddConsumptionUnitsRequest request) {
         LOGGER.debug("Inside service function of adding consumption units of asset. AssetUUID: " + request.getAssetUUID());
         try {
@@ -927,6 +952,7 @@ public class AssetService {
     }
 
     //get paginated consumptions
+    @HasRead
     GetPaginatedConsumptionsResponse getPaginatedConsumptionsByAsset(String uuid, int offset, int limit) {
         LOGGER.debug("Inside service to get consumption units of asset. Asset UUID: " + uuid + " with offset: " + offset + " and limit: " + limit);
 
@@ -944,6 +970,7 @@ public class AssetService {
     }
 
     //this function deletes a consumption unit by uuid AMS_UC_26
+    @HasDelete
     DefaultResponse deleteConsumptionUnits(String uuid) {
         LOGGER.debug("Inside service function of deleting consumption unit by uuid. UUID: " + uuid);
         try {
@@ -961,6 +988,7 @@ public class AssetService {
     }
 
     //get paginated consumptions AMS_UC_29
+    @HasRead
     GetPaginatedConsumptionsResponse getPaginatedConsumptions(GetPaginatedConsumptionsRequest request){
         LOGGER.debug("Inside service function of getting paginated consumptions.  TenantUUID: "+request.getTenantUUID()+" Offset: "+request.getOffset()+" Limit: "+request.getLimit()+"  AssetID: "+request.getAssetUUID()+" Start Date: "+request.getStartDate()+" End Date: "+request.getEndDate());
         GetPaginatedConsumptionsResponse response=new GetPaginatedConsumptionsResponse();
@@ -987,6 +1015,7 @@ public class AssetService {
     }
 
     //get paginated consumptions by asset uuids AMS_UC_31
+    @HasRead
     GetPaginatedConsumptionsByAssetsResponse getPaginatedConsumptionsByAssets(GetPaginatedConsumptionsByAssetsRequest request){
         LOGGER.debug("Inside service function of getting paginated consumptions by asset uuids. Offset: "+request.getOffset()+ "Limit: "+request.getLimit());
         GetPaginatedConsumptionsByAssetsResponse response=new GetPaginatedConsumptionsByAssetsResponse();
@@ -1006,6 +1035,7 @@ public class AssetService {
     }
 
     //get consumption by id AMS_UC_39
+    @HasRead
     GetConsumptionByIdResponse getConsumptionById(Long id){
         LOGGER.debug("Inside service function of getting consumption by id. ID: "+id);
         GetConsumptionByIdResponse response=new GetConsumptionByIdResponse();
@@ -1029,6 +1059,7 @@ public class AssetService {
     /******************************************* Usages Functions ****************************************************/
 
     //add usage
+    @HasCreate
     DefaultResponse addUsage(AddUsageRequest request){
         LOGGER.debug("Inside service function to add usage in asset. AssetUUID: " + request.getUsage().getAssetUUID());
         DefaultResponse response=new DefaultResponse();
@@ -1080,6 +1111,7 @@ public class AssetService {
      * this function will get a page of usages by asset uuid. asset uuid, offset and limit are passed to this function
      * this function finds the usages by asset and returns them
      */
+    @HasRead
     GetPaginatedUsagesByAssetResponse getPaginatedUsagesByAsset(String assetUUID,int offset,int limit){
         LOGGER.debug("Inside service function of getting paginated usages by asset. Asset UUID: "+assetUUID+" Offset: "+offset+"Limit: "+limit);
         GetPaginatedUsagesByAssetResponse response=new GetPaginatedUsagesByAssetResponse();
@@ -1101,6 +1133,7 @@ public class AssetService {
     /*
      * this function is used to get usages by tenant or filter usages by asset uuid and date
      */
+    @HasRead
     GetPaginatedUsagesResponse getPaginatedUsages(GetPaginatedUsagesRequest request){
         LOGGER.debug("Inside service function of getting paginated usages. TenantUUID: "+request.getTenantUUID()+" Offset: "+request.getOffset()+" Limit: "+request.getLimit()+"  AssetUUID: "+request.getAssetUUID()+" Start Date: "+request.getStartDate()+" End Date: "+request.getEndDate());
         GetPaginatedUsagesResponse response=new GetPaginatedUsagesResponse();
@@ -1120,6 +1153,7 @@ public class AssetService {
     }
 
     //get paginated usages by asset uuids AMS_UC_33
+    @HasRead
     GetPaginatedUsagesByAssetsAndCategoryResponse getPaginatedUsagesByAssetsAndType(GetPaginatedUsagesByAssetsAndCategoryRequest request){
         LOGGER.debug("Inside service function of getting paginated usages by asset uuids. Offset: "+request.getOffset()+ "Limit: "+request.getLimit());
         GetPaginatedUsagesByAssetsAndCategoryResponse response=new GetPaginatedUsagesByAssetsAndCategoryResponse();
@@ -1138,6 +1172,7 @@ public class AssetService {
     }
 
     //get usage by id
+    @HasRead
     GetUsageByIdResponse getUsageById(Long id){
         LOGGER.debug("Inside service function of getting usage by id.Id: "+id);
         GetUsageByIdResponse response=new GetUsageByIdResponse();
@@ -1167,6 +1202,7 @@ public class AssetService {
     Then, we set uuid of inspection template and it's children and also we set the parent of children so that children are saved automatically when parent is saved
     Then, we save the inspection template
      */
+    @HasCreate
     DefaultResponse postInspectionTemplate(PostInspectionTemplateRequest postInspectionTemplateRequest) {
         LOGGER.debug("Inside Service function of post inspection template");
         try {
@@ -1208,6 +1244,7 @@ public class AssetService {
     uuid of inspection template is passed to this function
     then, we get inspection template with that uuid from db and return it
      */
+    @HasRead
     GetInspectionTemplateResponse getInspectionTemplate(String id) {
         LOGGER.debug("Inside Service function of get inspection template");
         GetInspectionTemplateResponse response = new GetInspectionTemplateResponse();
@@ -1236,6 +1273,7 @@ public class AssetService {
     when a object is created therefore, this additional code sets the id of the object. If we don't set the id of object then the old inspection template
     won't be updated instead a new one will be created
      */
+    @HasUpdate
     EditInspectionTemplateResponse editInspectionTemplate(EditInspectionTemplateRequest editInspectionTemplateRequest) {
         LOGGER.debug("Inside Service function of edit inspection template");
         EditInspectionTemplateResponse response = new EditInspectionTemplateResponse();
@@ -1287,6 +1325,7 @@ public class AssetService {
     Then, we set it's parent to null because we don't want to delete it's parent alongwith the children
     Then, we delete inspection template by id
      */
+    @HasDelete
     DefaultResponse deleteInspectionTemplate(String id) {
         LOGGER.debug("Inside service function of deleting inspection template");
         try {
@@ -1317,6 +1356,7 @@ public class AssetService {
     First, We find the asset with that asset uuid and set parent of message (Set activity wall of asset as parent)
     Then, we set the uuid of asset and save it in db
     */
+    @HasCreate
     DefaultResponse addMessage(AddMessageRequest addMessageRequest) {
         LOGGER.debug("Inside service function of adding message");
         try {
@@ -1354,6 +1394,7 @@ public class AssetService {
     when a object is created therefore, this additional code sets the id of the object. If we don't set the id of object then the old message
     won't be updated instead a new one will be created
      */
+    @HasUpdate
     EditMessageResponse editMessage(EditMessageRequest editMessageRequest) {
         LOGGER.debug("Inside service function of adding message");
         EditMessageResponse response = new EditMessageResponse();
@@ -1398,6 +1439,7 @@ public class AssetService {
     Then, we set the parent of message to null because we don't want to delete the parent alongwith the children
     we save this change and then delete the message
      */
+    @HasDelete
     DefaultResponse deleteMessage(String id) {
         LOGGER.debug("Inside Service function of delete message");
         try {
@@ -1450,6 +1492,7 @@ public class AssetService {
 ////            byteFile.delete();
 //        }
 //    }
+    @HasCreate
     public UploadFileResponse uploadFile(MultipartFile file) {
         UploadFileResponse response = new UploadFileResponse();
         LOGGER.debug("inside service function of uploading file to s3");

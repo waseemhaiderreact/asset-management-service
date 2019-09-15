@@ -39,6 +39,8 @@ public class AssetResponse {
 
     private Usage usage;
 
+    private String assetNumber;
+
     private HashMap<String, Object> assetFields=new HashMap<String, Object>();
 
     private Set<AssetImage> assetImages=new HashSet<>();
@@ -240,6 +242,7 @@ public class AssetResponse {
         this.assetImages=asset.getAssetImages();
         this.attachments=asset.getAttachments();
         this.consumptionPoints=asset.getConsumptionPoints();
+        this.assetNumber = asset.getAssetNumber();
     }
 
     public int getConsumptionPoints() {
@@ -248,5 +251,13 @@ public class AssetResponse {
 
     public void setConsumptionPoints(int consumptionPoints) {
         this.consumptionPoints = consumptionPoints;
+    }
+
+    public String getAssetNumber() {
+        return assetNumber;
+    }
+
+    public void setAssetNumber(String assetNumber) {
+        this.assetNumber = assetNumber;
     }
 }

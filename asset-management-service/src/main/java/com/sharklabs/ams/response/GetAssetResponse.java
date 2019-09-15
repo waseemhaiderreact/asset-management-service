@@ -8,6 +8,7 @@ import com.sharklabs.ams.fieldtemplate.FieldTemplateResponse;
 public class GetAssetResponse {
     private AssetResponse asset;
     private FieldTemplateResponse fieldTemplate;
+    private String categoryId;
     private String responseIdentifier;
 
     public AssetResponse getAsset() {
@@ -32,5 +33,13 @@ public class GetAssetResponse {
 
     public void setResponseIdentifier(String responseIdentifier) {
         this.responseIdentifier = responseIdentifier;
+    }
+
+    public String getCategoryId() {
+        return categoryId;
+    }
+
+    public void setCategoryId(String categoryId) {
+        this.categoryId = categoryId;
     }
 }
