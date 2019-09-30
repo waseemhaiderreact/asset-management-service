@@ -1,13 +1,12 @@
 package com.sharklabs.ams.request;
 
-public class AddMessageRequest {
+public class AddReplyRequest {
 
     private String messageBody;
-    private String title;
-    private String assetWallUUID;
+    private String messageUUID;
     private String userName;
     private String userUUID;
-    private String priority;
+    private String workOrderUUID;//to get work order and get assignee uuids
 
 
     public String getMessageBody() {
@@ -18,20 +17,12 @@ public class AddMessageRequest {
         this.messageBody = messageBody;
     }
 
-    public String getTitle() {
-        return title;
+    public String getMessageUUID() {
+        return messageUUID;
     }
 
-    public void setTitle(String title) {
-        this.title = title;
-    }
-
-    public String getAssetWallUUID() {
-        return assetWallUUID;
-    }
-
-    public void setAssetWallUUID(String assetWallUUID) {
-        this.assetWallUUID = assetWallUUID;
+    public void setMessageUUID(String messageUUID) {
+        this.messageUUID = messageUUID;
     }
 
     public String getUserName() {
@@ -50,11 +41,11 @@ public class AddMessageRequest {
         this.userUUID = userUUID;
     }
 
-    public String getPriority() {
-        return priority;
+    public String getWorkOrderUUID() {
+        return workOrderUUID;
     }
 
-    public void setPriority(String priority) {
-        this.priority = priority;
+    public void setWorkOrderUUID(String workOrderUUID) {
+        this.workOrderUUID = workOrderUUID;
     }
 }

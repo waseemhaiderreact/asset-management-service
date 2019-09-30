@@ -2,31 +2,43 @@ package com.sharklabs.ams.message;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.sharklabs.ams.activitywall.ActivityWall;
+import com.sharklabs.ams.reply.Reply;
 
 import javax.persistence.*;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.Set;
 
-@Entity(name = "t_message")
+
+@Entity(name = "t_messages")
 public class Message {
+
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy= GenerationType.AUTO)
     private Long id;
+
+    private String userName;
+    private String userUUID;
 
     private String uuid;
 
-    private String userUUID;
+    private String title;
 
-    private boolean imageFlag;
+    @Column(length = 5000)
+    private String messageBody;
 
-    private String imageUrl;
+    private String priority;
 
-    private boolean messageFlag;
+    private boolean readStatus;
 
-    private String message;
+    private String type;
 
-    @JsonIgnore
-    @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "activity_wall_id",referencedColumnName = "id")
-    private ActivityWall activityWall;
+    private Date messageTime;
+
+    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    @OrderBy("replyTime ASC")
+    @JoinColumn(name="message_id")
+    private Set<Reply> replies=new HashSet<>();
 
     public Long getId() {
         return id;
@@ -36,12 +48,12 @@ public class Message {
         this.id = id;
     }
 
-    public String getUuid() {
-        return uuid;
+    public String getUserName() {
+        return userName;
     }
 
-    public void setUuid(String uuid) {
-        this.uuid = uuid;
+    public void setUserName(String userName) {
+        this.userName = userName;
     }
 
     public String getUserUUID() {
@@ -52,43 +64,67 @@ public class Message {
         this.userUUID = userUUID;
     }
 
-    public String getImageUrl() {
-        return imageUrl;
+    public String getTitle() {
+        return title;
     }
 
-    public void setImageUrl(String imageUrl) {
-        this.imageUrl = imageUrl;
+    public void setTitle(String title) {
+        this.title = title;
     }
 
-    public String getMessage() {
-        return message;
+    public String getMessageBody() {
+        return messageBody;
     }
 
-    public void setMessage(String message) {
-        this.message = message;
+    public void setMessageBody(String messageBody) {
+        this.messageBody = messageBody;
     }
 
-    public ActivityWall getActivityWall() {
-        return activityWall;
+    public String getPriority() {
+        return priority;
     }
 
-    public void setActivityWall(ActivityWall activityWall) {
-        this.activityWall = activityWall;
+    public void setPriority(String priority) {
+        this.priority = priority;
     }
 
-    public boolean isImageFlag() {
-        return imageFlag;
+    public boolean isReadStatus() {
+        return readStatus;
     }
 
-    public void setImageFlag(boolean imageFlag) {
-        this.imageFlag = imageFlag;
+    public void setReadStatus(boolean readStatus) {
+        this.readStatus = readStatus;
     }
 
-    public boolean isMessageFlag() {
-        return messageFlag;
+    public String getType() {
+        return type;
     }
 
-    public void setMessageFlag(boolean messageFlag) {
-        this.messageFlag = messageFlag;
+    public void setType(String type) {
+        this.type = type;
+    }
+
+    public Date getMessageTime() {
+        return messageTime;
+    }
+
+    public void setMessageTime(Date messageTime) {
+        this.messageTime = messageTime;
+    }
+
+    public Set<Reply> getReplies() {
+        return replies;
+    }
+
+    public void setReplies(Set<Reply> replies) {
+        this.replies = replies;
+    }
+
+    public String getUuid() {
+        return uuid;
+    }
+
+    public void setUuid(String uuid) {
+        this.uuid = uuid;
     }
 }

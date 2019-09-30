@@ -738,6 +738,25 @@ public class AssetController {
         return responseEntity;
     }
 
+
+    @RequestMapping(method = RequestMethod.POST,value = "/activitywall/reply")
+    public @ResponseBody
+    ResponseEntity addReplyToMessage(@RequestBody AddReplyRequest request){
+
+        Util util=new Util();
+        util.setThreadContextForLogging();
+        LOGGER.info("Request received in controller to add reply to a message");
+        try {
+            DefaultResponse response=assetService.addReplyToMessage(request);
+            return new ResponseEntity<>(response,HttpStatus.OK);
+        }catch (Exception e) {
+            LOGGER.error(e.getMessage(),e);
+            return new ResponseEntity<>(e.getMessage(),HttpStatus.INTERNAL_SERVER_ERROR);
+        }finally {
+            util.setThreadContextForLogging();
+        }
+    }
+
     /*******************************************END Activity Wall Functions********************************************/
 
     /******************************************* File Functions ******************************************************/

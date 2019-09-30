@@ -172,7 +172,7 @@ public class AssetModel {
 
     public void setAsset(Asset asset){
         this.id=asset.getId();
-        this.activityWall=asset.getActivityWall();
+//        this.activityWall=asset.getActivityWall();
         this.assetFields=asset.getAssetFields();
         this.assetImages=asset.getAssetImages();
         this.assetNumber=asset.getAssetNumber();

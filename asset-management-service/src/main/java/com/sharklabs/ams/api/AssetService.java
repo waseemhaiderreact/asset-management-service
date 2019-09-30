@@ -29,6 +29,8 @@ import com.sharklabs.ams.inspectiontemplate.InspectionTemplateRepository;
 import com.sharklabs.ams.message.Message;
 import com.sharklabs.ams.message.MessageRepository;
 import com.sharklabs.ams.page.AssetPage;
+import com.sharklabs.ams.reply.Reply;
+import com.sharklabs.ams.reply.ReplyRepository;
 import com.sharklabs.ams.request.*;
 import com.sharklabs.ams.response.*;
 import com.sharklabs.ams.security.HasCreate;
@@ -41,13 +43,14 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.dao.DataAccessException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+import shark.commons.util.ApplicationException;
 
 import javax.annotation.PostConstruct;
 import javax.sql.DataSource;
@@ -81,6 +84,8 @@ public class   AssetService {
     AssetFieldRepository assetFieldRepository;
     @Autowired
     AssetImageRepository assetImageRepository;
+    @Autowired
+    ReplyRepository replyRepository;
 
     @Value("${cloud.aws.credentials.accessKey}")
     private String accessKey;
@@ -170,8 +175,8 @@ public class   AssetService {
                 asset.setCategory(addCategoryRequest.getCategory());
                 asset.setUuid(UUID.randomUUID().toString());
                 ActivityWall activityWall = new ActivityWall();
-                activityWall.setAsset(asset);
-                asset.setActivityWall(activityWall);
+                activityWall.setAssetUuid(asset.getUuid());
+//                asset.setActivityWall(activityWall);
                 activityWall.setUuid(UUID.randomUUID().toString());
                 for (AssetField assetField : asset.getAssetFields()) {
                     assetField.setUuid(UUID.randomUUID().toString());
@@ -198,6 +203,11 @@ public class   AssetService {
         LOGGER.debug("Inside Service function of deleting category");
         try {
             Category category = categoryRepository.findCategoryByUuid(id);
+            ArrayList<String> assetUUIDs=new ArrayList<>();
+            for(Asset asset:category.getAssets()){
+                assetUUIDs.add(asset.getUuid());
+            }
+            activityWallRepository.deleteAllByAssetUuidIn(assetUUIDs);
             categoryRepository.deleteById(category.getId());
             LOGGER.info("Category deleted Successfully");
             return new DefaultResponse("Success", "Category deleted Successfully", "200");
@@ -502,8 +512,9 @@ public class   AssetService {
             //creating activity wall for that asset and also setting uuid
             ActivityWall activityWall = new ActivityWall();
             activityWall.setUuid(UUID.randomUUID().toString());
-            activityWall.setAsset(addAssetRequest.getAsset());
-            addAssetRequest.getAsset().setActivityWall(activityWall);
+            activityWall.setAssetUuid(addAssetRequest.getAsset().getUuid());
+            activityWall.setCreatedAt(new Date());
+//            addAssetRequest.getAsset().setActivityWall(activityWall);
             //saving in db
             categoryRepository.save(category);
 
@@ -511,6 +522,7 @@ public class   AssetService {
             Asset savedAsset = assetRepository.findAssetByUuid(addAssetRequest.getAsset().getUuid());
             savedAsset.setAssetNumber(this.genrateAssetNumber(savedAsset.getId()));
             assetRepository.save(savedAsset);
+            activityWallRepository.save(activityWall);
 
             LOGGER.info("Asset Added Successfully");
             return new DefaultResponse("Success", "Asset Added Successfully", "200", addAssetRequest.getAsset().getUuid());
@@ -560,12 +572,12 @@ public class   AssetService {
             for (AssetField assetField : editAssetRequest.getAsset().getAssetFields()) {
                 assetField.setAsset(editAssetRequest.getAsset());
             }
-            if (editAssetRequest.getAsset().getActivityWall() != null) {
-                editAssetRequest.getAsset().getActivityWall().setAsset(editAssetRequest.getAsset());
-                for (Message message : editAssetRequest.getAsset().getActivityWall().getMessages()) {
-                    message.setActivityWall(editAssetRequest.getAsset().getActivityWall());
-                }
-            }
+//            if (editAssetRequest.getAsset().getActivityWall() != null) {
+//                editAssetRequest.getAsset().getActivityWall().setAsset(editAssetRequest.getAsset());
+//                for (Message message : editAssetRequest.getAsset().getActivityWall().getMessages()) {
+//                    message.setActivityWall(editAssetRequest.getAsset().getActivityWall());
+//                }
+//            }
             //saving in db
             assetRepository.save(editAssetRequest.getAsset());
 
@@ -598,6 +610,8 @@ public class   AssetService {
             asset.setCategory(null);
             assetRepository.save(asset);
             //deleting
+            //delete wall
+            activityWallRepository.deleteActivityWallByAssetUuid(asset.getUuid());
             assetRepository.deleteById(asset.getId());
             LOGGER.info("Asset deleted Successfully");
             return new DefaultResponse("Success", "Asset deleted Successfully", "200");
@@ -622,9 +636,18 @@ public class   AssetService {
         try {
             //find asset with that uuid
             Asset asset = assetRepository.findAssetByUuid(id);
+            ActivityWall activityWall=activityWallRepository.findActivityWallByAssetUuid(asset.getUuid());
+            if(activityWall==null){
+                activityWall=new ActivityWall();
+                activityWall.setCreatedAt(new Date());
+                activityWall.setUuid(UUID.randomUUID().toString());
+                activityWall.setAssetUuid(asset.getUuid());
+                activityWallRepository.save(activityWall);
+            }
             //map it to a new object
             AssetResponse assetResponse = new AssetResponse();
             assetResponse.setAsset(asset);
+            assetResponse.setActivityWall(activityWall);
             response.setAsset(assetResponse);
             response.setCategoryId(asset.getCategory().getUuid());
             //set field template of asset
@@ -663,8 +686,18 @@ public class   AssetService {
 
             // Additions as requested by AssetDetail
 
-            if(assetDetailRequest.isActivityWall())
-                assetDetailResponse.setActivityWall(activityWallRepository.findActivityWallByAssetUuid(uuid));
+            if(assetDetailRequest.isActivityWall()){
+                ActivityWall activityWall=activityWallRepository.findActivityWallByAssetUuid(uuid);
+                if(activityWall==null){
+                    activityWall=new ActivityWall();
+                    activityWall.setCreatedAt(new Date());
+                    activityWall.setUuid(UUID.randomUUID().toString());
+                    activityWall.setAssetUuid(uuid);
+                    activityWallRepository.save(activityWall);
+                }
+                assetDetailResponse.setActivityWall(activityWall);
+            }
+
 
             if(assetDetailRequest.isAssetFields())
                 assetDetailResponse.setAssetField(assetFieldRepository.findAllByAssetUuid(uuid));
@@ -1362,20 +1395,25 @@ public class   AssetService {
         try {
             Asset asset = null;
             //if activity wall uuid is passed in the request then set parent of message
-            if (addMessageRequest.getAssetId() != null) {
-                asset = assetRepository.findAssetByUuid(addMessageRequest.getAssetId());
-                asset.getActivityWall().addMessage(addMessageRequest.getMessage());
-                addMessageRequest.getMessage().setActivityWall(asset.getActivityWall());
+            if (addMessageRequest.getAssetWallUUID() != null) {
+                ActivityWall activityWall = activityWallRepository.findActivityWallByUuid(addMessageRequest.getAssetWallUUID());
+                Message message=new Message();
+                message.setUuid(UUID.randomUUID().toString());
+                message.setUserUUID(addMessageRequest.getUserUUID());
+                message.setUserName(addMessageRequest.getUserName());
+                message.setMessageTime(new Date());
+                message.setPriority("normal");
+                message.setMessageBody(addMessageRequest.getMessageBody());
+                message.setReadStatus(false);
+                activityWall.getMessages().add(message);
+                activityWallRepository.save(activityWall);
+
+                LOGGER.info("Message Added Successfully");
+                return new DefaultResponse("Success", "Message Added Successfully", "200", message.getUuid());
             } else {
-                LOGGER.error("Asset uuid is not passed in the request");
-                return new DefaultResponse("Failure", "Asset uuid is not passed in the request", "500");
+                LOGGER.error("Wall uuid is not passed in the request");
+                return new DefaultResponse("Failure", "asset wall uuid is not passed in the request", "500");
             }
-            //setting uuid
-            addMessageRequest.getMessage().setUuid(UUID.randomUUID().toString());
-            //saving it in db
-            activityWallRepository.save(asset.getActivityWall());
-            LOGGER.info("Message Added Successfully");
-            return new DefaultResponse("Success", "Message Added Successfully", "200", addMessageRequest.getMessage().getUuid());
         } catch (Exception e) {
             e.printStackTrace();
             LOGGER.error("Error while adding message", e);
@@ -1403,15 +1441,15 @@ public class   AssetService {
             //if activity wall uuid is passed in the request then set parent of message
             if (editMessageRequest.getAssetId() != null) {
                 asset = assetRepository.findAssetByUuid(editMessageRequest.getAssetId());
-                editMessageRequest.getMessage().setActivityWall(asset.getActivityWall());
-                //This if will be executed for test library
-                if (editMessageRequest.getMessage().getId() == null) {
-                    for (Message message : asset.getActivityWall().getMessages()) {
-                        if (message.getUuid().equals(editMessageRequest.getMessage().getUuid())) {
-                            editMessageRequest.getMessage().setId(message.getId());
-                        }
-                    }
-                }
+//                editMessageRequest.getMessage().setActivityWall(asset.getActivityWall());
+//                //This if will be executed for test library
+//                if (editMessageRequest.getMessage().getId() == null) {
+//                    for (Message message : asset.getActivityWall().getMessages()) {
+//                        if (message.getUuid().equals(editMessageRequest.getMessage().getUuid())) {
+//                            editMessageRequest.getMessage().setId(message.getId());
+//                        }
+//                    }
+//                }//TODO:editMessage function to be converted to new activity style
             } else {
                 LOGGER.error("Asset uuid is not passed in the request");
                 response.setResponseIdentifier("Failure");
@@ -1445,8 +1483,6 @@ public class   AssetService {
         try {
             //get message by uuid
             Message message = messageRepository.findMessageByUuid(id);
-            //setting parent of message to null so that it does not delete the parent along with it
-            message.setActivityWall(null);
             //saving the change
             messageRepository.save(message);
             //now deleting it
@@ -1457,6 +1493,37 @@ public class   AssetService {
             e.printStackTrace();
             LOGGER.error("Error while deleting message", e);
             return new DefaultResponse("Failure", "Ërror while deleting message", "500");
+        }
+    }
+
+
+    @HasCreate
+    DefaultResponse addReplyToMessage(AddReplyRequest request) throws ApplicationException {
+        LOGGER.debug("In side service function to reply to message in work order wall");
+        try {
+            Message message=messageRepository.findMessageByUuid(request.getMessageUUID());
+            if(message!=null){
+                Reply reply=new Reply();
+                reply.setMessageBody(request.getMessageBody());
+                reply.setReadStatus(false);
+                reply.setReplyTime(new Date());
+                reply.setMessage(message);
+                reply.setUserName(request.getUserName());
+                reply.setUserUUID(request.getUserUUID());
+                reply.setUuid(UUID.randomUUID().toString());
+                replyRepository.save(reply);
+                return new DefaultResponse("Success","Reply added successfully!","200",reply.getUuid());
+            }
+            else{
+                return new DefaultResponse("Failure","Message not found!","404");
+            }
+        }catch(DataAccessException e){
+            e.printStackTrace();
+            throw new ApplicationException("Error occurred while adding reply to a message.",e);
+        }
+        catch(Exception e){
+            e.printStackTrace();
+            throw new ApplicationException("Unexpected error occurred while adding reply to a message",e);
         }
     }
 

@@ -206,7 +206,7 @@ public class AssetResponse {
 
     public void setAsset(Asset asset){
         this.id=asset.getId();
-        this.activityWall=asset.getActivityWall();
+//        this.activityWall=asset.getActivityWall();
         this.name=asset.getName();
         this.tenantUUID=asset.getTenantUUID();
         this.uuid=asset.getUuid();
