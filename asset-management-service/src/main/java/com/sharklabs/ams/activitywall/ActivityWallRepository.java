@@ -4,6 +4,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 
 import javax.transaction.Transactional;
+import java.util.ArrayList;
 
 public interface ActivityWallRepository extends JpaRepository<ActivityWall,Long> {
 
@@ -14,5 +15,11 @@ public interface ActivityWallRepository extends JpaRepository<ActivityWall,Long>
     @Modifying
     @Transactional
     Integer deleteById(Long id);
+
+    @Transactional
+    void deleteAllByAssetUuidIn(ArrayList<String> assetUUIDs);
+
+    @Transactional
+    void deleteActivityWallByAssetUuid(String assetUUID);
 
 }

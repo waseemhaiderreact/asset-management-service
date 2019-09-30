@@ -65,8 +65,8 @@ public class Asset implements Serializable {
     @OneToMany(  cascade = CascadeType.ALL,mappedBy = "asset",fetch = FetchType.EAGER)
     private Set<Attachment> attachments =new HashSet<>();
 
-    @OneToOne(mappedBy = "asset", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
-    private ActivityWall activityWall;
+//    @OneToOne(mappedBy = "asset", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+//    private ActivityWall activityWall;
 
     @OneToMany(  cascade = CascadeType.ALL,mappedBy = "asset",fetch = FetchType.EAGER)
     private Set<Usage> usages =new HashSet<>();
@@ -123,13 +123,13 @@ public class Asset implements Serializable {
         this.assetFields = assetFields;
     }
 
-    public ActivityWall getActivityWall() {
-        return activityWall;
-    }
-
-    public void setActivityWall(ActivityWall activityWall) {
-        this.activityWall = activityWall;
-    }
+//    public ActivityWall getActivityWall() {
+//        return activityWall;
+//    }
+//
+//    public void setActivityWall(ActivityWall activityWall) {
+//        this.activityWall = activityWall;
+//    }
 
     public String getAssetNumber() {
         return assetNumber;

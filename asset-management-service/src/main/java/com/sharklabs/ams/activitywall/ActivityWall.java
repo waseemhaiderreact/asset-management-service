@@ -1,10 +1,9 @@
 package com.sharklabs.ams.activitywall;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.sharklabs.ams.asset.Asset;
 import com.sharklabs.ams.message.Message;
 
 import javax.persistence.*;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -15,14 +14,14 @@ public class ActivityWall {
     private Long id;
 
     private String uuid;
+    private String assetUuid;
+    private Date createdAt;
 
-    @JsonIgnore
-    @OneToOne(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
-    @JoinColumn(name = "asset_id",referencedColumnName = "id")
-    private Asset asset;
+    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    @OrderBy("messageTime ASC")
+    @JoinColumn(name = "activity_wall_id")
+    private Set<Message> messages=new HashSet<>();
 
-    @OneToMany(  cascade = CascadeType.ALL,mappedBy = "activityWall",fetch = FetchType.EAGER)
-    private Set<Message> messages =new HashSet<>();
 
     public Long getId() {
         return id;
@@ -40,12 +39,13 @@ public class ActivityWall {
         this.uuid = uuid;
     }
 
-    public Asset getAsset() {
-        return asset;
+
+    public Date getCreatedAt() {
+        return createdAt;
     }
 
-    public void setAsset(Asset asset) {
-        this.asset = asset;
+    public void setCreatedAt(Date createdAt) {
+        this.createdAt = createdAt;
     }
 
     public Set<Message> getMessages() {
@@ -56,7 +56,11 @@ public class ActivityWall {
         this.messages = messages;
     }
 
-    public void addMessage(Message message){
-        this.messages.add(message);
+    public String getAssetUuid() {
+        return assetUuid;
+    }
+
+    public void setAssetUuid(String assetUuid) {
+        this.assetUuid = assetUuid;
     }
 }
