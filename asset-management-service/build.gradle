@@ -66,6 +66,7 @@ configurations {
 }
 
 dependencies {
+    compile files("libs/shark-commons-util-1.0.jar")
     compile("org.springframework.boot:spring-boot-starter-websocket:1.5.3.RELEASE")
     compile('org.springframework.boot:spring-boot-starter-data-jpa:1.5.3.RELEASE')
     compile('org.springframework.boot:spring-boot-starter-parent:1.5.3.RELEASE')
