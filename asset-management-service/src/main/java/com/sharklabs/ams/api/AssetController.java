@@ -779,6 +779,27 @@ public class AssetController {
         return responseEntity;
     }
 
+    @RequestMapping(method = RequestMethod.DELETE,value="/files", params = {"filename"})
+    public @ResponseBody
+    ResponseEntity deleteFile(@RequestParam("filename") String filename) throws EmptyEntityTableException {
+        Util util = new Util();
+        util.setThreadContextForLogging();
+        LOGGER.info("Request received in controller to delete file from s3");
+        DefaultResponse response=assetService.removeFile(filename);
+        ResponseEntity responseEntity=null;
+        if(response.getResponseIdentifier().equals("Success")){
+            responseEntity=new ResponseEntity<>(response,HttpStatus.OK);
+        }
+        else if(response.getResponseIdentifier().equals("Failure")){
+            responseEntity=new ResponseEntity<>(response,HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+        util.clearThreadContextForLogging();
+        return responseEntity;
+    }
+
+
+
+
     /*******************************************END File Functions ******************************************************/
 
     //create a new vehicle

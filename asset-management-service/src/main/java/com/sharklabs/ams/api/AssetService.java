@@ -4,6 +4,7 @@ import com.amazonaws.auth.AWSCredentials;
 import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3Client;
+import com.amazonaws.services.s3.model.DeleteObjectRequest;
 import com.amazonaws.services.s3.model.PutObjectRequest;
 import com.sharklabs.ams.AssetImage.AssetImage;
 import com.sharklabs.ams.AssetImage.AssetImageRepository;
@@ -973,7 +974,7 @@ public class   AssetService {
 
             assetRepository.save(asset);
 
-            //save attachments
+            //save attachment
             imageVoiceRepository.save(request.getImageVoices());
 
             return new DefaultResponse("Success", "Consumption Unit Added Successfully", "200", request.getConsumption().getUuid());
@@ -1574,6 +1575,7 @@ public class   AssetService {
             this.s3client.putObject(new PutObjectRequest(this.bucket + "/asset-images", fileName, convFile));
             response.setResponseIdentifier("Success");
             response.setFileUrl(fileUrl);
+            response.setFileName(fileName);
             LOGGER.info("File uploaded Successfully");
             convFile.delete();
             return response;
@@ -1582,6 +1584,26 @@ public class   AssetService {
             e.printStackTrace();
             response.setResponseIdentifier("Failure");
             convFile.delete();
+            return response;
+        }
+    }
+
+    @HasCreate
+    public DefaultResponse removeFile(String fileName) {
+        DefaultResponse response = new DefaultResponse();
+        LOGGER.debug("inside service function of delete file from s3");
+
+        try {
+            this.s3client.deleteObject(new DeleteObjectRequest(this.bucket+"/asset-images",fileName));
+            response.setResponseIdentifier("Success");
+            response.setDescription("Successfully deleted file!");
+            LOGGER.info("File deleted Successfully");
+            return response;
+        } catch (Exception e) {
+            LOGGER.error("Error while deleting file from s3", e);
+            e.printStackTrace();
+            response.setResponseIdentifier("Failure");
+            response.setDescription("Failed to delete file!");
             return response;
         }
     }
