@@ -3,6 +3,7 @@ package com.sharklabs.ams.response;
 public class UploadFileResponse {
     private String responseIdentifier;
     private String fileUrl;
+    private String fileName;
 
     public String getResponseIdentifier() {
         return responseIdentifier;
@@ -18,5 +19,13 @@ public class UploadFileResponse {
 
     public void setFileUrl(String fileUrl) {
         this.fileUrl = fileUrl;
+    }
+
+    public String getFileName() {
+        return fileName;
+    }
+
+    public void setFileName(String fileName) {
+        this.fileName = fileName;
     }
 }
