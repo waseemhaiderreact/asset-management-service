@@ -18,6 +18,9 @@ public interface AssetRepository extends JpaRepository<Asset,Long>, PagingAndSor
     Asset findAssetByUuid(String uuid);
     List<Asset> findByTenantUUID(String tenantUUID);
 
+    @Query(value = "SELECT uuid,name FROM t_asset WHERE tenantuuid LIKE :tenantUUID",nativeQuery = true)
+    List<Object> getAssetNameAndUUIDByTenantUUID(@Param("tenantUUID") String tenantUUID);
+
     @Query("SELECT a FROM t_asset a WHERE a.uuid = ?1")
     Asset findByUuid(String uuid);
 
@@ -47,4 +50,6 @@ public interface AssetRepository extends JpaRepository<Asset,Long>, PagingAndSor
 
     @Query(value = "SELECT * FROM t_asset t WHERE t.uuid LIKE :assetUUID",nativeQuery = true)
     Asset findAsset(@Param("assetUUID")String assetUUID);
+
+    ArrayList<Asset> findAssetsByTenantUUID(String tenantUUID);
 }

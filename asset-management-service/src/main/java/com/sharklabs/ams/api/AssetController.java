@@ -14,6 +14,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import shark.commons.util.ApplicationException;
 
 import java.util.Optional;
 
@@ -372,6 +373,26 @@ public class AssetController {
         util.clearThreadContextForLogging();
         return responseEntity;
     }
+
+    @RequestMapping(method = RequestMethod.GET,value="/",params = {"'tenantuuid'"})
+    public @ResponseBody
+    ResponseEntity getNameAndUUIDOfAssetsByTenantUUID(@RequestParam String tenantuuid) {
+        Util util = new Util();
+        util.setThreadContextForLogging();
+        LOGGER.info("Request received in controller to get name and type of assets by tenantuuid.");
+        ResponseEntity responseEntity=null;
+        GetNameAndUUIDOfAssetResponse response= null;
+        try {
+            response = assetService.getNameAndUUIDOfAssetByTenantUUID(tenantuuid);
+            responseEntity=new ResponseEntity<>(response,HttpStatus.OK);
+        } catch (ApplicationException e) {
+            LOGGER.error(e.getMessage(),e);
+        }
+
+        util.clearThreadContextForLogging();
+        return responseEntity;
+    }
+
 
     @RequestMapping(method = RequestMethod.GET,value = "",params = {"name"})
     public @ResponseBody

@@ -741,14 +741,8 @@ public class   AssetService {
         LOGGER.debug("Inside Service function of get assets");
         GetAssetsResponse response = new GetAssetsResponse();
         try {
-            List<Asset> assets = assetRepository.findByTenantUUID(tenantUUID);
-            List<AssetModel> assetModels = new ArrayList<>();
-            for (Asset asset : assets) {
-                AssetModel assetModel = new AssetModel();
-                assetModel.setAsset(asset);
-                assetModels.add(assetModel);
-            }
-            response.setAssets(assetModels);
+            List<Object> assets=assetRepository.getAssetNameAndUUIDByTenantUUID(tenantUUID);
+            response.setAssets(assets);
             response.setResponseIdentifier("Success");
             LOGGER.info("Received assets From database. Sending it to controller");
             return response;
@@ -909,6 +903,26 @@ public class   AssetService {
             LOGGER.error("Error while getting assets by uuids", e);
             response.setResponseIdentifier("Failure");
             return response;
+        }
+    }
+
+    @HasRead
+    GetNameAndUUIDOfAssetResponse getNameAndUUIDOfAssetByTenantUUID(String tenantUUID) throws ApplicationException {
+        try {
+            ArrayList<Asset> assets=assetRepository.findAssetsByTenantUUID(tenantUUID);
+            ArrayList<AssetNameAndUUIDModel> assetNameAndUUIDModels=new ArrayList<>();
+            GetNameAndUUIDOfAssetResponse response=new GetNameAndUUIDOfAssetResponse();
+            for (Asset asset:assets){
+                assetNameAndUUIDModels.add(new AssetNameAndUUIDModel(asset.getName(),asset.getUuid()));
+            }
+            response.setAssets(assetNameAndUUIDModels);
+            response.setResponseCode("200");
+            response.setResponseIdentifier("Success");
+            return response;
+
+        }catch (Exception e){
+            e.printStackTrace();
+            throw new ApplicationException("Unexpected error occurred while getting name and uuid of asset by tenant uuid",e);
         }
     }
 
@@ -1613,7 +1627,7 @@ public class   AssetService {
     /******************************************* Class Functions *****************************************************/
     //generate asset number
     private String genrateAssetNumber(Long id) {
-        String assetNumber = "AMS-ASSET-";
+        String assetNumber = "ERH-ASSET-";
         Long myId = 1000L + id;
         String formatted = String.format("%06d", myId);
         return assetNumber + formatted;
