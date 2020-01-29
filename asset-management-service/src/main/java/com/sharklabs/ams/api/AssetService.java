@@ -6,6 +6,8 @@ import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.model.DeleteObjectRequest;
 import com.amazonaws.services.s3.model.PutObjectRequest;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sharklabs.ams.AssetImage.AssetImage;
 import com.sharklabs.ams.AssetImage.AssetImageRepository;
 import com.sharklabs.ams.activitywall.ActivityWall;
@@ -40,6 +42,7 @@ import com.sharklabs.ams.security.HasRead;
 import com.sharklabs.ams.security.HasUpdate;
 import com.sharklabs.ams.usage.Usage;
 import com.sharklabs.ams.usage.UsageRepository;
+import com.sharklabs.ams.util.Util;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -204,8 +207,8 @@ public class   AssetService {
         LOGGER.debug("Inside Service function of deleting category");
         try {
             Category category = categoryRepository.findCategoryByUuid(id);
-            ArrayList<String> assetUUIDs=new ArrayList<>();
-            for(Asset asset:category.getAssets()){
+            ArrayList<String> assetUUIDs = new ArrayList<>();
+            for (Asset asset : category.getAssets()) {
                 assetUUIDs.add(asset.getUuid());
             }
             activityWallRepository.deleteAllByAssetUuidIn(assetUUIDs);
@@ -507,7 +510,7 @@ public class   AssetService {
             for (AssetImage assetImage : addAssetRequest.getAsset().getAssetImages()) {
                 assetImage.setAsset(addAssetRequest.getAsset());
             }
-            for(Attachment attachment: addAssetRequest.getAsset().getAttachments()){
+            for (Attachment attachment : addAssetRequest.getAsset().getAttachments()) {
                 attachment.setAsset(addAssetRequest.getAsset());
             }
             //creating activity wall for that asset and also setting uuid
@@ -637,9 +640,9 @@ public class   AssetService {
         try {
             //find asset with that uuid
             Asset asset = assetRepository.findAssetByUuid(id);
-            ActivityWall activityWall=activityWallRepository.findActivityWallByAssetUuid(asset.getUuid());
-            if(activityWall==null){
-                activityWall=new ActivityWall();
+            ActivityWall activityWall = activityWallRepository.findActivityWallByAssetUuid(asset.getUuid());
+            if (activityWall == null) {
+                activityWall = new ActivityWall();
                 activityWall.setCreatedAt(new Date());
                 activityWall.setUuid(UUID.randomUUID().toString());
                 activityWall.setAssetUuid(asset.getUuid());
@@ -675,7 +678,7 @@ public class   AssetService {
      * @Param - Requested Asset Detail
      */
     @HasRead
-    GetAssetDetailResponse getAssetDetail(AssetDetailRequest assetDetailRequest,String uuid){
+    GetAssetDetailResponse getAssetDetail(AssetDetailRequest assetDetailRequest, String uuid) {
         GetAssetDetailResponse response = new GetAssetDetailResponse();
         AssetDetailResponse assetDetailResponse = new AssetDetailResponse();
         AssetDetail assetDetail = null;
@@ -687,10 +690,10 @@ public class   AssetService {
 
             // Additions as requested by AssetDetail
 
-            if(assetDetailRequest.isActivityWall()){
-                ActivityWall activityWall=activityWallRepository.findActivityWallByAssetUuid(uuid);
-                if(activityWall==null){
-                    activityWall=new ActivityWall();
+            if (assetDetailRequest.isActivityWall()) {
+                ActivityWall activityWall = activityWallRepository.findActivityWallByAssetUuid(uuid);
+                if (activityWall == null) {
+                    activityWall = new ActivityWall();
                     activityWall.setCreatedAt(new Date());
                     activityWall.setUuid(UUID.randomUUID().toString());
                     activityWall.setAssetUuid(uuid);
@@ -700,31 +703,31 @@ public class   AssetService {
             }
 
 
-            if(assetDetailRequest.isAssetFields())
+            if (assetDetailRequest.isAssetFields())
                 assetDetailResponse.setAssetField(assetFieldRepository.findAllByAssetUuid(uuid));
 
-            if(assetDetailRequest.isAssetImages())
+            if (assetDetailRequest.isAssetImages())
                 assetDetailResponse.setAssetImage(assetImageRepository.findAllByAssetUuid(uuid));
 
-            if(assetDetailRequest.isAttachments())
+            if (assetDetailRequest.isAttachments())
                 assetDetailResponse.setAssetImage(assetImageRepository.findAllByAssetUuid(uuid));
 
-            if(assetDetailRequest.isConsumptions())
+            if (assetDetailRequest.isConsumptions())
                 assetDetailResponse.setConsumption(consumptionRepository.findByAssetUUID(uuid));
 
-            if(assetDetailRequest.isUsages())
+            if (assetDetailRequest.isUsages())
                 assetDetailResponse.setUsage(usageRepository.findByAssetUUID(uuid));
 
-            if(assetDetailRequest.isCategory())
+            if (assetDetailRequest.isCategory())
                 assetDetailResponse.setCategory(categoryRepository.findByAssetsUuid(uuid));
 
             response.setAssetDetail(assetDetailResponse);
             response.setResponseIdentifier("Success");
             LOGGER.info("Received Asset Detail From database. Sending it to controller");
-        }catch(Exception e){
+        } catch (Exception e) {
             response.setResponseIdentifier("Failure");
             LOGGER.error("Error while getting asset detail from db. Asset UUID: " + uuid, e);
-        }finally{
+        } finally {
             assetDetail = null;
             assetDetailResponse = null;
         }
@@ -741,7 +744,7 @@ public class   AssetService {
         LOGGER.debug("Inside Service function of get assets");
         GetAssetsResponse response = new GetAssetsResponse();
         try {
-            List<Object> assets=assetRepository.getAssetNameAndUUIDByTenantUUID(tenantUUID);
+            List<Object> assets = assetRepository.getAssetNameAndUUIDByTenantUUID(tenantUUID);
             response.setAssets(assets);
             response.setResponseIdentifier("Success");
             LOGGER.info("Received assets From database. Sending it to controller");
@@ -756,19 +759,19 @@ public class   AssetService {
 
     //get asset basic detail by tenant AMS_UC_31
     @HasRead
-    GetBasicAssetDetailByTenantResponse getBasicAssetDetailByTenant(String tenantUUID){
-        LOGGER.debug("Inside service function of getting basic details of asset by tenant. Tenant UUID: "+tenantUUID);
-        GetBasicAssetDetailByTenantResponse response=new GetBasicAssetDetailByTenantResponse();
-        try{
+    GetBasicAssetDetailByTenantResponse getBasicAssetDetailByTenant(String tenantUUID) {
+        LOGGER.debug("Inside service function of getting basic details of asset by tenant. Tenant UUID: " + tenantUUID);
+        GetBasicAssetDetailByTenantResponse response = new GetBasicAssetDetailByTenantResponse();
+        try {
             JdbcTemplate jt;
             jt = new JdbcTemplate(this.dataSource());
 
             String sql = "select a.id as id,a.uuid as uuid,a.asset_number as asset_number,a.name as asset_name,a.primary_usage_unit as primary_usage_unit,a.secondary_usage_unit as secondary_usage_unit,a.consumption_unit as consumption_unit,a.consumption_points as consumption_points,c.uuid as category_uuid " +
-                        "from t_asset a inner join t_category c on a.category_id=c.id " +
-                        "where a.tenantuuid=?";
+                    "from t_asset a inner join t_category c on a.category_id=c.id " +
+                    "where a.tenantuuid=?";
             List<Map<String, Object>> assetsResponse = jt.queryForList(sql, tenantUUID);
-            List<GetNameAndTypeOfAssetResponse> assets=new ArrayList<>();
-            for(Map<String,Object> assetResponse: assetsResponse) {
+            List<GetNameAndTypeOfAssetResponse> assets = new ArrayList<>();
+            for (Map<String, Object> assetResponse : assetsResponse) {
                 GetNameAndTypeOfAssetResponse asset = new GetNameAndTypeOfAssetResponse();
                 asset.setName(String.valueOf(assetResponse.get("asset_name")));
                 asset.setCategoryUUID(String.valueOf(assetResponse.get("category_uuid")));
@@ -777,7 +780,7 @@ public class   AssetService {
                 asset.setConsumptionUnit(String.valueOf(assetResponse.get("consumption_unit")));
                 asset.setPrimaryUsageUnit(String.valueOf(assetResponse.get("primary_usage_unit")));
                 asset.setSecondaryUsageUnit(String.valueOf(assetResponse.get("secondary_usage_unit")));
-                asset.setConsumptionPoints((int)assetResponse.get("consumption_points"));
+                asset.setConsumptionPoints((int) assetResponse.get("consumption_points"));
                 assets.add(asset);
             }
 
@@ -785,10 +788,10 @@ public class   AssetService {
             response.setResponseIdentifier("Success");
             LOGGER.info("Basic detail of asset got successfully");
             return response;
-        }catch(Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
             response.setResponseIdentifier("Failure");
-            LOGGER.error("Error while getting basic detail of asset by tenant. TenantUUID: "+tenantUUID);
+            LOGGER.error("Error while getting basic detail of asset by tenant. TenantUUID: " + tenantUUID);
             return response;
         }
     }
@@ -890,7 +893,7 @@ public class   AssetService {
                 asset.setConsumptionUnit(String.valueOf(assetResponse.get("consumption_unit")));
                 asset.setPrimaryUsageUnit(String.valueOf(assetResponse.get("primary_usage_unit")));
                 asset.setSecondaryUsageUnit(String.valueOf(assetResponse.get("secondary_usage_unit")));
-                asset.setConsumptionPoints((int)assetResponse.get("consumption_points"));
+                asset.setConsumptionPoints((int) assetResponse.get("consumption_points"));
                 assetsHashmap.put(String.valueOf(assetResponse.get("uuid")), asset);
             }
 
@@ -909,41 +912,84 @@ public class   AssetService {
     @HasRead
     GetNameAndUUIDOfAssetResponse getNameAndUUIDOfAssetByTenantUUID(String tenantUUID) throws ApplicationException {
         try {
-            ArrayList<Asset> assets=assetRepository.findAssetsByTenantUUID(tenantUUID);
-            ArrayList<AssetNameAndUUIDModel> assetNameAndUUIDModels=new ArrayList<>();
-            GetNameAndUUIDOfAssetResponse response=new GetNameAndUUIDOfAssetResponse();
-            for (Asset asset:assets){
-                assetNameAndUUIDModels.add(new AssetNameAndUUIDModel(asset.getName(),asset.getUuid()));
+            ArrayList<Asset> assets = assetRepository.findAssetsByTenantUUID(tenantUUID);
+            ArrayList<AssetNameAndUUIDModel> assetNameAndUUIDModels = new ArrayList<>();
+            GetNameAndUUIDOfAssetResponse response = new GetNameAndUUIDOfAssetResponse();
+            for (Asset asset : assets) {
+                assetNameAndUUIDModels.add(new AssetNameAndUUIDModel(asset.getName(), asset.getUuid()));
             }
             response.setAssets(assetNameAndUUIDModels);
             response.setResponseCode("200");
             response.setResponseIdentifier("Success");
             return response;
 
-        }catch (Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
-            throw new ApplicationException("Unexpected error occurred while getting name and uuid of asset by tenant uuid",e);
+            throw new ApplicationException("Unexpected error occurred while getting name and uuid of asset by tenant uuid", e);
         }
     }
 
     //get asset uuids by name
     @HasRead
-    GetAssetUUIDsByNameResponse getAssetUUIDsByName(String name){
+    GetAssetUUIDsByNameResponse getAssetUUIDsByName(String name) {
         LOGGER.info("Inside service function to get asset uuids by name");
-        GetAssetUUIDsByNameResponse response=new GetAssetUUIDsByNameResponse();
-        try{
-            List<Object> assetUUIDs=assetRepository.findAssetUUIDByAssetName(name);
+        GetAssetUUIDsByNameResponse response = new GetAssetUUIDsByNameResponse();
+        try {
+            List<Object> assetUUIDs = assetRepository.findAssetUUIDByAssetName(name);
             response.setAssetUUIDs(assetUUIDs);
             response.setResponseIdentifier("Success");
             LOGGER.info("Received assets uuids from database. Returning to controller");
             return response;
-        }catch (Exception e) {
+        } catch (Exception e) {
             e.printStackTrace();
             LOGGER.error("Error while getting assets by uuids", e);
             response.setResponseIdentifier("Failure");
             return response;
         }
     }
+
+    // Update Asset Fields
+    @HasUpdate
+    DefaultResponse updateAssetFields(UpdateAssetFieldsRequest updateAssetFieldsRequest) throws ApplicationException, JsonProcessingException {
+        Util util = new Util();
+        DefaultResponse defaultResponse = null;
+        Asset asset = null;
+        try {
+            util.setThreadContextForLogging();
+            LOGGER.info(" Entered service method to update all assetFields of asset uuid: "+updateAssetFieldsRequest.getAssetUUID()+" object: " + new ObjectMapper().writeValueAsString(updateAssetFieldsRequest.getAssetFields()));
+
+            // Obtain Asset
+            asset = assetRepository.findAsset(updateAssetFieldsRequest.getAssetUUID());
+
+            // Set Asset in AssetFields
+            for(AssetField assetField : updateAssetFieldsRequest.getAssetFields()){
+                assetField.setAsset(asset);
+            }
+
+            // Set updated Asset fields in Asset
+            asset.setAssetFields(updateAssetFieldsRequest.getAssetFields());
+
+            // Save the Asset
+            assetRepository.save(asset);
+
+            LOGGER.info("Successfully updated all assetFields of asset uuid: "+updateAssetFieldsRequest.getAssetUUID()+" object: " + new ObjectMapper().writeValueAsString(updateAssetFieldsRequest.getAssetFields()));
+            defaultResponse = new DefaultResponse("Success", "Successfully Updated all Asset Fields", "F200");
+        } catch (DataAccessException dae) {
+            throw new ApplicationException("An unexpected Error occurred while updating all assetFields of asset uuid: "+updateAssetFieldsRequest.getAssetUUID()+" object: " + new ObjectMapper().writeValueAsString(updateAssetFieldsRequest.getAssetFields())+ ".Error Code AMS-5624", dae);
+        } catch (Exception e) {
+            throw new ApplicationException("An Error occurred while update all assetFields of asset uuid: "+updateAssetFieldsRequest.getAssetUUID()+" object: " + new ObjectMapper().writeValueAsString(updateAssetFieldsRequest.getAssetFields()) + ".Error Code AMS-5624", e);
+        }finally{
+            LOGGER.info("Returning from service method of updating all assetFields of asset uuid: "+updateAssetFieldsRequest.getAssetUUID()+" object: " + new ObjectMapper().writeValueAsString(updateAssetFieldsRequest.getAssetFields()));
+            util.clearThreadContextForLogging();
+            util = null;
+            asset = null;
+        }
+
+        return defaultResponse;
+    }
+
+
+
 
     /******************************************* END Asset Functions ************************************************/
 

@@ -1,6 +1,9 @@
 package com.sharklabs.ams.api;
 
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.sharklabs.ams.assetfield.AssetField;
 import com.sharklabs.ams.exception.EmptyEntityTableException;
 import com.sharklabs.ams.request.*;
 import com.sharklabs.ams.response.*;
@@ -16,6 +19,8 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import shark.commons.util.ApplicationException;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 
@@ -409,6 +414,31 @@ public class AssetController {
         }
         else{
             responseEntity=new ResponseEntity<>(response,HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+
+        return responseEntity;
+    }
+
+    // Update all Asset Fields of an Asset
+    @PutMapping("/fields")
+    public @ResponseBody
+    ResponseEntity updateAllAssetFields(@RequestBody UpdateAssetFieldsRequest updateAssetFieldsRequest) throws JsonProcessingException {
+        Util util = new Util();
+        ResponseEntity responseEntity = null;
+        try{
+
+            util.setThreadContextForLogging();
+            LOGGER.info("Entered controller of updating all assetFields of asset uuid: "+updateAssetFieldsRequest.getAssetUUID()+" object: " + new ObjectMapper().writeValueAsString(updateAssetFieldsRequest.getAssetFields()));
+
+            responseEntity = new ResponseEntity<DefaultResponse>(assetService.updateAssetFields(updateAssetFieldsRequest),HttpStatus.OK);
+
+        }catch(Exception e){
+            LOGGER.error("An Error occurred while updating all assetFields of asset uuid: "+updateAssetFieldsRequest.getAssetUUID()+" object: " + new ObjectMapper().writeValueAsString(updateAssetFieldsRequest.getAssetFields()),e);
+            responseEntity = new ResponseEntity<String>(e.getMessage(),HttpStatus.INTERNAL_SERVER_ERROR);
+        }finally{
+            LOGGER.info("Returning from controller of updating all assetFields of asset uuid: "+updateAssetFieldsRequest.getAssetUUID()+" object: " + new ObjectMapper().writeValueAsString(updateAssetFieldsRequest.getAssetFields()));
+            util.clearThreadContextForLogging();
+            util = null;
         }
 
         return responseEntity;
