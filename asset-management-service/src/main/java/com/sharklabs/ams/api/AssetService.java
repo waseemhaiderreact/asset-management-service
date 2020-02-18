@@ -1052,8 +1052,7 @@ public class   AssetService {
 
         GetPaginatedConsumptionsResponse response = new GetPaginatedConsumptionsResponse();
         try {
-            Asset asset = assetRepository.findAssetByUuid(uuid);
-            Page<Consumption> consumptions = consumptionRepository.findByAssetOrderByCreatedAt(asset, new PageRequest(offset, limit));
+            Page<Consumption> consumptions = consumptionRepository.findByAssetUUIDOrderByCreatedAt(uuid, new PageRequest(offset, limit));
             response.setConsumptions(consumptions);
             response.setResponseIdentifier("Success");
 

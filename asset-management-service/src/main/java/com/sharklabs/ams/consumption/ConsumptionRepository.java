@@ -24,7 +24,7 @@ public interface ConsumptionRepository extends JpaRepository<Consumption,Long> {
     @Transactional
     Integer deleteById(Long id);
 
-    Page<Consumption> findByAssetOrderByCreatedAt(Asset asset, Pageable pageable);
+    Page<Consumption> findByAssetUUIDOrderByCreatedAt(String assetUUID, Pageable pageable);
 
     @Query(value = "SELECT * FROM t_consumption c "+
             "WHERE ((:assetUUID is null) or (c.assetuuid=:assetUUID)) "+
