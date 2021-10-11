@@ -22,14 +22,14 @@ public interface ConsumptionRepository extends JpaRepository<Consumption,Long> {
 
     @Modifying
     @Transactional
-    Integer deleteById(Long id);
+    Integer deleteByUuid(String uuid);
 
     Page<Consumption> findByAssetUUIDOrderByCreatedAt(String assetUUID, Pageable pageable);
 
     @Query(value = "SELECT * FROM t_consumption c "+
             "WHERE ((:assetUUID is null) or (c.assetuuid=:assetUUID)) "+
             "AND ((:tenantUUID is null) or (c.tenantuuid=:tenantUUID)) "+
-            "AND ((:startDate is null) or (c.created_at BETWEEN :startDate AND :endDate)) \n#pageable\n",
+            "AND ((:startDate is null) or (c.created_at BETWEEN :startDate AND :endDate)) ORDER BY c.created_at DESC \n#pageable\n",
             countQuery = "SELECT count(*) FROM t_consumption c "+
                     "WHERE ((:assetUUID is null) or (c.assetuuid=:assetUUID)) "+
                     "AND ((:tenantUUID is null) or (c.tenantuuid=:tenantUUID)) "+

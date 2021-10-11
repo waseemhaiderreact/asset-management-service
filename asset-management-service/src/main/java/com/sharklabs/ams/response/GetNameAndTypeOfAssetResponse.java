@@ -1,5 +1,7 @@
 package com.sharklabs.ams.response;
 
+import com.sharklabs.ams.usage.Usage;
+
 public class GetNameAndTypeOfAssetResponse {
     private String name;
     private String type;
@@ -10,7 +12,10 @@ public class GetNameAndTypeOfAssetResponse {
     private String primaryUsageUnit;
     private String secondaryUsageUnit;
     private String consumptionUnit;
+    private String modelNumber;
     private int consumptionPoints;
+    private Usage lastUsage;
+    private String manufacture;
 
 
     public GetNameAndTypeOfAssetResponse(String name, String type, String assetNumber,String uuid) {
@@ -20,9 +25,43 @@ public class GetNameAndTypeOfAssetResponse {
         this.uuid=uuid;
     }
 
-    public GetNameAndTypeOfAssetResponse() {
+    public GetNameAndTypeOfAssetResponse(String name, String categoryUUID, String assetNumber, String uuid, String primaryUsageUnit, String secondaryUsageUnit, String consumptionUnit, int consumptionPoints) {
+        this.name = name;
+        this.categoryUUID = categoryUUID;
+        this.assetNumber = assetNumber;
+        this.uuid = uuid;
+        this.primaryUsageUnit = primaryUsageUnit;
+        this.secondaryUsageUnit = secondaryUsageUnit;
+        this.consumptionUnit = consumptionUnit;
+        this.consumptionPoints = consumptionPoints;
     }
 
+    public GetNameAndTypeOfAssetResponse(String name, String type, String assetNumber, String uuid, String imageUrl, String primaryUsageUnit, String secondaryUsageUnit, String consumptionUnit, int consumptionPoints) {
+        this.name = name;
+        this.type = type;
+        this.assetNumber = assetNumber;
+        this.uuid = uuid;
+        this.imageUrl = imageUrl;
+        this.primaryUsageUnit = primaryUsageUnit;
+        this.secondaryUsageUnit = secondaryUsageUnit;
+        this.consumptionUnit = consumptionUnit;
+        this.consumptionPoints = consumptionPoints;
+    }
+
+    public GetNameAndTypeOfAssetResponse(String name, String categoryUUID, String assetNumber, String uuid, String primaryUsageUnit, String secondaryUsageUnit, String consumptionUnit, int consumptionPoints,String modelNumber) {
+        this.name = name;
+        this.categoryUUID = categoryUUID;
+        this.assetNumber = assetNumber;
+        this.uuid = uuid;
+        this.primaryUsageUnit = primaryUsageUnit;
+        this.secondaryUsageUnit = secondaryUsageUnit;
+        this.consumptionUnit = consumptionUnit;
+        this.consumptionPoints = consumptionPoints;
+        this.modelNumber = modelNumber;
+    }
+
+    public GetNameAndTypeOfAssetResponse() {
+    }
     public String getImageUrl() {
         return imageUrl;
     }
@@ -101,5 +140,29 @@ public class GetNameAndTypeOfAssetResponse {
 
     public void setCategoryUUID(String categoryUUID) {
         this.categoryUUID = categoryUUID;
+    }
+
+    public Usage getLastUsage() {
+        return lastUsage;
+    }
+
+    public void setLastUsage(Usage lastUsage) {
+        this.lastUsage = lastUsage;
+    }
+
+    public String getModelNumber() {
+        return modelNumber;
+    }
+
+    public void setModelNumber(String modelNumber) {
+        this.modelNumber = modelNumber;
+    }
+
+    public String getManufacture() {
+        return manufacture;
+    }
+
+    public void setManufacture(String manufacture) {
+        this.manufacture = manufacture;
     }
 }

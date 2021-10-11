@@ -25,11 +25,12 @@ public class FieldTemplate {
     private boolean isPrivate;
 
     @JsonIgnore
-    @OneToOne(fetch = FetchType.EAGER,cascade = CascadeType.ALL)
+    @OneToOne(fetch = FetchType.LAZY,cascade = CascadeType.ALL)
     @JoinColumn(name = "category_id")
     private Category category;
 
-    @OneToMany(  cascade = CascadeType.ALL,mappedBy = "fieldTemplate",fetch = FetchType.EAGER)
+    @OneToMany(  cascade = CascadeType.ALL,fetch = FetchType.EAGER)
+    @JoinColumn(name = "field_template_id",referencedColumnName = "id")
     private Set<Field> fields =new HashSet<>();
 
     public Long getId() {
@@ -88,4 +89,6 @@ public class FieldTemplate {
     public void setFields(Set<Field> fields) {
         this.fields = fields;
     }
+
 }
+

@@ -10,5 +10,5 @@ public interface MessageRepository extends JpaRepository<Message,Long> {
 
     @Modifying
     @Transactional
-    Integer deleteById(Long id);
+    Integer deleteByUuid(String uuid);
 }

@@ -13,6 +13,10 @@ public class GetAssetDetailResponse {
         return assetDetail;
     }
 
+    public AssetDetailResponse getAssetDetail() {
+        return assetDetail;
+    }
+
     public void setAssetDetail(AssetDetailResponse assetDetail) {
         this.assetDetail = assetDetail;
     }

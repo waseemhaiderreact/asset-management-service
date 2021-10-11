@@ -25,13 +25,14 @@ public class Category {
 
     private String tenantUUID;
 
-    @OneToOne(mappedBy = "category", cascade = CascadeType.ALL, fetch = FetchType.EAGER,orphanRemoval = true)
+    @OneToOne(mappedBy="category",cascade = CascadeType.ALL, fetch = FetchType.EAGER,orphanRemoval = true)
     private FieldTemplate fieldTemplate;
 
-    @OneToOne(mappedBy = "category", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    @OneToOne(mappedBy="category",cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     private InspectionTemplate inspectionTemplate;
 
-    @OneToMany( mappedBy = "category", cascade = CascadeType.ALL,fetch = FetchType.EAGER)
+    @OneToMany( cascade = CascadeType.ALL,fetch = FetchType.EAGER)
+    @JoinColumn(name = "category_id")
     private Set<Asset> assets =new HashSet<>();
 
     public Long getId() {

@@ -11,6 +11,8 @@ public class ImageVoice {
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
 
+    private String uuid;
+
     private String contentUrl;
 
     private String consumptionUUID; // consumption it is attached with if this imagevoice is of a consumption.
@@ -37,5 +39,13 @@ public class ImageVoice {
 
     public void setConsumptionUUID(String consumptionUUID) {
         this.consumptionUUID = consumptionUUID;
+    }
+
+    public String getUuid() {
+        return uuid;
+    }
+
+    public void setUuid(String uuid) {
+        this.uuid = uuid;
     }
 }

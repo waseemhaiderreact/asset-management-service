@@ -29,8 +29,6 @@ public class Asset implements Serializable {
 
     private String modelNumber;
 
-    private String inventory;
-
     private String manufacture;
 
     private Date purchaseDate;
@@ -51,27 +49,42 @@ public class Asset implements Serializable {
 
     private int consumptionPoints;
 
-    @JsonIgnore
-    @ManyToOne(fetch = FetchType.EAGER, cascade = {CascadeType.DETACH,CascadeType.REFRESH,CascadeType.REMOVE})
-    @JoinColumn(name = "category_id",referencedColumnName = "id")
-    private Category category;
+    private String categoryUUID;
 
-    @OneToMany(  cascade = CascadeType.ALL,mappedBy = "asset",fetch = FetchType.EAGER)
+    private int archive;
+
+    private String removeFromGroupUUID;
+
+    private String removeFromCategoryUUID;
+
+    private String status;
+
+//    @JsonIgnore
+//    @ManyToOne(fetch = FetchType.EAGER, cascade = {CascadeType.DETACH,CascadeType.REFRESH,CascadeType.REMOVE})
+//    @JoinColumn(name = "category_id",referencedColumnName = "id")
+//    private Category category;
+
+    @OneToMany(  cascade = CascadeType.ALL,fetch = FetchType.EAGER)
+    @JoinColumn(name = "asset_id",referencedColumnName = "id")
     private Set<AssetField> assetFields =new HashSet<>();
 
-    @OneToMany(  cascade = CascadeType.ALL,mappedBy = "asset",fetch = FetchType.EAGER)
+    @OneToMany(  cascade = CascadeType.ALL,fetch = FetchType.EAGER)
+    @JoinColumn(name = "asset_id",referencedColumnName = "id")
     private Set<AssetImage> assetImages =new HashSet<>();
 
-    @OneToMany(  cascade = CascadeType.ALL,mappedBy = "asset",fetch = FetchType.EAGER)
+    @OneToMany(  cascade = CascadeType.ALL,fetch = FetchType.EAGER)
+    @JoinColumn(name = "asset_id",referencedColumnName = "id")
     private Set<Attachment> attachments =new HashSet<>();
 
 //    @OneToOne(mappedBy = "asset", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
 //    private ActivityWall activityWall;
 
-    @OneToMany(  cascade = CascadeType.ALL,mappedBy = "asset",fetch = FetchType.EAGER)
+    @OneToMany(  cascade = CascadeType.ALL,fetch = FetchType.EAGER)
+    @JoinColumn(name = "asset_id",referencedColumnName = "id")
     private Set<Usage> usages =new HashSet<>();
 
-    @OneToMany(  cascade = CascadeType.ALL,mappedBy = "asset",fetch = FetchType.EAGER)
+    @OneToMany(  cascade = CascadeType.ALL,fetch = FetchType.EAGER)
+    @JoinColumn(name = "asset_id",referencedColumnName = "id")
     private Set<Consumption> consumptions =new HashSet<>();
 
     public Long getId() {
@@ -107,13 +120,13 @@ public class Asset implements Serializable {
         this.tenantUUID = tenantUUID;
     }
 
-    public Category getCategory() {
-        return category;
-    }
-
-    public void setCategory(Category category) {
-        this.category = category;
-    }
+//    public Category getCategory() {
+//        return category;
+//    }
+//
+//    public void setCategory(Category category) {
+//        this.category = category;
+//    }
 
     public Set<AssetField> getAssetFields() {
         return assetFields;
@@ -153,14 +166,6 @@ public class Asset implements Serializable {
 
     public void setModelNumber(String modelNumber) {
         this.modelNumber = modelNumber;
-    }
-
-    public String getInventory() {
-        return inventory;
-    }
-
-    public void setInventory(String inventory) {
-        this.inventory = inventory;
     }
 
     public String getManufacture() {
@@ -266,4 +271,41 @@ public class Asset implements Serializable {
     public void setConsumptionPoints(int consumptionPoints) {
         this.consumptionPoints = consumptionPoints;
     }
+
+    public String getCategoryUUID() {
+        return categoryUUID;
+    }
+
+    public void setCategoryUUID(String categoryUUID) {
+        this.categoryUUID = categoryUUID;
+    }
+
+    public int getArchive() {
+        return archive;
+    }
+
+    public void setArchive(int archive) {
+        this.archive = archive;
+    }
+
+    public String getRemoveFromGroupUUID() {
+        return removeFromGroupUUID;
+    }
+
+    public void setRemoveFromGroupUUID(String removeFromGroupUUID) {
+        this.removeFromGroupUUID = removeFromGroupUUID;
+    }
+
+    public String getRemoveFromCategoryUUID() {
+        return removeFromCategoryUUID;
+    }
+
+    public void setRemoveFromCategoryUUID(String removeFromCategoryUUID) {
+        this.removeFromCategoryUUID = removeFromCategoryUUID;
+    }
+    public String getStatus() { return status; }
+
+    public void setStatus(String status) { this.status = status; }
+
+
 }

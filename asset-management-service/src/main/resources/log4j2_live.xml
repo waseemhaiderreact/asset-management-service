@@ -24,11 +24,12 @@
 
         <Logger name="com.sharklabs.ams" additivity="false">
             <AppenderRef ref="appLog" />
-            <AppenderRef ref="Console" />
+<!--            <AppenderRef ref="Console" />-->
         </Logger>
 
         <Root level="info">
-            <AppenderRef ref="Console" />
+            <AppenderRef ref="appLog" />
+<!--            <AppenderRef ref="Console" />-->
         </Root>
     </Loggers>
 </Configuration>

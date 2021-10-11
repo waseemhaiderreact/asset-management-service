@@ -176,9 +176,8 @@ public class AssetModel {
         this.assetFields=asset.getAssetFields();
         this.assetImages=asset.getAssetImages();
         this.assetNumber=asset.getAssetNumber();
-        this.categoryUUID=asset.getCategory().getUuid();
+        this.categoryUUID=asset.getCategoryUUID();
         this.description=asset.getDescription();
-        this.inventory=asset.getInventory();
         this.manufacture=asset.getManufacture();
         this.modelNumber=asset.getModelNumber();
         this.name=asset.getName();

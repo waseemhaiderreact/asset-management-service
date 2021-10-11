@@ -14,4 +14,20 @@ public interface CustomChannels {
 
     @Output("outBoundAssetSend")
     MessageChannel sendAsset();
+
+    @Input("inBoundGetAssetBasicDetail")
+    SubscribableChannel getAssetBasicDetail();
+
+    @Output("outBoundGetAssetBasicDetail")
+    MessageChannel getAssetBasicDetailResponse();
+
+    /* Written By Kumail Khan*/
+    @Output("outBoundWalletNotification")
+    MessageChannel walletNotification();
+
+    @Output("outBoundWalletRequest")
+    MessageChannel walletRequest();
+
+    @Input("inBoundReceivingWalletRequestModel")
+    MessageChannel setWalletRequestModel();
 }

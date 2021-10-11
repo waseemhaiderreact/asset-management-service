@@ -22,10 +22,12 @@ public class InspectionItem {
 
     private String type;
 
-    @JsonIgnore
-    @ManyToOne(fetch = FetchType.EAGER,cascade = CascadeType.ALL)
-    @JoinColumn(name = "inspection_item_category_id",referencedColumnName = "id")
-    private InspectionItemCategory inspectionItemCategory;
+    private String inspectionItemCategoryUUID;
+
+//    @JsonIgnore
+//    @ManyToOne(fetch = FetchType.EAGER,cascade = CascadeType.ALL)
+//    @JoinColumn(name = "inspection_item_category_id",referencedColumnName = "id")
+//    private InspectionItemCategory inspectionItemCategory;
 
     public Long getId() {
         return id;
@@ -75,11 +77,19 @@ public class InspectionItem {
         this.type = type;
     }
 
-    public InspectionItemCategory getInspectionItemCategory() {
-        return inspectionItemCategory;
+//    public InspectionItemCategory getInspectionItemCategory() {
+//        return inspectionItemCategory;
+//    }
+//
+//    public void setInspectionItemCategory(InspectionItemCategory inspectionItemCategory) {
+//        this.inspectionItemCategory = inspectionItemCategory;
+//    }
+
+    public String getInspectionItemCategoryUUID() {
+        return inspectionItemCategoryUUID;
     }
 
-    public void setInspectionItemCategory(InspectionItemCategory inspectionItemCategory) {
-        this.inspectionItemCategory = inspectionItemCategory;
+    public void setInspectionItemCategoryUUID(String inspectionItemCategoryUUID) {
+        this.inspectionItemCategoryUUID = inspectionItemCategoryUUID;
     }
 }

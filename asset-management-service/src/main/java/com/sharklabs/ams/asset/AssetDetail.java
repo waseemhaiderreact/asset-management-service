@@ -15,8 +15,6 @@ public class AssetDetail {
 
     private String modelNumber;
 
-    private String inventory;
-
     private String manufacture;
 
     private Date purchaseDate;
@@ -37,13 +35,14 @@ public class AssetDetail {
 
     private int consumptionPoints;
 
-    public AssetDetail(Long id, String assetNumber, String uuid, String name, String modelNumber, String inventory, String manufacture, Date purchaseDate, Date expiryDate, String warranty, String description, String tenantUUID, String primaryUsageUnit, String secondaryUsageUnit, String consumptionUnit, int consumptionPoints) {
+    private String status;
+
+    public AssetDetail(Long id, String assetNumber, String uuid, String name, String modelNumber, String manufacture, Date purchaseDate, Date expiryDate, String warranty, String description, String tenantUUID, String primaryUsageUnit, String secondaryUsageUnit, String consumptionUnit, int consumptionPoints, String status) {
         this.id = id;
         this.assetNumber = assetNumber;
         this.uuid = uuid;
         this.name = name;
         this.modelNumber = modelNumber;
-        this.inventory = inventory;
         this.manufacture = manufacture;
         this.purchaseDate = purchaseDate;
         this.expiryDate = expiryDate;
@@ -54,6 +53,7 @@ public class AssetDetail {
         this.secondaryUsageUnit = secondaryUsageUnit;
         this.consumptionUnit = consumptionUnit;
         this.consumptionPoints = consumptionPoints;
+       this.status = status;
         //this.category = category;
 
     }
@@ -96,14 +96,6 @@ public class AssetDetail {
 
     public void setModelNumber(String modelNumber) {
         this.modelNumber = modelNumber;
-    }
-
-    public String getInventory() {
-        return inventory;
-    }
-
-    public void setInventory(String inventory) {
-        this.inventory = inventory;
     }
 
     public String getManufacture() {
@@ -185,6 +177,10 @@ public class AssetDetail {
     public void setConsumptionPoints(int consumptionPoints) {
         this.consumptionPoints = consumptionPoints;
     }
+
+    public String getStatus() {   return status;   }
+
+    public void setStatus(String status) {   this.status = status;   }
 
     /*public Category getCategory() {
         return category;

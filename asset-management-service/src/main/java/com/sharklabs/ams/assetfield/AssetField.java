@@ -19,10 +19,12 @@ public class AssetField {
 
     private String fieldValue; // will hold JSON
 
-    @JsonIgnore
-    @ManyToOne(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
-    @JoinColumn(name = "asset_id",referencedColumnName = "id")
-    private Asset asset;
+    private String assetUUID;
+
+//    @JsonIgnore
+//    @ManyToOne(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+//    @JoinColumn(name = "asset_id",referencedColumnName = "id")
+//    private Asset asset;
 
     public Long getId() {
         return id;
@@ -64,11 +66,20 @@ public class AssetField {
         this.fieldValue = fieldValue;
     }
 
-    public Asset getAsset() {
-        return asset;
+//    public Asset getAsset() {
+//        return asset;
+//    }
+//
+//    public void setAsset(Asset asset) {
+//        this.asset = asset;
+//    }
+
+
+    public String getAssetUUID() {
+        return assetUUID;
     }
 
-    public void setAsset(Asset asset) {
-        this.asset = asset;
+    public void setAssetUUID(String assetUUID) {
+        this.assetUUID = assetUUID;
     }
 }

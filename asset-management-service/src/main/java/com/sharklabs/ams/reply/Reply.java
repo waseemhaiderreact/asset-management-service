@@ -26,11 +26,11 @@ public class Reply {
 
     private Date replyTime;
 
+    private String messageUUID;
 
-
-    @JsonIgnore
-    @ManyToOne(fetch = FetchType.LAZY)
-    private Message message;
+//    @JsonIgnore
+//    @ManyToOne(fetch = FetchType.LAZY)
+//    private Message message;
 
     public Long getId() {
         return id;
@@ -64,12 +64,21 @@ public class Reply {
         this.replyTime = replyTime;
     }
 
-    public Message getMessage() {
-        return message;
+//    public Message getMessage() {
+//        return message;
+//    }
+//
+//    public void setMessage(Message message) {
+//        this.message = message;
+//    }
+
+
+    public String getMessageUUID() {
+        return messageUUID;
     }
 
-    public void setMessage(Message message) {
-        this.message = message;
+    public void setMessageUUID(String messageUUID) {
+        this.messageUUID = messageUUID;
     }
 
     public String getMessageBody() {

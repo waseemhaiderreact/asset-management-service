@@ -3,6 +3,7 @@ package com.sharklabs.ams.consumption;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.sharklabs.ams.asset.Asset;
 
+
 import javax.persistence.*;
 import java.util.Date;
 
@@ -20,6 +21,8 @@ public class Consumption {
 
     private String currency;
 
+    @Column(nullable =true)
+    private int updatedConsumptionLevel;
     private int updatedConsumptionPoints;
 
     //meter fields
@@ -36,10 +39,10 @@ public class Consumption {
 
     private String assetUUID;
 
-    @JsonIgnore
-    @ManyToOne(fetch = FetchType.EAGER, cascade = {CascadeType.DETACH,CascadeType.REFRESH,CascadeType.PERSIST,CascadeType.MERGE})
-    @JoinColumn(name = "asset_id",referencedColumnName = "id")
-    private Asset asset;
+//    @JsonIgnore
+//    @ManyToOne(fetch = FetchType.EAGER, cascade = {CascadeType.DETACH,CascadeType.REFRESH,CascadeType.PERSIST,CascadeType.MERGE})
+//    @JoinColumn(name = "asset_id",referencedColumnName = "id")
+//    private Asset asset;
 
     public Long getId() {
         return id;
@@ -57,13 +60,13 @@ public class Consumption {
         this.consumptionValue = consumptionValue;
     }
 
-    public Asset getAsset() {
-        return asset;
-    }
-
-    public void setAsset(Asset asset) {
-        this.asset = asset;
-    }
+//    public Asset getAsset() {
+//        return asset;
+//    }
+//
+//    public void setAsset(Asset asset) {
+//        this.asset = asset;
+//    }
 
     public String getUuid() {
         return uuid;
@@ -151,5 +154,13 @@ public class Consumption {
 
     public void setLng(Double lng) {
         this.lng = lng;
+    }
+
+    public int getUpdatedConsumptionLevel() {
+        return updatedConsumptionLevel;
+    }
+
+    public void setUpdatedConsumptionLevel(int updatedConsumptionLevel) {
+        this.updatedConsumptionLevel = updatedConsumptionLevel;
     }
 }

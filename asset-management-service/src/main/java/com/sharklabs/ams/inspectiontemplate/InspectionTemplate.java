@@ -21,12 +21,15 @@ public class InspectionTemplate {
 
     private String tenantUUID;
 
+
+
     @JsonIgnore
-    @OneToOne(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+    @OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     @JoinColumn(name = "category_id",referencedColumnName = "id")
     private Category category;
 
-    @OneToMany(  cascade = CascadeType.ALL,mappedBy = "inspectionTemplate",fetch = FetchType.EAGER)
+    @OneToMany(  cascade = CascadeType.ALL,fetch = FetchType.EAGER)
+    @JoinColumn(name = "inspection_template_id",referencedColumnName = "id")
     private Set<InspectionItemCategory> inspectionItemCategories =new HashSet<>();
 
     public Long getId() {

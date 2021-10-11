@@ -12,8 +12,6 @@ public class AssetModelForTableView {
 
     private String modelNumber;
 
-    private String inventory;
-
     private String manufacture;
 
     private Date purchaseDate;
@@ -32,6 +30,44 @@ public class AssetModelForTableView {
 
     private String consumptionUnit;
 
+    private String assignees;
+
+    private String status;
+
+    public AssetModelForTableView(Long id, String assetNumber, String uuid, String name, String modelNumber, String manufacture, Date purchaseDate, Date expiryDate, String warranty, String description, String tenantUUID, String primaryUsageUnit, String secondaryUsageUnit, String consumptionUnit) {
+        this.id = id;
+        this.assetNumber = assetNumber;
+        this.uuid = uuid;
+        this.name = name;
+        this.modelNumber = modelNumber;
+        this.manufacture = manufacture;
+        this.purchaseDate = purchaseDate;
+        this.expiryDate = expiryDate;
+        this.warranty = warranty;
+        this.description = description;
+        this.tenantUUID = tenantUUID;
+        this.primaryUsageUnit = primaryUsageUnit;
+        this.secondaryUsageUnit = secondaryUsageUnit;
+        this.consumptionUnit = consumptionUnit;
+    }
+
+    public AssetModelForTableView(Long id, String assetNumber, String uuid, String name, String modelNumber, String manufacture, Date purchaseDate, Date expiryDate, String warranty, String description, String tenantUUID, String primaryUsageUnit, String secondaryUsageUnit, String consumptionUnit, String status) {
+        this.id = id;
+        this.assetNumber = assetNumber;
+        this.uuid = uuid;
+        this.name = name;
+        this.modelNumber = modelNumber;
+        this.manufacture = manufacture;
+        this.purchaseDate = purchaseDate;
+        this.expiryDate = expiryDate;
+        this.warranty = warranty;
+        this.description = description;
+        this.tenantUUID = tenantUUID;
+        this.primaryUsageUnit = primaryUsageUnit;
+        this.secondaryUsageUnit = secondaryUsageUnit;
+        this.consumptionUnit = consumptionUnit;
+        this.status = status;
+    }
 
     public Long getId() {
         return id;
@@ -71,14 +107,6 @@ public class AssetModelForTableView {
 
     public void setModelNumber(String modelNumber) {
         this.modelNumber = modelNumber;
-    }
-
-    public String getInventory() {
-        return inventory;
-    }
-
-    public void setInventory(String inventory) {
-        this.inventory = inventory;
     }
 
     public String getManufacture() {
@@ -151,5 +179,21 @@ public class AssetModelForTableView {
 
     public void setConsumptionUnit(String consumptionUnit) {
         this.consumptionUnit = consumptionUnit;
+    }
+
+    public String getAssignees() {
+        return assignees;
+    }
+
+    public void setAssignees(String assignes) {
+        this.assignees = assignes;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
     }
 }

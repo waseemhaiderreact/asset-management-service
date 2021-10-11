@@ -10,5 +10,5 @@ public interface InspectionTemplateRepository extends JpaRepository<InspectionTe
 
     @Modifying
     @Transactional
-    Integer deleteById(Long id);
+    Integer deleteByUuid(String uuid);
 }

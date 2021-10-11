@@ -19,12 +19,15 @@ public class InspectionItemCategory {
 
     private String name;
 
-    @JsonIgnore
-    @ManyToOne(fetch = FetchType.EAGER,cascade = CascadeType.ALL)
-    @JoinColumn(name = "inspection_template_id",referencedColumnName = "id")
-    private InspectionTemplate inspectionTemplate;
+    private String inspectionTemplateUUID;
 
-    @OneToMany(  cascade = CascadeType.ALL,mappedBy = "inspectionItemCategory",fetch = FetchType.EAGER)
+//    @JsonIgnore
+//    @ManyToOne(fetch = FetchType.EAGER,cascade = CascadeType.ALL)
+//    @JoinColumn(name = "inspection_template_id",referencedColumnName = "id")
+//    private InspectionTemplate inspectionTemplate;
+
+    @OneToMany(  cascade = CascadeType.ALL,fetch = FetchType.EAGER)
+    @JoinColumn(name = "inspection_item_category_id",referencedColumnName = "id")
     private Set<InspectionItem> inspectionItems =new HashSet<>();
 
     public Long getId() {
@@ -51,13 +54,21 @@ public class InspectionItemCategory {
         this.name = name;
     }
 
-    public InspectionTemplate getInspectionTemplate() {
-        return inspectionTemplate;
+    public String getInspectionTemplateUUID() {
+        return inspectionTemplateUUID;
     }
 
-    public void setInspectionTemplate(InspectionTemplate inspectionTemplate) {
-        this.inspectionTemplate = inspectionTemplate;
+    public void setInspectionTemplateUUID(String inspectionTemplateUUID) {
+        this.inspectionTemplateUUID = inspectionTemplateUUID;
     }
+
+    //    public InspectionTemplate getInspectionTemplate() {
+//        return inspectionTemplate;
+//    }
+//
+//    public void setInspectionTemplate(InspectionTemplate inspectionTemplate) {
+//        this.inspectionTemplate = inspectionTemplate;
+//    }
 
     public Set<InspectionItem> getInspectionItems() {
         return inspectionItems;

@@ -15,10 +15,12 @@ public class Attachment {
 
     private String fileName;
 
-    @JsonIgnore
-    @ManyToOne(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
-    @JoinColumn(name = "asset_id",referencedColumnName = "id")
-    private Asset asset;
+    private String assetUUID;
+
+//    @JsonIgnore
+//    @ManyToOne(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+//    @JoinColumn(name = "asset_id",referencedColumnName = "id")
+//    private Asset asset;
 
     public Long getId() {
         return id;
@@ -44,11 +46,20 @@ public class Attachment {
         this.contentUrl = contentUrl;
     }
 
-    public Asset getAsset() {
-        return asset;
+//    public Asset getAsset() {
+//        return asset;
+//    }
+//
+//    public void setAsset(Asset asset) {
+//        this.asset = asset;
+//    }
+
+
+    public String getAssetUUID() {
+        return assetUUID;
     }
 
-    public void setAsset(Asset asset) {
-        this.asset = asset;
+    public void setAssetUUID(String assetUUID) {
+        this.assetUUID = assetUUID;
     }
 }

@@ -16,5 +16,5 @@ public interface FieldTemplateRepository extends CrudRepository<FieldTemplate,Lo
     @Modifying
     @Transactional
 //    @Query(value = "delete from t_field_template where uuid=?1",nativeQuery = true)
-    Integer deleteById(Long id);
+    Integer deleteByUuid(String uuid);
 }

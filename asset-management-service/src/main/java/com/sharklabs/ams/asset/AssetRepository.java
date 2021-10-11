@@ -1,5 +1,6 @@
 package com.sharklabs.ams.asset;
 
+import com.sharklabs.ams.response.GetNameAndTypeOfAssetResponse;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -10,13 +11,22 @@ import org.springframework.stereotype.Repository;
 import javax.transaction.Transactional;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
+
 @Repository
 public interface AssetRepository extends JpaRepository<Asset,Long>, PagingAndSortingRepository<Asset,Long> {
 
+    Set<Asset> findAssetsByUuidIn(List<String> assetUuids);
 
     @Query("SELECT a FROM t_asset a WHERE a.uuid = ?1")
     Asset findAssetByUuid(String uuid);
     List<Asset> findByTenantUUID(String tenantUUID);
+
+    @Query("SELECT a.status FROM t_asset a WHERE a.uuid = ?1")
+    String getAssetStatusByUUID(@Param("uuid") String uuid);
+
+    @Query("SELECT a.categoryUUID FROM t_asset a WHERE a.uuid = ?1")
+    String getAssetCategoryUUIDByUUID(@Param("uuid") String uuid);
 
     @Query(value = "SELECT uuid,name FROM t_asset WHERE tenantuuid LIKE :tenantUUID",nativeQuery = true)
     List<Object> getAssetNameAndUUIDByTenantUUID(@Param("tenantUUID") String tenantUUID);
@@ -26,16 +36,13 @@ public interface AssetRepository extends JpaRepository<Asset,Long>, PagingAndSor
 
     @Modifying
     @Transactional
-    Integer deleteById(Long id);
+    Integer deleteByUuid(String uuid);
 
-
+    boolean existsByModelNumber(String modelNumber);
 
     // Basic Asset Detail i.e w/o Collections and ActivityWall
-    @Query("SELECT new com.sharklabs.ams.asset.AssetDetail(a.id, a.assetNumber, a.uuid, a.name, a.modelNumber, a.inventory, a.manufacture, a.purchaseDate, a.expiryDate, a.warranty, a.description, a.tenantUUID, a.primaryUsageUnit, a.secondaryUsageUnit, a.consumptionUnit, a.consumptionPoints) FROM t_asset a WHERE a.uuid = ?1")
+    @Query("SELECT new com.sharklabs.ams.asset.AssetDetail(a.id, a.assetNumber, a.uuid, a.name, a.modelNumber, a.manufacture, a.purchaseDate, a.expiryDate, a.warranty, a.description, a.tenantUUID, a.primaryUsageUnit, a.secondaryUsageUnit, a.consumptionUnit, a.consumptionPoints, a.status) FROM t_asset a WHERE a.uuid = ?1")
     AssetDetail getBasicAssetDetailByUuid(String uuid);
-
-
-
 
 
 //    List<Asset> findByUuidIn(List<String> uuids);
@@ -52,4 +59,7 @@ public interface AssetRepository extends JpaRepository<Asset,Long>, PagingAndSor
     Asset findAsset(@Param("assetUUID")String assetUUID);
 
     ArrayList<Asset> findAssetsByTenantUUID(String tenantUUID);
+
+    Asset findByModelNumber(String modelNumber);
+    Asset findByAssetNumber(String AssetNumber);
 }

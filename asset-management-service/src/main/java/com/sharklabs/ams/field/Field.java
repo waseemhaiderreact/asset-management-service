@@ -2,6 +2,7 @@ package com.sharklabs.ams.field;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.sharklabs.ams.fieldtemplate.FieldTemplate;
+import org.hibernate.validator.constraints.Length;
 
 import javax.persistence.*;
 import java.io.Serializable;
@@ -20,16 +21,21 @@ public class Field implements Serializable,Comparable<Field> {
 
     private String type;
 
+
+    private String options;
+
     private String iconUrl;
 
     private int fieldPosition;
 
     private boolean isMandatory;
 
-    @JsonIgnore
-    @ManyToOne(fetch = FetchType.EAGER,cascade = CascadeType.ALL)
-    @JoinColumn(name = "field_template_id",referencedColumnName = "id")
-    private FieldTemplate fieldTemplate;
+    private String fieldTemplateUUID;
+
+//    @JsonIgnore
+//    @ManyToOne(fetch = FetchType.EAGER,cascade = CascadeType.ALL)
+//    @JoinColumn(name = "field_template_id",referencedColumnName = "id")
+//    private FieldTemplate fieldTemplate;
 
     public Long getId() {
         return id;
@@ -95,13 +101,29 @@ public class Field implements Serializable,Comparable<Field> {
         isMandatory = mandatory;
     }
 
-    public FieldTemplate getFieldTemplate() {
-        return fieldTemplate;
+    public String getFieldTemplateUUID() {
+        return fieldTemplateUUID;
     }
 
-    public void setFieldTemplate(FieldTemplate fieldTemplate) {
-        this.fieldTemplate = fieldTemplate;
+    public void setFieldTemplateUUID(String fieldTemplateUUID) {
+        this.fieldTemplateUUID = fieldTemplateUUID;
     }
+
+    public String getOptions() {
+        return options;
+    }
+
+    public void setOptions(String options) {
+        this.options = options;
+    }
+
+    //    public FieldTemplate getFieldTemplate() {
+//        return fieldTemplate;
+//    }
+//
+//    public void setFieldTemplate(FieldTemplate fieldTemplate) {
+//        this.fieldTemplate = fieldTemplate;
+//    }
 
     @Override
     public int compareTo(Field field) {

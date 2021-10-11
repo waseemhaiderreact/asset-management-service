@@ -1,15 +1,15 @@
 package com.sharklabs.ams.request;
 
-import java.util.List;
+import java.util.ArrayList;
 
 public class GetNameAndTypeOfAssetsByUUIDSRequest {
-    private List<String> uuids;
+    private ArrayList<String> uuids=new ArrayList<>();
 
-    public List<String> getUuids() {
+    public ArrayList<String> getUuids() {
         return uuids;
     }
 
-    public void setUuids(List<String> uuids) {
+    public void setUuids(ArrayList<String> uuids) {
         this.uuids = uuids;
     }
 }

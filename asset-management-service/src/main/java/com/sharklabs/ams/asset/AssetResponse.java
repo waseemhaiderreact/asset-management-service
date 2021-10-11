@@ -31,13 +31,19 @@ public class AssetResponse {
 
     private String tenantUUID;
 
+    private String categoryUUID;
+
     private String primaryUsageUnit;
 
     private String secondaryUsageUnit;
 
     private String consumptionUnit;
 
+    private String status;
+
     private Usage usage;
+
+    private Usage lastUsage;
 
     private String assetNumber;
 
@@ -124,13 +130,6 @@ public class AssetResponse {
         this.assetImages = assetImages;
     }
 
-    public Usage getUsage() {
-        return usage;
-    }
-
-    public void setUsage(Usage usage) {
-        this.usage = usage;
-    }
 
     public String getPrimaryUsageUnit() {
         return primaryUsageUnit;
@@ -155,6 +154,10 @@ public class AssetResponse {
     public void setConsumptionUnit(String consumptionUnit) {
         this.consumptionUnit = consumptionUnit;
     }
+
+    public String getStatus() {   return status;   }
+
+    public void setStatus(String status) {   this.status = status;   }
 
     public String getModelNumber() {
         return modelNumber;
@@ -210,11 +213,11 @@ public class AssetResponse {
         this.name=asset.getName();
         this.tenantUUID=asset.getTenantUUID();
         this.uuid=asset.getUuid();
+        this.categoryUUID = asset.getCategoryUUID();
         this.description=asset.getDescription();
         this.primaryUsageUnit=asset.getPrimaryUsageUnit();
         this.secondaryUsageUnit=asset.getSecondaryUsageUnit();
         this.consumptionUnit=asset.getConsumptionUnit();
-        this.inventory=asset.getInventory();
         this.manufacture=asset.getManufacture();
         this.modelNumber=asset.getModelNumber();
         this.purchaseDate=asset.getPurchaseDate();
@@ -259,5 +262,29 @@ public class AssetResponse {
 
     public void setAssetNumber(String assetNumber) {
         this.assetNumber = assetNumber;
+    }
+
+    public Usage getUsage() {
+        return usage;
+    }
+
+    public void setUsage(Usage usage) {
+        this.usage = usage;
+    }
+
+    public Usage getLastUsage() {
+        return lastUsage;
+    }
+
+    public void setLastUsage(Usage lastUsage) {
+        this.lastUsage = lastUsage;
+    }
+
+    public String getCategoryUUID() {
+        return categoryUUID;
+    }
+
+    public void setCategoryUUID(String categoryUUID) {
+        this.categoryUUID = categoryUUID;
     }
 }

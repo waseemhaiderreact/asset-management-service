@@ -33,10 +33,10 @@ public class Usage{
 
     private String tenantUUID;
 
-    @JsonIgnore
-    @ManyToOne(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
-    @JoinColumn(name = "asset_id",referencedColumnName = "id")
-    private Asset asset;
+//    @JsonIgnore
+//    @ManyToOne(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+//    @JoinColumn(name = "asset_id",referencedColumnName = "id")
+//    private Asset asset;
 
     public Long getId() {
         return id;
@@ -118,13 +118,13 @@ public class Usage{
         this.secondaryUsageLng = secondaryUsageLng;
     }
 
-    public Asset getAsset() {
-        return asset;
-    }
-
-    public void setAsset(Asset asset) {
-        this.asset = asset;
-    }
+//    public Asset getAsset() {
+//        return asset;
+//    }
+//
+//    public void setAsset(Asset asset) {
+//        this.asset = asset;
+//    }
 
     public Date getCreatedAt() {
         return createdAt;

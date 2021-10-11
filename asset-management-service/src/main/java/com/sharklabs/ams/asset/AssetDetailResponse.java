@@ -22,6 +22,8 @@ public class AssetDetailResponse {
 
     private Set<Usage> Usage = new HashSet<>();
 
+    private Usage lastUsage;
+
     private Set<AssetField> assetField = new HashSet<>();
 
     private Set<AssetImage> assetImage = new HashSet<>();
@@ -92,5 +94,13 @@ public class AssetDetailResponse {
 
     public void setCategory(Category category) {
         this.category = category;
+    }
+
+    public com.sharklabs.ams.usage.Usage getLastUsage() {
+        return lastUsage;
+    }
+
+    public void setLastUsage(com.sharklabs.ams.usage.Usage lastUsage) {
+        this.lastUsage = lastUsage;
     }
 }

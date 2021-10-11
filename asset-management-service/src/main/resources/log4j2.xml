@@ -23,7 +23,7 @@
     <Loggers>
 
         <Logger name="com.sharklabs.ams" additivity="false">
-            <AppenderRef ref="appLog" />
+<!--            <AppenderRef ref="appLog" />-->
             <AppenderRef ref="Console" />
         </Logger>
 

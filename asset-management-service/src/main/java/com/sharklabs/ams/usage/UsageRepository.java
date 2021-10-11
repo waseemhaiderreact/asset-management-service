@@ -10,11 +10,13 @@ import java.util.Date;
 import java.util.List;
 import java.util.Set;
 
-public interface UsageRepository extends JpaRepository<Usage,Long> {
+public interface  UsageRepository extends JpaRepository<Usage,Long> {
 
     Set<Usage> findByAssetUUID(String uuid);
+    Set<Usage> findByAssetUUIDOrderByIdDesc(String uuid);
+    Usage findFirstByAssetUUIDOrderByIdDesc(String uuid);
 
-    Page<Usage> findByAssetUUIDOrderByCreatedAt(String assetUUID, Pageable pageable);
+    Page<Usage> findByAssetUUIDOrderByCreatedAtDesc(String assetUUID, Pageable pageable);
 
     @Query(value = "SELECT * FROM t_usages u "+
             "WHERE ((:assetUUID is null) or (u.assetuuid=:assetUUID)) "+
