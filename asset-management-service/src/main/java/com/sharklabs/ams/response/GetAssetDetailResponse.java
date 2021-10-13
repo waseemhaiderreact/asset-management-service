@@ -9,9 +9,9 @@ public class GetAssetDetailResponse {
     private FieldTemplateResponse fieldTemplate;
     private String responseIdentifier;
 
-    public AssetDetailResponse getAsset() {
-        return assetDetail;
-    }
+//    public AssetDetailResponse getAsset() {
+//        return assetDetail;
+//    }
 
     public AssetDetailResponse getAssetDetail() {
         return assetDetail;

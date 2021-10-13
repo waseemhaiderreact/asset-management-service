@@ -1,19 +1,19 @@
 package com.sharklabs.ams.response;
 
-import java.util.Map;
+import com.sharklabs.ams.asset.AssetInfoDTO;
 
-public class GetAssetNameAndNumberResponse {
+public class AssetNameAndNumberResponse {
 
-    private Map<String,String> detail;
+    private AssetInfoDTO assetInfoDTO;
 
     private String responseIdentifier;
 
-    public Map<String, String> getDetail() {
-        return detail;
+    public AssetInfoDTO getAssetInfoDTO() {
+        return assetInfoDTO;
     }
 
-    public void setDetail(Map<String, String> detail) {
-        this.detail = detail;
+    public void setAssetInfoDTO(AssetInfoDTO assetInfoDTO) {
+        this.assetInfoDTO = assetInfoDTO;
     }
 
     public String getResponseIdentifier() {

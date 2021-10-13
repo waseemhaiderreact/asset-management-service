@@ -13,7 +13,6 @@ import com.sharklabs.ams.util.AccessDeniedException;
 import com.sharklabs.ams.util.Util;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.core.tools.picocli.CommandLine;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -961,7 +960,7 @@ public class AssetController {
 
             util.setThreadContextForLogging(scim2Util);
             LOGGER.info("Entered controller of get Asset name and number and category by Asset uuid: "+uuid);
-            responseEntity = new ResponseEntity<GetAssetNameAndNumberResponse>(assetService.getAssetNameAndNumberAndCategoryByAssetUUID(uuid),HttpStatus.OK);
+            responseEntity = new ResponseEntity<AssetNameAndNumberResponse>(assetService.getAssetNameAndNumberAndCategoryByAssetUUID(uuid),HttpStatus.OK);
         }catch(AccessDeniedException ade){
             LOGGER.error("Access is Denied for getting Asset name and number and category by Asset uuid: "+uuid,ade);
             responseEntity = new ResponseEntity<String>(ade.getMessage(),HttpStatus.UNAUTHORIZED);

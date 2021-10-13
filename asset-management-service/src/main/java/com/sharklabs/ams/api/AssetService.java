@@ -39,7 +39,6 @@ import com.sharklabs.ams.field.FieldRepository;
 import com.sharklabs.ams.fieldtemplate.FieldTemplate;
 import com.sharklabs.ams.fieldtemplate.FieldTemplateRepository;
 import com.sharklabs.ams.fieldtemplate.FieldTemplateResponse;
-import com.sharklabs.ams.imagevoice.ImageVoice;
 import com.sharklabs.ams.imagevoice.ImageVoiceRepository;
 import com.sharklabs.ams.inspectionitem.InspectionItem;
 import com.sharklabs.ams.inspectionitemcategory.InspectionItemCategory;
@@ -2058,38 +2057,26 @@ public class   AssetService {
     }
 
     //purpose of function to get Asset name and number and category by Asset uuid
-    public GetAssetNameAndNumberResponse getAssetNameAndNumberAndCategoryByAssetUUID(String uuid) throws AccessDeniedException,ApplicationException{
+    public AssetNameAndNumberResponse getAssetNameAndNumberAndCategoryByAssetUUID(String uuid) throws AccessDeniedException,ApplicationException{
         //checking if user have read access
         if(!privilegeHandler.hasRead())
             throw new AccessDeniedException();
 
         Util util = new Util();
-        GetAssetNameAndNumberResponse response = null;
-        Asset asset = null;
+        AssetNameAndNumberResponse response = null;
+        AssetInfoDTO asset = null;
         Category category = null;
         try {
             util.setThreadContextForLogging(scim2Util);
             LOGGER.info("Inside service function of get Asset name and number and category by Asset uuid: " + uuid);
-            response = new GetAssetNameAndNumberResponse();
-            asset = assetRepository.findAssetByUuid(uuid);
+            response = new AssetNameAndNumberResponse();
+            asset = assetRepository.findAssetInfoByAssetUUID(uuid);
             if(asset != null) {
-                category = categoryRepository.findCategoryByUuid(asset.getCategoryUUID());
-                response.setDetail(new HashMap<>());
-                response.getDetail().put("assetName", asset.getName());
-                response.getDetail().put("assetNumber", asset.getAssetNumber());
-                response.getDetail().put("assetUUID", asset.getUuid());
-                if(category !=null) {
-                    response.getDetail().put("categoryName", category.getName());
-                    response.getDetail().put("categoryUUID", category.getUuid());
-                }else{
-                    response.getDetail().put("categoryName", "");
-                    response.getDetail().put("categoryUUID", "");
-                }
+                response.setAssetInfoDTO(asset);
                 response.setResponseIdentifier(SUCCESS);
                 LOGGER.info("Successfully got Asset Name and number and category by uuid: " + uuid);
             }else{
-                response.setDetail(new HashMap<>());
-                response.getDetail().put("description","No Asset found with uuid: " + uuid);
+                response.setAssetInfoDTO(null);
                 response.setResponseIdentifier(FAILURE);
                 LOGGER.info("No Asset found with uuid: " + uuid);
             }
