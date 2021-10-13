@@ -622,7 +622,7 @@ public class AssetController {
         try{
             util.setThreadContextForLogging(scim2Util);
             LOGGER.info("Request received in get Assets name and uuid by tenant uuid: " + tenantUUID);
-            responseEntity = new ResponseEntity<>(assetService.getAssetsNameAndUUIDByTenantUUID(tenantUUID),HttpStatus.OK);
+            responseEntity = new ResponseEntity<AssetsNameAndUUIDResponse>(assetService.getAssetsNameAndUUIDByTenantUUID(tenantUUID),HttpStatus.OK);
         }catch (AccessDeniedException ae){
             responseEntity = new ResponseEntity<String>(ae.getMessage(),HttpStatus.FORBIDDEN);
         }catch (Exception e){
@@ -2170,10 +2170,7 @@ public class AssetController {
         return responseEntity;
     }
 
-
-
     /*********************************ASSET GROUP SDT FUNCTION END**********************************/
-
 
     /*********************************ASSET GROUP FUNCTION START ***********************************/
 
@@ -2262,8 +2259,7 @@ public class AssetController {
         return responseEntity;
     }
 
-    // archive/delete assetgrouping....
-
+    // archive/delete asset groups
     @RequestMapping(method = RequestMethod.DELETE,value="/assets/group",params = {"id","type"})
     public @ResponseBody
     ResponseEntity deleteAssetGroup(@RequestParam String id,@RequestParam String type)  throws EmptyEntityTableException {
@@ -2294,6 +2290,7 @@ public class AssetController {
         }
         return responseEntity;
     }
+
     @RequestMapping(method = RequestMethod.POST,value = "/assets/group/filter")
     public @ResponseBody
     ResponseEntity getPaginatedAssetGroups(@RequestBody GetPaginatedAssetGroupsRequest request) throws EmptyEntityTableException,IOException {
@@ -2326,6 +2323,26 @@ public class AssetController {
         return responseEntity;
     }
 
+    @GetMapping("/group")
+    public @ResponseBody
+    ResponseEntity getAssetGroupsNameAndUUIDByTenantUUID(@RequestParam String tenantUUID){
+        Util util = new Util();
+        ResponseEntity responseEntity = null;
+        try{
+            util.setThreadContextForLogging(scim2Util);
+            LOGGER.info("Request received in get Asset groups name and uuid by tenant uuid: " + tenantUUID);
+            responseEntity = new ResponseEntity<AssetGroupsNameAndUUIDResponse>(assetService.getAssetGroupsNameAndUUIDByTenantUUID(tenantUUID),HttpStatus.OK);
+        }catch (AccessDeniedException ae){
+            responseEntity = new ResponseEntity<String>(ae.getMessage(),HttpStatus.FORBIDDEN);
+        }catch (Exception e){
+            responseEntity = new ResponseEntity<String>(e.getMessage(),HttpStatus.INTERNAL_SERVER_ERROR);
+        }finally {
+            LOGGER.info("Returning from get Asset groups name and uuid by tenant uuid.");
+            util.clearThreadContextForLogging();
+            util = null;
+        }
+        return responseEntity;
+    }
     /*********************************ASSET GROUP FUNCTION END ***********************************/
     /*******************************************************Start Wallet Function**********************************************************/
     @PutMapping("/wallets")

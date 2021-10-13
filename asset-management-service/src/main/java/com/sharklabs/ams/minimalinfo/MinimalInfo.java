@@ -6,4 +6,9 @@ public class MinimalInfo {
         String getUuid();
         String getName();
     }
+
+    public interface AssetGroupInfo{
+        String getUuid();
+        String getGroupName();
+    }
 }

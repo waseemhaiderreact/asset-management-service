@@ -1,6 +1,7 @@
 package com.sharklabs.ams.assetGroup;
 
 import com.sharklabs.ams.asset.Asset;
+import com.sharklabs.ams.minimalinfo.MinimalInfo;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -21,5 +22,7 @@ public interface AssetGroupRepository extends JpaRepository<AssetGroup, Long> {
     Page<AssetGroup> findAssetGroupByTenantUUIDOrderByCreatedAtDesc(String tenantUUID, Pageable pageable);
     Page<AssetGroup> findAssetGroupByTenantUUIDOrderByGroupNameAsc(String tenantUUID, Pageable pageable);
     Set<AssetGroup> findAssetGroupByTenantUUIDOrderByGroupNameAsc(String tenantUUID);
+
+    List<MinimalInfo.AssetGroupInfo> findAssetGroupByTenantUUIDAndDeletefromGroupUUIDIsNull(String uuid);
 
 }

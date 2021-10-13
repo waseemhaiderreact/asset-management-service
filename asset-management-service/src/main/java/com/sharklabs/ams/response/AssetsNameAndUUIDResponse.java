@@ -4,7 +4,7 @@ import com.sharklabs.ams.minimalinfo.MinimalInfo;
 
 import java.util.List;
 
-public class AssetNameAndUUIDResponse {
+public class AssetsNameAndUUIDResponse {
 
     private List<MinimalInfo.AssetInfo> assetInfos;
 

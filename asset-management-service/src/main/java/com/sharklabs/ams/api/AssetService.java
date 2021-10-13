@@ -1375,24 +1375,24 @@ public class   AssetService {
         return response;
     }
 
-    public AssetNameAndUUIDResponse getAssetsNameAndUUIDByTenantUUID(String tenantUUID) throws AccessDeniedException,ApplicationException{
+    public AssetsNameAndUUIDResponse getAssetsNameAndUUIDByTenantUUID(String tenantUUID) throws AccessDeniedException,ApplicationException{
         if(!privilegeHandler.hasRead()){
             LOGGER.error("Access is Denied to read Assets.");
             throw new AccessDeniedException();
         }
         Util util = new Util();
-        AssetNameAndUUIDResponse response = null;
+        AssetsNameAndUUIDResponse response = null;
         List<MinimalInfo.AssetInfo> assetInfos = null;
         try{
             util.setThreadContextForLogging(scim2Util);
             LOGGER.info("Inside service function of get Assets name and uuid by tenant uuid: " + tenantUUID);
             assetInfos = assetRepository.findAssetByTenantUUIDAndRemoveFromCategoryUUIDIsNull(tenantUUID);
-            response = new AssetNameAndUUIDResponse();
+            response = new AssetsNameAndUUIDResponse();
             response.setResponseIdentifier(SUCCESS);
             response.setAssetInfos(assetInfos);
             LOGGER.info("Successfully got Assets name and uuid.");
         }catch (Exception e){
-            response = new AssetNameAndUUIDResponse();
+            response = new AssetsNameAndUUIDResponse();
             response.setResponseIdentifier(FAILURE);
             LOGGER.error("An Error occurred while getting Assets name and uuid by tenant uuid.",e);
             throw new ApplicationException("An Error occurred while getting Assets name and uuid by tenant uuid.",e);
@@ -4479,34 +4479,59 @@ public class   AssetService {
         return response;
     }
 
+    public GetPaginatedAssetGroupsResponse getPaginatedAssetGroups(GetPaginatedAssetGroupsRequest request) throws IOException, AccessDeniedException {
 
-//    @HasRead
-        public GetPaginatedAssetGroupsResponse getPaginatedAssetGroups(GetPaginatedAssetGroupsRequest request) throws IOException, AccessDeniedException {
+        if(!privilegeHandler.hasRead())
+            throw new AccessDeniedException();
 
-            if(!privilegeHandler.hasRead())
-                throw new AccessDeniedException();
+        LOGGER.debug("Inside service function to get paginated asset groups");
 
-            LOGGER.debug("Inside service function to get paginated asset groups");
+        GetPaginatedAssetGroupsResponse response=new GetPaginatedAssetGroupsResponse();
+        try {
 
-            GetPaginatedAssetGroupsResponse response=new GetPaginatedAssetGroupsResponse();
-            try {
-
-                Page<AssetGroup> assetGroups=assetGroupRepository.findAssetGroupByTenantUUIDOrderByCreatedAtDesc(request.getTenantUUID(),new PageRequest(request.getOffset(),request.getLimit()));
-                //set assets to null to reduce size of response, assets are not needed in table, when viewing single group, then assets are required.
-                for (AssetGroup assetGroup : assetGroups.getContent()) {
-                    assetGroup.setAssets(null);
-                }
-                response.setAssetGroups(assetGroups);
-                response.setResponseIdentifier("Success");
-
-            }catch (Exception e){
-                LOGGER.error("Error occurred while getting paginated asset groups, request: "+convertToJSON(request),e);
-                response.setResponseIdentifier("Failure");
+            Page<AssetGroup> assetGroups=assetGroupRepository.findAssetGroupByTenantUUIDOrderByCreatedAtDesc(request.getTenantUUID(),new PageRequest(request.getOffset(),request.getLimit()));
+            //set assets to null to reduce size of response, assets are not needed in table, when viewing single group, then assets are required.
+            for (AssetGroup assetGroup : assetGroups.getContent()) {
+                assetGroup.setAssets(null);
             }
-            return response;
-        }
+            response.setAssetGroups(assetGroups);
+            response.setResponseIdentifier("Success");
 
-        /**************************************** Asset Functions End *****************************************/
+        }catch (Exception e){
+            LOGGER.error("Error occurred while getting paginated asset groups, request: "+convertToJSON(request),e);
+            response.setResponseIdentifier("Failure");
+        }
+        return response;
+    }
+
+    public AssetGroupsNameAndUUIDResponse getAssetGroupsNameAndUUIDByTenantUUID(String tenantUUID) throws AccessDeniedException, ApplicationException{
+        if(!privilegeHandler.hasRead()){
+            LOGGER.error("Access is Denied to read Asset group.");
+            throw new AccessDeniedException();
+        }
+        Util util = new Util();
+        AssetGroupsNameAndUUIDResponse response = null;
+        List<MinimalInfo.AssetGroupInfo> assetGroupInfos = null;
+        try{
+            util.setThreadContextForLogging(scim2Util);
+            LOGGER.info("Inside service function of get Asset groups name and uuid by tenant uuid: " + tenantUUID);
+            assetGroupInfos = assetGroupRepository.findAssetGroupByTenantUUIDAndDeletefromGroupUUIDIsNull(tenantUUID);
+            response = new AssetGroupsNameAndUUIDResponse();
+            response.setResponseIdentifer(SUCCESS);
+            response.setAssetGroupInfos(assetGroupInfos);
+            LOGGER.info("Successfully got Asset groups name and uuid by tenant uuid.");
+        }catch (Exception e){
+            LOGGER.error("An Error Occurred while getting Asset groups name and uuid by tenant uuid.",e);
+            throw new ApplicationException("An Error Occurred while getting Asset groups name and uuid by tenant uuid.",e);
+        }finally {
+            LOGGER.info("Returning to controller of get Asset groups name and uuid by tenant uuid.");
+            util.clearThreadContextForLogging();
+            util = null;
+        }
+        return response;
+    }
+
+    /**************************************** Asset Functions End *****************************************/
 
         /*****************************************************Start Wallet Function***************************************************/
         public DefaultResponse createWallet (CreateWalletRequest wallet) throws ApplicationException {
