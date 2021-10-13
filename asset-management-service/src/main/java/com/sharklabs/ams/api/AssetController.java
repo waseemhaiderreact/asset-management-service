@@ -613,6 +613,28 @@ public class AssetController {
         return responseEntity;
     }
 
+    //Web App Api
+    @GetMapping("/name")
+    public @ResponseBody
+    ResponseEntity getAssetsNameAndUUIDByTenantUUID(@RequestParam String tenantUUID){
+        Util util = new Util();
+        ResponseEntity responseEntity = null;
+        try{
+            util.setThreadContextForLogging(scim2Util);
+            LOGGER.info("Request received in get Assets name and uuid by tenant uuid: " + tenantUUID);
+            responseEntity = new ResponseEntity<>(assetService.getAssetsNameAndUUIDByTenantUUID(tenantUUID),HttpStatus.OK);
+        }catch (AccessDeniedException ae){
+            responseEntity = new ResponseEntity<String>(ae.getMessage(),HttpStatus.FORBIDDEN);
+        }catch (Exception e){
+            responseEntity = new ResponseEntity<String>(e.getMessage(),HttpStatus.INTERNAL_SERVER_ERROR);
+        }finally {
+            LOGGER.info("Returning from get Assets name and uuid by tenant uuid.");
+            util.clearThreadContextForLogging();
+            util = null;
+        }
+        return responseEntity;
+    }
+
     //get asset basic detail by tenant AMS_UC_31
     @RequestMapping(method = RequestMethod.GET,value="/basicinfo",params = {"tenantuuid"})
     public @ResponseBody

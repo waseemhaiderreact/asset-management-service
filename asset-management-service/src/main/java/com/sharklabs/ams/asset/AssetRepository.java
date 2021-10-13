@@ -1,5 +1,6 @@
 package com.sharklabs.ams.asset;
 
+import com.sharklabs.ams.minimalinfo.MinimalInfo;
 import com.sharklabs.ams.response.GetNameAndTypeOfAssetResponse;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
@@ -65,4 +66,6 @@ public interface AssetRepository extends JpaRepository<Asset,Long>, PagingAndSor
     ArrayList<Asset> findAssetsByTenantUUID(String tenantUUID);
 
     Asset findByAssetNumber(String AssetNumber);
+
+    List<MinimalInfo.AssetInfo> findAssetByTenantUUIDAndRemoveFromCategoryUUIDIsNull(String uuid);
 }

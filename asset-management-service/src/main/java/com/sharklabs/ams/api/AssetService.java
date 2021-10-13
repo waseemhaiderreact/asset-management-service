@@ -46,6 +46,7 @@ import com.sharklabs.ams.inspectiontemplate.InspectionTemplate;
 import com.sharklabs.ams.inspectiontemplate.InspectionTemplateRepository;
 import com.sharklabs.ams.message.Message;
 import com.sharklabs.ams.message.MessageRepository;
+import com.sharklabs.ams.minimalinfo.MinimalInfo;
 import com.sharklabs.ams.page.AssetPage;
 import com.sharklabs.ams.reply.Reply;
 import com.sharklabs.ams.reply.ReplyRepository;
@@ -1371,6 +1372,35 @@ public class   AssetService {
             util = null;
         }
 
+        return response;
+    }
+
+    public AssetNameAndUUIDResponse getAssetsNameAndUUIDByTenantUUID(String tenantUUID) throws AccessDeniedException,ApplicationException{
+        if(!privilegeHandler.hasRead()){
+            LOGGER.error("Access is Denied to read Assets.");
+            throw new AccessDeniedException();
+        }
+        Util util = new Util();
+        AssetNameAndUUIDResponse response = null;
+        List<MinimalInfo.AssetInfo> assetInfos = null;
+        try{
+            util.setThreadContextForLogging(scim2Util);
+            LOGGER.info("Inside service function of get Assets name and uuid by tenant uuid: " + tenantUUID);
+            assetInfos = assetRepository.findAssetByTenantUUIDAndRemoveFromCategoryUUIDIsNull(tenantUUID);
+            response = new AssetNameAndUUIDResponse();
+            response.setResponseIdentifier(SUCCESS);
+            response.setAssetInfos(assetInfos);
+            LOGGER.info("Successfully got Assets name and uuid.");
+        }catch (Exception e){
+            response = new AssetNameAndUUIDResponse();
+            response.setResponseIdentifier(FAILURE);
+            LOGGER.error("An Error occurred while getting Assets name and uuid by tenant uuid.",e);
+            throw new ApplicationException("An Error occurred while getting Assets name and uuid by tenant uuid.",e);
+        }finally {
+            LOGGER.info("Returning to controller of get Assets name and uuid by tenant uuid.");
+            util.clearThreadContextForLogging();
+            util = null;
+        }
         return response;
     }
 
