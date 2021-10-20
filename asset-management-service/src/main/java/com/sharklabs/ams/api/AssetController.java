@@ -634,9 +634,6 @@ public class AssetController {
     AssetsNameAndUUIDResponse getAssetsAndAssetGroupsNameAndUUIDByTenantUUID(@RequestParam String tenantUUID, @RequestParam String accessKey, @RequestParam String assetUUID){
         try{
             LOGGER.info("Request received in get Assets and Asset groups name and uuid by tenant uuid: " + tenantUUID);
-            if(assetUUID.equals("none")){
-                assetUUID = null;
-            }
             return assetService.getAssetsAndAssetGroupsNameAndUUIDByTenantUUID(tenantUUID,accessKey,assetUUID);
         }catch (AccessDeniedException ae){
             return new AssetsNameAndUUIDResponse(null,null,null,Constant.FAILURE);
