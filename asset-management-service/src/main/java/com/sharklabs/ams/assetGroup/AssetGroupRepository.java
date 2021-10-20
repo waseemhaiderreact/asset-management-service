@@ -5,6 +5,8 @@ import com.sharklabs.ams.minimalinfo.MinimalInfo;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import javax.transaction.Transactional;
 import java.util.List;
@@ -23,6 +25,8 @@ public interface AssetGroupRepository extends JpaRepository<AssetGroup, Long> {
     Page<AssetGroup> findAssetGroupByTenantUUIDOrderByGroupNameAsc(String tenantUUID, Pageable pageable);
     Set<AssetGroup> findAssetGroupByTenantUUIDOrderByGroupNameAsc(String tenantUUID);
 
-    List<MinimalInfo.AssetGroupInfo> findAssetGroupByTenantUUIDAndDeletefromGroupUUIDIsNull(String uuid);
+//    List<MinimalInfo.AssetGroupInfo> findAssetGroupByTenantUUIDAndDeletefromGroupUUIDIsNull(String uuid);
 
+    @Query("SELECT new com.sharklabs.ams.assetGroup.AssetGroupDTO(a.uuid,a.groupName) FROM t_asset_groups a WHERE a.tenantUUID=?1 AND a.deletefromGroupUUID is NULL")
+    List<AssetGroupDTO> findAssetGroupByTenantUUIDAndDeletefromGroupUUIDIsNull(@Param("uuid") String uuid);
 }

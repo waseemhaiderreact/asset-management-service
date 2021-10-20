@@ -44,4 +44,6 @@ public class Constant {
 
     // ---------------- SDT Constants END
 
+    // Secret key for unprotected calls (alpha-numeric)
+    public static  final String SECRET_KEY = "ypFWwA-E8VgkQ9GWn-PzYUEyfEQ-fgeba7H3Q-yEEwHy";
 }

@@ -10,10 +10,12 @@ import com.sharklabs.ams.request.*;
 import com.sharklabs.ams.response.*;
 import com.sharklabs.ams.security.SCIM2Util;
 import com.sharklabs.ams.util.AccessDeniedException;
+import com.sharklabs.ams.util.Constant;
 import com.sharklabs.ams.util.Util;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
@@ -387,6 +389,9 @@ public class AssetController {
     /*******************************************Asset Functions**********************************************/
     //add asset AMS_UC_10
     @RequestMapping(method = RequestMethod.POST,value="")
+    @Caching(evict = {
+            @CacheEvict(value= "assetAndAssetGroup",allEntries= true)
+    })
     public @ResponseBody
     ResponseEntity addAsset(@RequestBody AddAssetRequest addAssetRequest/*, OAuth2Authentication oAuth2Authentication*/) throws IOException {
         Util util = new Util();
@@ -419,6 +424,9 @@ public class AssetController {
 
     //edit asset AMS_UC_11
     @RequestMapping(method = RequestMethod.PUT,value="")
+    @Caching(evict = {
+            @CacheEvict(value= "assetAndAssetGroup",allEntries= true)
+    })
     public @ResponseBody
     ResponseEntity editAsset(@RequestBody EditAssetRequest editAssetRequest) throws IOException{
         Util util = new Util();
@@ -451,6 +459,9 @@ public class AssetController {
 
     //delete asset AMS_UC_12
     @RequestMapping(method = RequestMethod.DELETE,value="",params={"id"})
+    @Caching(evict = {
+            @CacheEvict(value= "assetAndAssetGroup",allEntries= true)
+    })
     public @ResponseBody
     ResponseEntity deleteAsset(@RequestParam String id) {
         Util util = new Util();
@@ -501,6 +512,9 @@ public class AssetController {
     }
 
     @DeleteMapping("/archive-delete")
+    @Caching(evict = {
+            @CacheEvict(value= "assetAndAssetGroup",allEntries= true)
+    })
     public @ResponseBody
     ResponseEntity archiveOrDeleteAssetByUuid(@RequestParam String uuid, @RequestParam String type){
         Util util = new Util();
@@ -614,25 +628,21 @@ public class AssetController {
     }
 
     //Web App Api
-    @GetMapping("/name")
+    @GetMapping("/asset-groups/name")
+    @Cacheable(value = "assetAndAssetGroup")
     public @ResponseBody
-    ResponseEntity getAssetsNameAndUUIDByTenantUUID(@RequestParam String tenantUUID){
-        Util util = new Util();
-        ResponseEntity responseEntity = null;
+    AssetsNameAndUUIDResponse getAssetsAndAssetGroupsNameAndUUIDByTenantUUID(@RequestParam String tenantUUID, @RequestParam String accessKey, @RequestParam String assetUUID){
         try{
-            util.setThreadContextForLogging(scim2Util);
-            LOGGER.info("Request received in get Assets name and uuid by tenant uuid: " + tenantUUID);
-            responseEntity = new ResponseEntity<AssetsNameAndUUIDResponse>(assetService.getAssetsNameAndUUIDByTenantUUID(tenantUUID),HttpStatus.OK);
+            LOGGER.info("Request received in get Assets and Asset groups name and uuid by tenant uuid: " + tenantUUID);
+            if(assetUUID.equals("none")){
+                assetUUID = null;
+            }
+            return assetService.getAssetsAndAssetGroupsNameAndUUIDByTenantUUID(tenantUUID,accessKey,assetUUID);
         }catch (AccessDeniedException ae){
-            responseEntity = new ResponseEntity<String>(ae.getMessage(),HttpStatus.FORBIDDEN);
+            return new AssetsNameAndUUIDResponse(null,null,null,Constant.FAILURE);
         }catch (Exception e){
-            responseEntity = new ResponseEntity<String>(e.getMessage(),HttpStatus.INTERNAL_SERVER_ERROR);
-        }finally {
-            LOGGER.info("Returning from get Assets name and uuid by tenant uuid.");
-            util.clearThreadContextForLogging();
-            util = null;
+            return new AssetsNameAndUUIDResponse(null,null,null,Constant.FAILURE);
         }
-        return responseEntity;
     }
 
     //get asset basic detail by tenant AMS_UC_31
@@ -752,6 +762,7 @@ public class AssetController {
         }
         return responseEntity;
     }
+
     //get name of types of assets by uuids AMS_UC_23
     @RequestMapping(method = RequestMethod.POST,value="/inspections/listview")
     public @ResponseBody
@@ -1060,6 +1071,7 @@ public class AssetController {
         }
         return responseEntity;
     }
+
     @RequestMapping(method=RequestMethod.GET,value="/consumption",params={"uuid","offset","limit"})
     public @ResponseBody
     ResponseEntity getPaginatedConsumptionsByAsset(@RequestParam String uuid, @RequestParam int offset, @RequestParam int limit) throws EmptyEntityTableException{
@@ -1091,6 +1103,7 @@ public class AssetController {
         }
         return responseEntity;
     }
+
     //delete consumption units of asset AMS_UC_26
     @RequestMapping(method = RequestMethod.DELETE,value="/consumption",params = {"uuid"})
     public @ResponseBody
@@ -1295,9 +1308,7 @@ public class AssetController {
         return responseEntity;
     }
 
-
     //finish trip.
-
     @RequestMapping(method=RequestMethod.PUT, value="/usages")
     public @ResponseBody
     ResponseEntity editUsage(@RequestBody EditUsageRequest request) throws IOException{
@@ -1669,7 +1680,6 @@ public class AssetController {
         return responseEntity;
     }
 
-
     @RequestMapping(method = RequestMethod.POST,value = "/activitywall/reply")
     public @ResponseBody
     ResponseEntity addReplyToMessage(@RequestBody AddReplyRequest request) throws IOException{
@@ -1733,6 +1743,7 @@ public class AssetController {
         }
         return responseEntity;
     }
+
     @RequestMapping(method = RequestMethod.DELETE,value="/files", params = {"filename"})
     public @ResponseBody
     ResponseEntity deleteFile(@RequestParam("filename") String filename) throws EmptyEntityTableException,IOException {
@@ -1763,6 +1774,7 @@ public class AssetController {
         }
         return responseEntity;
     }
+
     @GetMapping("/codes")
     @ResponseBody
     public List generateCodes(@RequestParam int type,@RequestParam int quantity){
@@ -2134,7 +2146,6 @@ public class AssetController {
 
     /*************************************************************************************************************************************/
     /* Wriiten By Qasim Ishtiaq*/
-
                                     /* Written By Nouman Afzaal*/
     /*********************************ASSET GROUP SDT FUNCTION START********************************/
 
@@ -2175,6 +2186,9 @@ public class AssetController {
     /*********************************ASSET GROUP FUNCTION START ***********************************/
 
     @RequestMapping(method = RequestMethod.POST,value="/assets/group")
+    @Caching(evict = {
+            @CacheEvict(value= "assetAndAssetGroup",allEntries= true)
+    })
     public @ResponseBody
     ResponseEntity addAssetGroup(@RequestBody AddAssetGroupRequest request)  throws EmptyEntityTableException,IOException {
         Util util = new Util();
@@ -2203,6 +2217,9 @@ public class AssetController {
     }
 
     @PutMapping("/assets/group")
+    @Caching(evict = {
+            @CacheEvict(value= "assetAndAssetGroup",allEntries= true)
+    })
     public @ResponseBody
     ResponseEntity editAssetGroup(@RequestBody EditGroupAssetsRequest request) throws IOException {
         Util util = new Util();
@@ -2261,6 +2278,9 @@ public class AssetController {
 
     // archive/delete asset groups
     @RequestMapping(method = RequestMethod.DELETE,value="/assets/group",params = {"id","type"})
+    @Caching(evict = {
+            @CacheEvict(value= "assetAndAssetGroup",allEntries= true)
+    })
     public @ResponseBody
     ResponseEntity deleteAssetGroup(@RequestParam String id,@RequestParam String type)  throws EmptyEntityTableException {
         Util util = new Util();
@@ -2323,26 +2343,27 @@ public class AssetController {
         return responseEntity;
     }
 
-    @GetMapping("/group")
-    public @ResponseBody
-    ResponseEntity getAssetGroupsNameAndUUIDByTenantUUID(@RequestParam String tenantUUID){
-        Util util = new Util();
-        ResponseEntity responseEntity = null;
-        try{
-            util.setThreadContextForLogging(scim2Util);
-            LOGGER.info("Request received in get Asset groups name and uuid by tenant uuid: " + tenantUUID);
-            responseEntity = new ResponseEntity<AssetGroupsNameAndUUIDResponse>(assetService.getAssetGroupsNameAndUUIDByTenantUUID(tenantUUID),HttpStatus.OK);
-        }catch (AccessDeniedException ae){
-            responseEntity = new ResponseEntity<String>(ae.getMessage(),HttpStatus.FORBIDDEN);
-        }catch (Exception e){
-            responseEntity = new ResponseEntity<String>(e.getMessage(),HttpStatus.INTERNAL_SERVER_ERROR);
-        }finally {
-            LOGGER.info("Returning from get Asset groups name and uuid by tenant uuid.");
-            util.clearThreadContextForLogging();
-            util = null;
-        }
-        return responseEntity;
-    }
+//    @GetMapping("/group")
+//    public @ResponseBody
+//    ResponseEntity getAssetGroupsNameAndUUIDByTenantUUID(@RequestParam String tenantUUID){
+//        Util util = new Util();
+//        ResponseEntity responseEntity = null;
+//        try{
+//            util.setThreadContextForLogging(scim2Util);
+//            LOGGER.info("Request received in get Asset groups name and uuid by tenant uuid: " + tenantUUID);
+//            responseEntity = new ResponseEntity<AssetGroupsNameAndUUIDResponse>(assetService.getAssetGroupsNameAndUUIDByTenantUUID(tenantUUID),HttpStatus.OK);
+//        }catch (AccessDeniedException ae){
+//            responseEntity = new ResponseEntity<String>(ae.getMessage(),HttpStatus.FORBIDDEN);
+//        }catch (Exception e){
+//            responseEntity = new ResponseEntity<String>(e.getMessage(),HttpStatus.INTERNAL_SERVER_ERROR);
+//        }finally {
+//            LOGGER.info("Returning from get Asset groups name and uuid by tenant uuid.");
+//            util.clearThreadContextForLogging();
+//            util = null;
+//        }
+//        return responseEntity;
+//    }
+
     /*********************************ASSET GROUP FUNCTION END ***********************************/
     /*******************************************************Start Wallet Function**********************************************************/
     @PutMapping("/wallets")

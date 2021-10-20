@@ -9,6 +9,7 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.boot.web.support.SpringBootServletInitializer;
+import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.cloud.netflix.feign.EnableFeignClients;
 import org.springframework.cloud.stream.annotation.EnableBinding;
 import org.springframework.context.annotation.Bean;
@@ -24,6 +25,7 @@ import java.util.TimeZone;
 //@EnableResourceServer
 @EnableBinding(CustomChannels.class)
 @EnableFeignClients("com.sharklabs.ams")
+@EnableCaching
 public class AssetApplication extends SpringBootServletInitializer {
     private static final Logger LOGGER = LogManager.getLogger(AssetApplication.class);
 

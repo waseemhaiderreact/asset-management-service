@@ -67,5 +67,12 @@ public interface AssetRepository extends JpaRepository<Asset,Long>, PagingAndSor
 
     Asset findByAssetNumber(String AssetNumber);
 
-    List<MinimalInfo.AssetInfo> findAssetByTenantUUIDAndRemoveFromCategoryUUIDIsNull(String uuid);
+//    List<MinimalInfo.AssetInfo> findAssetByTenantUUIDAndRemoveFromCategoryUUIDIsNull(String uuid);
+
+    @Query("SELECT new com.sharklabs.ams.asset.AssetDTO(a.uuid,a.name) FROM t_asset a WHERE a.tenantUUID=?1 AND a.removeFromCategoryUUID " +
+            "is NULL ")
+    List<AssetDTO> findAssetByTenantUUIDAndRemoveFromCategoryUUIDIsNull(@Param("uuid") String uuid);
+
+    @Query("SELECT c.name FROM t_asset a, t_category c WHERE a.uuid=?1 AND c.uuid=a.categoryUUID")
+    String findCategoryNameByAssetUUID(@Param("uuid") String uuid);
 }

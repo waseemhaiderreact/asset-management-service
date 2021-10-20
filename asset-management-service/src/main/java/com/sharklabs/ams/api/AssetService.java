@@ -1375,31 +1375,26 @@ public class   AssetService {
         return response;
     }
 
-    public AssetsNameAndUUIDResponse getAssetsNameAndUUIDByTenantUUID(String tenantUUID) throws AccessDeniedException,ApplicationException{
-        if(!privilegeHandler.hasRead()){
-            LOGGER.error("Access is Denied to read Assets.");
+    public AssetsNameAndUUIDResponse getAssetsAndAssetGroupsNameAndUUIDByTenantUUID(String tenantUUID, String accessKey, String assetUUID) throws AccessDeniedException,ApplicationException{
+        if(!accessKey.equals(Constant.SECRET_KEY)){
+            LOGGER.info("Access is Denied.");
             throw new AccessDeniedException();
         }
-        Util util = new Util();
         AssetsNameAndUUIDResponse response = null;
-        List<MinimalInfo.AssetInfo> assetInfos = null;
+        String assetCategory = null;
         try{
-            util.setThreadContextForLogging(scim2Util);
-            LOGGER.info("Inside service function of get Assets name and uuid by tenant uuid: " + tenantUUID);
-            assetInfos = assetRepository.findAssetByTenantUUIDAndRemoveFromCategoryUUIDIsNull(tenantUUID);
-            response = new AssetsNameAndUUIDResponse();
-            response.setResponseIdentifier(SUCCESS);
-            response.setAssetInfos(assetInfos);
-            LOGGER.info("Successfully got Assets name and uuid.");
+            LOGGER.info("Inside service function of get Assets and Asset groups name and uuid by tenant uuid: " + tenantUUID);
+            if(assetUUID != null){
+                assetCategory = assetRepository.findCategoryNameByAssetUUID(assetUUID);
+            }
+            response = new AssetsNameAndUUIDResponse(assetRepository.findAssetByTenantUUIDAndRemoveFromCategoryUUIDIsNull(tenantUUID),
+                        assetGroupRepository.findAssetGroupByTenantUUIDAndDeletefromGroupUUIDIsNull(tenantUUID),assetCategory,SUCCESS);
+            LOGGER.info("Successfully got Assets and Asset groups name and uuid.");
         }catch (Exception e){
-            response = new AssetsNameAndUUIDResponse();
-            response.setResponseIdentifier(FAILURE);
-            LOGGER.error("An Error occurred while getting Assets name and uuid by tenant uuid.",e);
-            throw new ApplicationException("An Error occurred while getting Assets name and uuid by tenant uuid.",e);
+            LOGGER.error("An Error occurred while getting Assets and Asset groups name and uuid by tenant uuid.",e);
+            throw new ApplicationException("An Error occurred while getting Assets and Asset groups name and uuid by tenant uuid.",e);
         }finally {
-            LOGGER.info("Returning to controller of get Assets name and uuid by tenant uuid.");
-            util.clearThreadContextForLogging();
-            util = null;
+            LOGGER.info("Returning to controller of get Assets and Asset groups name and uuid by tenant uuid.");
         }
         return response;
     }
@@ -4504,32 +4499,32 @@ public class   AssetService {
         return response;
     }
 
-    public AssetGroupsNameAndUUIDResponse getAssetGroupsNameAndUUIDByTenantUUID(String tenantUUID) throws AccessDeniedException, ApplicationException{
-        if(!privilegeHandler.hasRead()){
-            LOGGER.error("Access is Denied to read Asset group.");
-            throw new AccessDeniedException();
-        }
-        Util util = new Util();
-        AssetGroupsNameAndUUIDResponse response = null;
-        List<MinimalInfo.AssetGroupInfo> assetGroupInfos = null;
-        try{
-            util.setThreadContextForLogging(scim2Util);
-            LOGGER.info("Inside service function of get Asset groups name and uuid by tenant uuid: " + tenantUUID);
-            assetGroupInfos = assetGroupRepository.findAssetGroupByTenantUUIDAndDeletefromGroupUUIDIsNull(tenantUUID);
-            response = new AssetGroupsNameAndUUIDResponse();
-            response.setResponseIdentifer(SUCCESS);
-            response.setAssetGroupInfos(assetGroupInfos);
-            LOGGER.info("Successfully got Asset groups name and uuid by tenant uuid.");
-        }catch (Exception e){
-            LOGGER.error("An Error Occurred while getting Asset groups name and uuid by tenant uuid.",e);
-            throw new ApplicationException("An Error Occurred while getting Asset groups name and uuid by tenant uuid.",e);
-        }finally {
-            LOGGER.info("Returning to controller of get Asset groups name and uuid by tenant uuid.");
-            util.clearThreadContextForLogging();
-            util = null;
-        }
-        return response;
-    }
+//    public AssetGroupsNameAndUUIDResponse getAssetGroupsNameAndUUIDByTenantUUID(String tenantUUID) throws AccessDeniedException, ApplicationException{
+//        if(!privilegeHandler.hasRead()){
+//            LOGGER.error("Access is Denied to read Asset group.");
+//            throw new AccessDeniedException();
+//        }
+//        Util util = new Util();
+//        AssetGroupsNameAndUUIDResponse response = null;
+//        List<MinimalInfo.AssetGroupInfo> assetGroupInfos = null;
+//        try{
+//            util.setThreadContextForLogging(scim2Util);
+//            LOGGER.info("Inside service function of get Asset groups name and uuid by tenant uuid: " + tenantUUID);
+//            assetGroupInfos = assetGroupRepository.findAssetGroupByTenantUUIDAndDeletefromGroupUUIDIsNull(tenantUUID);
+//            response = new AssetGroupsNameAndUUIDResponse();
+//            response.setResponseIdentifer(SUCCESS);
+//            response.setAssetGroupInfos(assetGroupInfos);
+//            LOGGER.info("Successfully got Asset groups name and uuid by tenant uuid.");
+//        }catch (Exception e){
+//            LOGGER.error("An Error Occurred while getting Asset groups name and uuid by tenant uuid.",e);
+//            throw new ApplicationException("An Error Occurred while getting Asset groups name and uuid by tenant uuid.",e);
+//        }finally {
+//            LOGGER.info("Returning to controller of get Asset groups name and uuid by tenant uuid.");
+//            util.clearThreadContextForLogging();
+//            util = null;
+//        }
+//        return response;
+//    }
 
     /**************************************** Asset Functions End *****************************************/
 
@@ -4911,7 +4906,7 @@ public class   AssetService {
 
                                     responderfactpage = factRepository.findByWalletUUIDAndTransactiontypeIsNotContainingOrderByDateTimeDesc(walletRequest.getReceiverWalletUUID(), "spend",new PageRequest(0, 1));
                                 } catch (Exception e) {
-                                    return new DefaultResponse("Success", "Please Add Purchase first", "F200");
+                                    return new DefaultResponse("Failure", "Please Add Purchase first", "F200");
                                 }
                                 //Sender Purchase
                                 senderFact.setCurrentAverage(factpage.getContent().get(0).getCurrentAverage());

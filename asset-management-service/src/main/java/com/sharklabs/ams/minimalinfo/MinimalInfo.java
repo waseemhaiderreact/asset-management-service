@@ -1,6 +1,8 @@
 package com.sharklabs.ams.minimalinfo;
 
-public class MinimalInfo {
+import java.io.Serializable;
+
+public class MinimalInfo implements Serializable {
 
     public interface AssetInfo{
         String getUuid();
