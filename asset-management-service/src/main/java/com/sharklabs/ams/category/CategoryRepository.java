@@ -20,6 +20,9 @@ public interface CategoryRepository extends JpaRepository<Category,Long> {
 
     List<Category> findByTenantUUID(String tenantUUID);
 
+    @Query("SELECT new com.sharklabs.ams.category.CategoryDTO(c.uuid,c.name) FROM t_category c WHERE c.tenantUUID=?1")
+    List<CategoryDTO> findCategoriesListByTenantUUID(@Param("uuid") String uuid);
+
     Category findByTenantUUIDAndName(String tenantUUID, String name);
 
     @Modifying

@@ -48,6 +48,9 @@ public class AssetController {
     /*******************************************Category Functions*******************************************/
     //add a category AMS_UC_01
     @RequestMapping(method = RequestMethod.POST,value="/categories")
+    @Caching(evict = {
+            @CacheEvict(value = "categories",allEntries = true)
+    })
     public @ResponseBody
     ResponseEntity addCategory(@RequestBody AddCategoryRequest addCategoryRequest) throws IOException {
         Util util = new Util();
@@ -81,6 +84,9 @@ public class AssetController {
 
     //delete a category AMS_UC_05
     @RequestMapping(method = RequestMethod.DELETE,value="/categories",params = {"id"})
+    @Caching(evict = {
+            @CacheEvict(value = "categories",allEntries = true)
+    })
     public @ResponseBody
     ResponseEntity deleteCategory(@RequestParam String id) {
         Util util = new Util();
@@ -177,6 +183,9 @@ public class AssetController {
 
     //edit categories AMS_UC_04
     @RequestMapping(method = RequestMethod.PUT,value="/categories")
+    @Caching(evict = {
+            @CacheEvict(value = "categories",allEntries = true)
+    })
     public @ResponseBody
     ResponseEntity editCategory(@RequestBody EditCategoryRequest editCategoryRequest) throws IOException {
         Util util = new Util();
@@ -252,6 +261,26 @@ public class AssetController {
         return response;
     }
 
+    //Web App get Categories list by tenant uuid
+    @GetMapping("/categories/list")
+    @Cacheable( value = "categories")
+    public @ResponseBody
+    CategoriesListResponse getCategoriesListByTenantUUID(@RequestParam("tenantUUID") String tenantUUID){
+        Util util = new Util();
+        CategoriesListResponse response = null;
+        try{
+            util.setThreadContextForLogging(scim2Util);
+            LOGGER.info("Request received in get categories list by tenant uuid: " + tenantUUID);
+            response = assetService.getCategoriesListByTenantUUID(tenantUUID);
+        }catch (AccessDeniedException ae){
+            response = new CategoriesListResponse(null,Constant.FAILURE);
+        }catch (Exception e){
+            response = new CategoriesListResponse(null,Constant.FAILURE);
+        }finally {
+            LOGGER.info("Returning from controller of get categories list by tenant uuid.");
+        }
+        return response;
+    }
     /*******************************************END Category Functions*******************************************/
 
     /*******************************************Field Template Functions*****************************************/
@@ -631,7 +660,7 @@ public class AssetController {
     @GetMapping("/asset-groups/name")
     @Cacheable(value = "assetAndAssetGroup")
     public @ResponseBody
-    AssetsNameAndUUIDResponse getAssetsAndAssetGroupsNameAndUUIDByTenantUUID(@RequestParam String tenantUUID, @RequestParam String accessKey, @RequestParam String assetUUID){
+    AssetsNameAndUUIDResponse getAssetsAndAssetGroupsNameAndUUIDByTenantUUID(@RequestParam String tenantUUID, @RequestParam String accessKey, @RequestParam(required = false) String assetUUID){
         try{
             LOGGER.info("Request received in get Assets and Asset groups name and uuid by tenant uuid: " + tenantUUID);
             return assetService.getAssetsAndAssetGroupsNameAndUUIDByTenantUUID(tenantUUID,accessKey,assetUUID);

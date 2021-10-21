@@ -618,6 +618,28 @@ public class   AssetService {
         return response;
     }
 
+    public  CategoriesListResponse getCategoriesListByTenantUUID(String tenantUUID) throws ApplicationException,AccessDeniedException{
+        if(!privilegeHandler.hasCategory()){
+            LOGGER.error("Access is Denied.");
+            throw new AccessDeniedException();
+        }
+        Util util = new Util();
+        CategoriesListResponse response = null;
+        try{
+            LOGGER.info("Request received in get categories list by tenant uuid: " + tenantUUID);
+            response = new CategoriesListResponse();
+            response.setCategoryDTOS(categoryRepository.findCategoriesListByTenantUUID(tenantUUID));
+            response.setResponseIdentifier(SUCCESS);
+        }catch (Exception e){
+            LOGGER.error("An Error occurred while getting categories list.",e);
+            throw new ApplicationException("An Error occurred while getting categories list.",e);
+        }finally {
+            LOGGER.info("Returning from controller of get categories list by tenant uuid.");
+            util.clearThreadContextForLogging();
+            util = null;
+        }
+        return response;
+    }
     /*******************************************END Category Functions*******************************************/
 
     /*******************************************Field Template Functions*****************************************/
