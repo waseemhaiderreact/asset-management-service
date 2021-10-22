@@ -4925,12 +4925,8 @@ public class   AssetService {
 
                             //check available limit for sender & check responder ka balance
                             if (senderWallet.getCapacity() - senderWallet.getBalance() >= walletRequest.getQuantity() && responderWallet.getBalance() >= walletRequest.getQuantity()) {
-
-
-                                    factpage = factRepository.findByWalletUUIDAndTransactiontypeIsNotContainingOrderByDateTimeDesc(senderWallet.getWalletUUID(),"spend", new PageRequest(0, 1));
-                                    responderfactpage = factRepository.findByWalletUUIDAndTransactiontypeIsNotContainingOrderByDateTimeDesc(walletRequest.getReceiverWalletUUID(), "spend",new PageRequest(0, 1));
-
-
+                                factpage = factRepository.findByWalletUUIDAndTransactiontypeIsNotContainingOrderByDateTimeDesc(senderWallet.getWalletUUID(),"spend", new PageRequest(0, 1));
+                                responderfactpage = factRepository.findByWalletUUIDAndTransactiontypeIsNotContainingOrderByDateTimeDesc(walletRequest.getReceiverWalletUUID(), "spend",new PageRequest(0, 1));
                                 if(factpage.getContent().size()>0 && responderfactpage.getContent().size()>0){
                                     //Sender Purchase
                                     senderFact.setCurrentAverage(factpage.getContent().get(0).getCurrentAverage());
@@ -4987,15 +4983,10 @@ public class   AssetService {
                                 }else{
                                     if(factpage.getContent().size()>0){
                                         return new DefaultResponse("Success", "Please Add Purchase first", "F250");
-
                                     }else{
                                         return new DefaultResponse("Success", "Sender need to add purchase first", "F260");
-
                                     }
-
                                 }
-
-
                             } else {
                                 walletRequest = walletRequestRepository.findByRequestUUID(requestApproveOrIgnore.getRequestUUID());
                                 walletRequest.setApproveFlag(false);
@@ -5011,14 +5002,11 @@ public class   AssetService {
                             responderWallet = walletRespository.findByWalletUUID(walletRequest.getReceiverWalletUUID());
                             senderWallet = walletRespository.findByWalletUUID(walletRequest.getSenderWalletUUID());
                             if (responderWallet.getCapacity() - responderWallet.getBalance() >= walletRequest.getQuantity() && senderWallet.getBalance() >= walletRequest.getQuantity()) {
-
-                                    factpage = factRepository.findByWalletUUIDAndTransactiontypeIsNotContainingOrderByDateTimeDesc(senderWallet.getWalletUUID(), "spend",new PageRequest(0, 1));
-                                    responderfactpage = factRepository.findByWalletUUIDAndTransactiontypeIsNotContainingOrderByDateTimeDesc(walletRequest.getReceiverWalletUUID(),"spend", new PageRequest(0, 1));
-
+                                factpage = factRepository.findByWalletUUIDAndTransactiontypeIsNotContainingOrderByDateTimeDesc(senderWallet.getWalletUUID(), "spend",new PageRequest(0, 1));
+                                responderfactpage = factRepository.findByWalletUUIDAndTransactiontypeIsNotContainingOrderByDateTimeDesc(walletRequest.getReceiverWalletUUID(),"spend", new PageRequest(0, 1));
                               if(factpage.getContent().size()>0 && responderfactpage.getContent().size()>0){
                                   senderFact = new Fact();
                                   responderFact = new Fact();
-
                                   //Sender Purchase
                                   senderFact.setCurrentAverage(factpage.getContent().get(0).getCurrentAverage());
                                   senderFact.setQuantity(walletRequest.getQuantity());
@@ -5074,10 +5062,8 @@ public class   AssetService {
                               }else{
                                   if(factpage.getContent().size()>0){
                                       return new DefaultResponse("Success", "Please Add Purchase first", "F250");
-
                                   }else{
                                       return new DefaultResponse("Success", "Sender need to add purchase first", "F260");
-
                                   }
                               }
                             } else {
@@ -5091,7 +5077,6 @@ public class   AssetService {
                         }
                     }else{
                         response=new DefaultResponse("Success","Request Already Respond","F200");
-
                     }
                 }
             }catch (Exception e){
