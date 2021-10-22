@@ -4867,13 +4867,11 @@ public class   AssetService {
                             //check available limit for sender & check responder ka balance
                             if (senderWallet.getCapacity() - senderWallet.getBalance() >= walletRequest.getQuantity() && responderWallet.getBalance() >= walletRequest.getQuantity()) {
 
-                                try {
+
                                     factpage = factRepository.findByWalletUUIDAndTransactiontypeIsNotContainingOrderByDateTimeDesc(senderWallet.getWalletUUID(),"spend", new PageRequest(0, 1));
                                     responderfactpage = factRepository.findByWalletUUIDAndTransactiontypeIsNotContainingOrderByDateTimeDesc(walletRequest.getReceiverWalletUUID(), "spend",new PageRequest(0, 1));
 
-                                } catch (Exception e) {
-                                    return new DefaultResponse("Success", "Please Add Purchase first", "F200");
-                                }
+
                                 if(factpage.getContent().size()>0 && responderfactpage.getContent().size()>0){
                                     //Sender Purchase
                                     senderFact.setCurrentAverage(factpage.getContent().get(0).getCurrentAverage());
@@ -4929,10 +4927,10 @@ public class   AssetService {
                                     response = new DefaultResponse("Success", "Request Approved Successfully", "F200");
                                 }else{
                                     if(factpage.getContent().size()>0){
-                                        return new DefaultResponse("Success", "Please Add Purchase first", "F200");
+                                        return new DefaultResponse("Success", "Please Add Purchase first", "F250");
 
                                     }else{
-                                        return new DefaultResponse("Success", "Sender need to add purchase first", "F200");
+                                        return new DefaultResponse("Success", "Sender need to add purchase first", "F260");
 
                                     }
 
@@ -4954,12 +4952,10 @@ public class   AssetService {
                             responderWallet = walletRespository.findByWalletUUID(walletRequest.getReceiverWalletUUID());
                             senderWallet = walletRespository.findByWalletUUID(walletRequest.getSenderWalletUUID());
                             if (responderWallet.getCapacity() - responderWallet.getBalance() >= walletRequest.getQuantity() && senderWallet.getBalance() >= walletRequest.getQuantity()) {
-                                try {
+
                                     factpage = factRepository.findByWalletUUIDAndTransactiontypeIsNotContainingOrderByDateTimeDesc(senderWallet.getWalletUUID(), "spend",new PageRequest(0, 1));
                                     responderfactpage = factRepository.findByWalletUUIDAndTransactiontypeIsNotContainingOrderByDateTimeDesc(walletRequest.getReceiverWalletUUID(),"spend", new PageRequest(0, 1));
-                                } catch (Exception e) {
-                                    return new DefaultResponse("Success", "Please Add Purchase first", "F200");
-                                }
+
                               if(factpage.getContent().size()>0 && responderfactpage.getContent().size()>0){
                                   senderFact = new Fact();
                                   responderFact = new Fact();
@@ -5018,10 +5014,10 @@ public class   AssetService {
                                   response = new DefaultResponse("Success", "Request Approved Successfully", "F200");
                               }else{
                                   if(factpage.getContent().size()>0){
-                                      return new DefaultResponse("Success", "Please Add Purchase first", "F200");
+                                      return new DefaultResponse("Success", "Please Add Purchase first", "F250");
 
                                   }else{
-                                      return new DefaultResponse("Success", "Sender need to add purchase first", "F200");
+                                      return new DefaultResponse("Success", "Sender need to add purchase first", "F260");
 
                                   }
                               }
