@@ -4920,68 +4920,81 @@ public class   AssetService {
                         if (walletRequest.getRequestType().equals("Transfer In")) {
 
                             responderWallet = walletRespository.findByWalletUUID(walletRequest.getReceiverWalletUUID());
+
                             senderWallet = walletRespository.findByWalletUUID(walletRequest.getSenderWalletUUID());
+
                             //check available limit for sender & check responder ka balance
                             if (senderWallet.getCapacity() - senderWallet.getBalance() >= walletRequest.getQuantity() && responderWallet.getBalance() >= walletRequest.getQuantity()) {
-                                try {
+
+
                                     factpage = factRepository.findByWalletUUIDAndTransactiontypeIsNotContainingOrderByDateTimeDesc(senderWallet.getWalletUUID(),"spend", new PageRequest(0, 1));
-
                                     responderfactpage = factRepository.findByWalletUUIDAndTransactiontypeIsNotContainingOrderByDateTimeDesc(walletRequest.getReceiverWalletUUID(), "spend",new PageRequest(0, 1));
-                                } catch (Exception e) {
-                                    return new DefaultResponse("Failure", "Please Add Purchase first", "F200");
-                                }
-                                //Sender Purchase
-                                senderFact.setCurrentAverage(factpage.getContent().get(0).getCurrentAverage());
-                                senderFact.setQuantity(walletRequest.getQuantity());
-                                senderFact.setRateCurrency(factpage.getContent().get(0).getRateCurrency());
-                                senderFact.setRate(factpage.getContent().get(0).getRate());
-                                senderFact.setRateBasisUnit(factpage.getContent().get(0).getRateBasisUnit());
-                                senderFact.setQuantityUnit(factpage.getContent().get(0).getQuantityUnit());
-                                senderFact.setDateTime(new Date());
-                                senderFact.setWalletUUID(walletRequest.getSenderWalletUUID());
-                                senderFact.setFactUUID(UUID.randomUUID().toString());
-                                senderFact.setTotal(((walletRequest.getQuantity()) * (factpage.getContent().get(0).getCurrentAverage())));
-                                senderFact.setVolume(factpage.getContent().get(0).getVolume());
-                                senderFact.setTransactiontype("Transfer In");
-                                senderFact.setUserUUID(walletRequest.getSenderUUID());
-                                senderFact.setDescription(walletRequest.getDescription());
-                                factRepository.save(senderFact);
-                                senderWallet = walletRespository.findByWalletUUID(walletRequest.getSenderWalletUUID());
-                                Double Balance = senderWallet.getBalance() + walletRequest.getQuantity();
-                                senderWallet.setBalance(Balance);
-                                walletRespository.save(senderWallet);
-                                // responder tranfer
-                                responderFact.setCurrentAverage(responderfactpage.getContent().get(0).getCurrentAverage());
-                                responderFact.setQuantity(walletRequest.getQuantity());
-                                responderFact.setRateCurrency(responderfactpage.getContent().get(0).getRateCurrency());
-                                responderFact.setRate(responderfactpage.getContent().get(0).getRate());
-                                responderFact.setRateBasisUnit(responderfactpage.getContent().get(0).getRateBasisUnit());
-                                responderFact.setQuantityUnit(responderfactpage.getContent().get(0).getQuantityUnit());
-                                responderFact.setDateTime(new Date());
-                                responderFact.setWalletUUID(walletRequest.getReceiverWalletUUID());
-                                responderFact.setFactUUID(UUID.randomUUID().toString());
-                                responderFact.setTotal(((walletRequest.getQuantity()) * (responderfactpage.getContent().get(0).getCurrentAverage())));
-                                responderFact.setVolume(responderfactpage.getContent().get(0).getVolume());
-                                responderFact.setTransactiontype("Transfer Out");
-                                responderFact.setUserUUID(walletRequest.getResponderUUID());
-                                responderFact.setDescription(walletRequest.getDescription());
-                                factRepository.save(responderFact);
-                                responderWallet = walletRespository.findByWalletUUID(walletRequest.getReceiverWalletUUID());
-                                Balance = responderWallet.getBalance() - walletRequest.getQuantity();
-                                responderWallet.setBalance(Balance);
-                                if(responderWallet.getThresholdValue()<responderWallet.getBalance()){
 
+
+                                if(factpage.getContent().size()>0 && responderfactpage.getContent().size()>0){
+                                    //Sender Purchase
+                                    senderFact.setCurrentAverage(factpage.getContent().get(0).getCurrentAverage());
+                                    senderFact.setQuantity(walletRequest.getQuantity());
+                                    senderFact.setRateCurrency(factpage.getContent().get(0).getRateCurrency());
+                                    senderFact.setRate(factpage.getContent().get(0).getRate());
+                                    senderFact.setRateBasisUnit(factpage.getContent().get(0).getRateBasisUnit());
+                                    senderFact.setQuantityUnit(factpage.getContent().get(0).getQuantityUnit());
+                                    senderFact.setDateTime(new Date());
+                                    senderFact.setWalletUUID(walletRequest.getSenderWalletUUID());
+                                    senderFact.setFactUUID(UUID.randomUUID().toString());
+                                    senderFact.setTotal(((walletRequest.getQuantity()) * (factpage.getContent().get(0).getCurrentAverage())));
+                                    senderFact.setVolume(factpage.getContent().get(0).getVolume());
+                                    senderFact.setTransactiontype("Transfer In");
+                                    senderFact.setUserUUID(walletRequest.getSenderUUID());
+                                    senderFact.setDescription(walletRequest.getDescription());
+                                    factRepository.save(senderFact);
+                                    senderWallet = walletRespository.findByWalletUUID(walletRequest.getSenderWalletUUID());
+                                    Double Balance = senderWallet.getBalance() + walletRequest.getQuantity();
+                                    senderWallet.setBalance(Balance);
+                                    walletRespository.save(senderWallet);
+                                    // responder tranfer
+                                    responderFact.setCurrentAverage(responderfactpage.getContent().get(0).getCurrentAverage());
+                                    responderFact.setQuantity(walletRequest.getQuantity());
+                                    responderFact.setRateCurrency(responderfactpage.getContent().get(0).getRateCurrency());
+                                    responderFact.setRate(responderfactpage.getContent().get(0).getRate());
+                                    responderFact.setRateBasisUnit(responderfactpage.getContent().get(0).getRateBasisUnit());
+                                    responderFact.setQuantityUnit(responderfactpage.getContent().get(0).getQuantityUnit());
+                                    responderFact.setDateTime(new Date());
+                                    responderFact.setWalletUUID(walletRequest.getReceiverWalletUUID());
+                                    responderFact.setFactUUID(UUID.randomUUID().toString());
+                                    responderFact.setTotal(((walletRequest.getQuantity()) * (responderfactpage.getContent().get(0).getCurrentAverage())));
+                                    responderFact.setVolume(responderfactpage.getContent().get(0).getVolume());
+                                    responderFact.setTransactiontype("Transfer Out");
+                                    responderFact.setUserUUID(walletRequest.getResponderUUID());
+                                    responderFact.setDescription(walletRequest.getDescription());
+                                    factRepository.save(responderFact);
+                                    responderWallet = walletRespository.findByWalletUUID(walletRequest.getReceiverWalletUUID());
+                                    Balance = responderWallet.getBalance() - walletRequest.getQuantity();
+                                    responderWallet.setBalance(Balance);
+                                    if(responderWallet.getThresholdValue()<responderWallet.getBalance()){
+
+                                    }else{
+                                        sendEmail(responderWallet);
+                                        //generater email
+                                    }
+                                    walletRespository.save(responderWallet);
+                                    walletRequest = walletRequestRepository.findByRequestUUID(requestApproveOrIgnore.getRequestUUID());
+                                    walletRequest.setApproveFlag(requestApproveOrIgnore.getApprove());
+                                    walletRequest.setIgnoreFlag(requestApproveOrIgnore.getIgnore());
+                                    walletRequest.setResponderUUID(requestApproveOrIgnore.getResponderUUID());
+                                    walletRequestRepository.save(walletRequest);
+                                    response = new DefaultResponse("Success", "Request Approved Successfully", "F200");
                                 }else{
-                                    sendEmail(responderWallet);
-                                    //generater email
+                                    if(factpage.getContent().size()>0){
+                                        return new DefaultResponse("Success", "Please Add Purchase first", "F250");
+
+                                    }else{
+                                        return new DefaultResponse("Success", "Sender need to add purchase first", "F260");
+
+                                    }
+
                                 }
-                                walletRespository.save(responderWallet);
-                                walletRequest = walletRequestRepository.findByRequestUUID(requestApproveOrIgnore.getRequestUUID());
-                                walletRequest.setApproveFlag(requestApproveOrIgnore.getApprove());
-                                walletRequest.setIgnoreFlag(requestApproveOrIgnore.getIgnore());
-                                walletRequest.setResponderUUID(requestApproveOrIgnore.getResponderUUID());
-                                walletRequestRepository.save(walletRequest);
-                                response = new DefaultResponse("Success", "Request Approved Successfully", "F200");
+
 
                             } else {
                                 walletRequest = walletRequestRepository.findByRequestUUID(requestApproveOrIgnore.getRequestUUID());
@@ -4998,67 +5011,75 @@ public class   AssetService {
                             responderWallet = walletRespository.findByWalletUUID(walletRequest.getReceiverWalletUUID());
                             senderWallet = walletRespository.findByWalletUUID(walletRequest.getSenderWalletUUID());
                             if (responderWallet.getCapacity() - responderWallet.getBalance() >= walletRequest.getQuantity() && senderWallet.getBalance() >= walletRequest.getQuantity()) {
-                                try {
+
                                     factpage = factRepository.findByWalletUUIDAndTransactiontypeIsNotContainingOrderByDateTimeDesc(senderWallet.getWalletUUID(), "spend",new PageRequest(0, 1));
                                     responderfactpage = factRepository.findByWalletUUIDAndTransactiontypeIsNotContainingOrderByDateTimeDesc(walletRequest.getReceiverWalletUUID(),"spend", new PageRequest(0, 1));
-                                } catch (Exception e) {
-                                    return new DefaultResponse("Success", "Please Add Purchase first", "F200");
-                                }
-                                senderFact = new Fact();
-                                responderFact = new Fact();
 
-                                //Sender Purchase
-                                senderFact.setCurrentAverage(factpage.getContent().get(0).getCurrentAverage());
-                                senderFact.setQuantity(walletRequest.getQuantity());
-                                senderFact.setRateCurrency(factpage.getContent().get(0).getRateCurrency());
-                                senderFact.setRate(factpage.getContent().get(0).getRate());
-                                senderFact.setRateBasisUnit(factpage.getContent().get(0).getRateBasisUnit());
-                                senderFact.setQuantityUnit(factpage.getContent().get(0).getQuantityUnit());
-                                senderFact.setDateTime(new Date());
-                                senderFact.setWalletUUID(walletRequest.getSenderWalletUUID());
-                                senderFact.setFactUUID(UUID.randomUUID().toString());
-                                senderFact.setTotal(((walletRequest.getQuantity()) * (factpage.getContent().get(0).getCurrentAverage())));
-                                senderFact.setVolume(factpage.getContent().get(0).getVolume());
-                                senderFact.setTransactiontype("Transfer Out");
-                                senderFact.setUserUUID(walletRequest.getSenderUUID());
-                                senderFact.setDescription(walletRequest.getDescription());
-                                factRepository.save(senderFact);
-                                senderWallet = walletRespository.findByWalletUUID(walletRequest.getSenderWalletUUID());
-                                Double Balance = senderWallet.getBalance() - walletRequest.getQuantity();
-                                senderWallet.setBalance(Balance);
-                                if(senderWallet.getThresholdValue()<senderWallet.getBalance()){
+                              if(factpage.getContent().size()>0 && responderfactpage.getContent().size()>0){
+                                  senderFact = new Fact();
+                                  responderFact = new Fact();
 
-                                }else{
-                                    //generater email
-                                    sendEmail(senderWallet);
-                                }
-                                walletRespository.save(senderWallet);
-                                // responder tranfer
-                                responderFact.setCurrentAverage(responderfactpage.getContent().get(0).getCurrentAverage());
-                                responderFact.setQuantity(walletRequest.getQuantity());
-                                responderFact.setRateCurrency(responderfactpage.getContent().get(0).getRateCurrency());
-                                responderFact.setRate(responderfactpage.getContent().get(0).getRate());
-                                responderFact.setRateBasisUnit(responderfactpage.getContent().get(0).getRateBasisUnit());
-                                responderFact.setQuantityUnit(responderfactpage.getContent().get(0).getQuantityUnit());
-                                responderFact.setDateTime(new Date());
-                                responderFact.setWalletUUID(walletRequest.getReceiverWalletUUID());
-                                responderFact.setFactUUID(UUID.randomUUID().toString());
-                                responderFact.setTotal(((walletRequest.getQuantity()) * (responderfactpage.getContent().get(0).getCurrentAverage())));
-                                responderFact.setVolume(responderfactpage.getContent().get(0).getVolume());
-                                responderFact.setTransactiontype("Transfer In");
-                                responderFact.setUserUUID(walletRequest.getResponderUUID());
-                                responderFact.setDescription(walletRequest.getDescription());
-                                factRepository.save(responderFact);
-                                responderWallet = walletRespository.findByWalletUUID(walletRequest.getReceiverWalletUUID());
-                                Balance = responderWallet.getBalance() + walletRequest.getQuantity();
-                                responderWallet.setBalance(Balance);
-                                walletRespository.save(responderWallet);
-                                walletRequest = walletRequestRepository.findByRequestUUID(requestApproveOrIgnore.getRequestUUID());
-                                walletRequest.setApproveFlag(requestApproveOrIgnore.getApprove());
-                                walletRequest.setIgnoreFlag(requestApproveOrIgnore.getIgnore());
-                                walletRequest.setResponderUUID(requestApproveOrIgnore.getResponderUUID());
-                                walletRequestRepository.save(walletRequest);
-                                response = new DefaultResponse("Success", "Request Approved Successfully", "F200");
+                                  //Sender Purchase
+                                  senderFact.setCurrentAverage(factpage.getContent().get(0).getCurrentAverage());
+                                  senderFact.setQuantity(walletRequest.getQuantity());
+                                  senderFact.setRateCurrency(factpage.getContent().get(0).getRateCurrency());
+                                  senderFact.setRate(factpage.getContent().get(0).getRate());
+                                  senderFact.setRateBasisUnit(factpage.getContent().get(0).getRateBasisUnit());
+                                  senderFact.setQuantityUnit(factpage.getContent().get(0).getQuantityUnit());
+                                  senderFact.setDateTime(new Date());
+                                  senderFact.setWalletUUID(walletRequest.getSenderWalletUUID());
+                                  senderFact.setFactUUID(UUID.randomUUID().toString());
+                                  senderFact.setTotal(((walletRequest.getQuantity()) * (factpage.getContent().get(0).getCurrentAverage())));
+                                  senderFact.setVolume(factpage.getContent().get(0).getVolume());
+                                  senderFact.setTransactiontype("Transfer Out");
+                                  senderFact.setUserUUID(walletRequest.getSenderUUID());
+                                  senderFact.setDescription(walletRequest.getDescription());
+                                  factRepository.save(senderFact);
+                                  senderWallet = walletRespository.findByWalletUUID(walletRequest.getSenderWalletUUID());
+                                  Double Balance = senderWallet.getBalance() - walletRequest.getQuantity();
+                                  senderWallet.setBalance(Balance);
+                                  if(senderWallet.getThresholdValue()<senderWallet.getBalance()){
+
+                                  }else{
+                                      //generater email
+                                      sendEmail(senderWallet);
+                                  }
+                                  walletRespository.save(senderWallet);
+                                  // responder tranfer
+                                  responderFact.setCurrentAverage(responderfactpage.getContent().get(0).getCurrentAverage());
+                                  responderFact.setQuantity(walletRequest.getQuantity());
+                                  responderFact.setRateCurrency(responderfactpage.getContent().get(0).getRateCurrency());
+                                  responderFact.setRate(responderfactpage.getContent().get(0).getRate());
+                                  responderFact.setRateBasisUnit(responderfactpage.getContent().get(0).getRateBasisUnit());
+                                  responderFact.setQuantityUnit(responderfactpage.getContent().get(0).getQuantityUnit());
+                                  responderFact.setDateTime(new Date());
+                                  responderFact.setWalletUUID(walletRequest.getReceiverWalletUUID());
+                                  responderFact.setFactUUID(UUID.randomUUID().toString());
+                                  responderFact.setTotal(((walletRequest.getQuantity()) * (responderfactpage.getContent().get(0).getCurrentAverage())));
+                                  responderFact.setVolume(responderfactpage.getContent().get(0).getVolume());
+                                  responderFact.setTransactiontype("Transfer In");
+                                  responderFact.setUserUUID(walletRequest.getResponderUUID());
+                                  responderFact.setDescription(walletRequest.getDescription());
+                                  factRepository.save(responderFact);
+                                  responderWallet = walletRespository.findByWalletUUID(walletRequest.getReceiverWalletUUID());
+                                  Balance = responderWallet.getBalance() + walletRequest.getQuantity();
+                                  responderWallet.setBalance(Balance);
+                                  walletRespository.save(responderWallet);
+                                  walletRequest = walletRequestRepository.findByRequestUUID(requestApproveOrIgnore.getRequestUUID());
+                                  walletRequest.setApproveFlag(requestApproveOrIgnore.getApprove());
+                                  walletRequest.setIgnoreFlag(requestApproveOrIgnore.getIgnore());
+                                  walletRequest.setResponderUUID(requestApproveOrIgnore.getResponderUUID());
+                                  walletRequestRepository.save(walletRequest);
+                                  response = new DefaultResponse("Success", "Request Approved Successfully", "F200");
+                              }else{
+                                  if(factpage.getContent().size()>0){
+                                      return new DefaultResponse("Success", "Please Add Purchase first", "F250");
+
+                                  }else{
+                                      return new DefaultResponse("Success", "Sender need to add purchase first", "F260");
+
+                                  }
+                              }
                             } else {
                                 walletRequest = walletRequestRepository.findByRequestUUID(requestApproveOrIgnore.getRequestUUID());
                                 walletRequest.setApproveFlag(false);

@@ -2635,7 +2635,8 @@ public class AssetController {
                 responseEntity=new ResponseEntity<>(defaultResponse,HttpStatus.INTERNAL_SERVER_ERROR);
             }
         }catch(ApplicationException e){
-            LOGGER.error("An Error occurred while Request Approve or Ignore in Wallet in Asset Controller");
+            LOGGER.error("An Error occurred while Request Approve or Ignore in Wallet in Asset Controller",e);
+
             responseEntity = new ResponseEntity<String>(e.getMessage(),HttpStatus.INTERNAL_SERVER_ERROR);
         }finally {
             util.clearThreadContextForLogging();
