@@ -13,6 +13,7 @@ import com.sharklabs.ams.activitywall.ActivityWall;
 import com.sharklabs.ams.activitywall.ActivityWallRepository;
 import com.sharklabs.ams.asset.*;
 import com.sharklabs.ams.assetGroup.AssetGroup;
+import com.sharklabs.ams.assetGroup.AssetGroupDTO;
 import com.sharklabs.ams.assetGroup.AssetGroupRepository;
 import com.sharklabs.ams.assetfield.AssetField;
 import com.sharklabs.ams.assetfield.AssetFieldRepository;
@@ -1419,6 +1420,31 @@ public class   AssetService {
             LOGGER.info("Returning to controller of get Assets and Asset groups name and uuid by tenant uuid.");
         }
         return response;
+    }
+
+    public AssetGroupByAssetResponse getAssetGroupsByAssets (AssetGroupByAssetUUIDsRequest request) throws AccessDeniedException,ApplicationException{
+        if(!privilegeHandler.hasRead()){
+            throw new AccessDeniedException();
+        }
+        Util util = new Util();
+        AssetGroupByAssetResponse response =new AssetGroupByAssetResponse();
+        List<AssetGroupDTO> assetGroupDTOList = null;
+        try{
+            util.setThreadContextForLogging(scim2Util);
+            if(request.getAssetUUIDs().size()>0){
+                assetGroupDTOList=assetGroupRepository.findAssetGroupByAssetsInAndDeletefromGroupUUIDIsNull(request.getAssetUUIDs());
+                response.setAssetGroupDTOS(assetGroupDTOList);
+                response.setResponseIdentifier(SUCCESS);
+                LOGGER.info("Successfully got Assets and Asset groups name and uuid.");
+            }
+        }catch(Exception e){
+            LOGGER.error("An Error occurred while getting Asset groups name and uuid by Assets.",e);
+            throw new ApplicationException("An Error occurred while getting Assets groups name and uuid by Assets..",e);
+        }finally {
+            LOGGER.info("Returning to controller of get Asset groups name and uuid by Assets..");
+        }
+        return response;
+
     }
 
     //get asset basic detail by tenant AMS_UC_31

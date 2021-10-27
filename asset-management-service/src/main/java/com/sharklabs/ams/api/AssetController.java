@@ -23,6 +23,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import shark.commons.util.ApplicationException;
 
+import javax.persistence.Access;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -668,6 +669,20 @@ public class AssetController {
             return new AssetsNameAndUUIDResponse(null,null,null,Constant.FAILURE);
         }catch (Exception e){
             return new AssetsNameAndUUIDResponse(null,null,null,Constant.FAILURE);
+        }
+    }
+
+    /* Written By Kumail Ahmed Khan */
+    @PostMapping ("/asset-groups")
+    public @ResponseBody
+    AssetGroupByAssetResponse getAssetGroupsByAssets(@RequestBody AssetGroupByAssetUUIDsRequest request){
+        try{
+            LOGGER.info("Request received in Controller to get Asset Group By AssetUUIDs: "+convertToJSON(request));
+            return assetService.getAssetGroupsByAssets(request);
+        }catch (AccessDeniedException ae){
+            return new AssetGroupByAssetResponse();
+        }catch (Exception e){
+            return new AssetGroupByAssetResponse();
         }
     }
 

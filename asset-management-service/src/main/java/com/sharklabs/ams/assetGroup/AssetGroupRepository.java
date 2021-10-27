@@ -29,4 +29,7 @@ public interface AssetGroupRepository extends JpaRepository<AssetGroup, Long> {
 
     @Query("SELECT new com.sharklabs.ams.assetGroup.AssetGroupDTO(a.uuid,a.groupName) FROM t_asset_groups a WHERE a.tenantUUID=?1 AND a.deletefromGroupUUID is NULL")
     List<AssetGroupDTO> findAssetGroupByTenantUUIDAndDeletefromGroupUUIDIsNull(@Param("uuid") String uuid);
+
+    @Query("SELECT distinct new com.sharklabs.ams.assetGroup.AssetGroupDTO(a.uuid,a.groupName) FROM t_asset_groups a JOIN a.assets ac WHERE ac.uuid in :assetUUIDs AND a.deletefromGroupUUID is NULL")
+    List<AssetGroupDTO> findAssetGroupByAssetsInAndDeletefromGroupUUIDIsNull(@Param("assetUUIDs") Set<String> assetUUIDs);
 }
