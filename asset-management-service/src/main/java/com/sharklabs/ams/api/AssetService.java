@@ -64,6 +64,9 @@ import com.sharklabs.ams.wallet.*;
 import org.apache.commons.io.IOUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.stream.annotation.EnableBinding;
@@ -2183,6 +2186,32 @@ public class   AssetService {
         return response;
     }
 
+    //purpose of function to export sample excel
+    public ExportSampleExcelResponse exportExcelSample(ExportSampleExcelRequest request) throws ApplicationException,AccessDeniedException {
+
+        //check if user have access read Assets
+        if(!privilegeHandler.hasRead()){
+            LOGGER.error("Access is Deined.");
+            throw new AccessDeniedException();
+        }
+        Util util = new Util();
+        ExportSampleExcelResponse response = new ExportSampleExcelResponse();
+        Workbook workbook = new XSSFWorkbook();
+        Sheet sheet = workbook.createSheet("Asset");
+        
+        try{
+            util.setThreadContextForLogging(scim2Util);
+            LOGGER.info("Inside service function export Excel sample. Details: " + convertToJSON(request));
+
+        }catch (Exception e){
+            LOGGER.error("An Error occurred while exporting excel sample file.",e);
+        }finally {
+            LOGGER.info("Returning to controller of export excel sample.");
+            util.clearThreadContextForLogging();
+            util = null;
+        }
+        return response;
+    }
     /******************************************* END Asset Functions ************************************************/
 
     /******************************************* Consumption Functions **********************************************/

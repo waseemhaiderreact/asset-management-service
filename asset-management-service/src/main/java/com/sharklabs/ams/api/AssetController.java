@@ -990,7 +990,6 @@ public class AssetController {
         return responseEntity;
     }
 
-
     @PostMapping("/user")
     public @ResponseBody
     ResponseEntity getAssetNameAndUUIDForAps(@RequestParam("assetUUIDS") List<String> assetUUIDS){
@@ -1054,6 +1053,28 @@ public class AssetController {
             responseEntity = new ResponseEntity<String>(e.getMessage(),HttpStatus.INTERNAL_SERVER_ERROR);
         }finally{
             LOGGER.info("Returning from controller of get Asset images by Asset uuid: "+uuid);
+            util.clearThreadContextForLogging();
+            util = null;
+        }
+        return responseEntity;
+    }
+
+    @PostMapping("/export/excel")
+    public @ResponseBody
+    ResponseEntity exportExcelSample(@RequestBody ExportSampleExcelRequest request) throws IOException{
+        Util util = new Util();
+        ResponseEntity responseEntity = null;
+        try{
+            util.setThreadContextForLogging(scim2Util);
+            LOGGER.info("Inside service function of export excel sample file. Details: " + convertToJSON(request));
+            responseEntity = new ResponseEntity<ExportSampleExcelResponse>(assetService.exportExcelSample(request),HttpStatus.OK);
+        }catch (AccessDeniedException ae){
+            responseEntity = new ResponseEntity<String>(ae.getMessage(),HttpStatus.FORBIDDEN);
+            ae = null;
+        }catch (Exception e){
+            responseEntity = new ResponseEntity<String>(e.getMessage(),HttpStatus.INTERNAL_SERVER_ERROR);
+        }finally {
+            LOGGER.info("Returning from controller of export Excel Sample.");
             util.clearThreadContextForLogging();
             util = null;
         }
