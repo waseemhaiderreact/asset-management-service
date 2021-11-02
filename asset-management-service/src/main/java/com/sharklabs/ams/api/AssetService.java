@@ -35,6 +35,7 @@ import com.sharklabs.ams.fact.FactRepository;
 import com.sharklabs.ams.feign.ApsServiceProxy;
 import com.sharklabs.ams.feign.AuthServiceProxy;
 import com.sharklabs.ams.field.Field;
+import com.sharklabs.ams.field.FieldDTO;
 import com.sharklabs.ams.field.FieldRepository;
 import com.sharklabs.ams.fieldtemplate.FieldTemplate;
 import com.sharklabs.ams.fieldtemplate.FieldTemplateRepository;
@@ -64,8 +65,8 @@ import com.sharklabs.ams.wallet.*;
 import org.apache.commons.io.IOUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.apache.poi.ss.usermodel.Sheet;
-import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -87,9 +88,7 @@ import javax.persistence.PersistenceContext;
 import javax.persistence.criteria.*;
 import javax.sql.DataSource;
 import javax.transaction.Transactional;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
+import java.io.*;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.net.URLEncoder;
@@ -2191,18 +2190,50 @@ public class   AssetService {
 
         //check if user have access read Assets
         if(!privilegeHandler.hasRead()){
-            LOGGER.error("Access is Deined.");
+            LOGGER.error("Access is Denied.");
             throw new AccessDeniedException();
         }
         Util util = new Util();
         ExportSampleExcelResponse response = new ExportSampleExcelResponse();
         Workbook workbook = new XSSFWorkbook();
         Sheet sheet = workbook.createSheet("Asset");
-        
+        Row row = null;
+        Cell cell = null;
         try{
             util.setThreadContextForLogging(scim2Util);
             LOGGER.info("Inside service function export Excel sample. Details: " + convertToJSON(request));
+//            sheet.setColumnWidth(0,256 * 30);
+//            sheet.setColumnWidth(1,256 * 30);
+            createHeading(row,sheet,"Asset Info",0);
+            createRow(row,sheet,"Asset Name",request.getName(),false,null,3);
+            createRow(row,sheet,"Category",request.getCategory(),false,null,4);
+            createRow(row,sheet,"Model Number",request.getModelNumber(),false,null,5);
+            createRow(row,sheet,"Manufacturer",request.getManufacturer(),false,null,6);
+            createRow(row,sheet,"Purchase Date",null,true,request.getPurchaseDate(),7);
+            createRow(row,sheet,"Status",request.getStatus(),false,null,8);
+            createRow(row,sheet,"Warranty",request.getWarranty(),false,null,9);
+            createRow(row,sheet,"Warranty Unit",request.getWarrantyUnit(),false,null,10);
+            createRow(row,sheet,"Primary Usage Unit",request.getPrimaryUsageUnit(),false,null,11);
+            createRow(row,sheet,"Secondary Usage Unit",request.getSecondaryUsageUnit(),false,null,12);
+            createRow(row,sheet,"Consumption Unit",request.getConsumptionUnit(),false,null,13);
+            createRow(row,sheet,"Description",request.getDescription(),false,null,14);
+            createHeading(row,sheet,"Additional Details",16);
+            int j = 19;
+            for(FieldDTO fieldDTO:request.getAdditionalFields()){
+                createRow(row,sheet,fieldDTO.getFieldLabel(),fieldDTO.getFieldValue(),false,null,j);
+                j += 1;
+            }
 
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            workbook.write(out);
+            out.close();
+            workbook.close();
+
+            byte [] file = out.toByteArray();
+            response.setResponseIdentifier(SUCCESS);
+            response.setFileName("Asset");
+            response.setFile(file);
+            response.setContentLength(file.length);
         }catch (Exception e){
             LOGGER.error("An Error occurred while exporting excel sample file.",e);
         }finally {
@@ -2211,6 +2242,107 @@ public class   AssetService {
             util = null;
         }
         return response;
+    }
+
+    public void createHeading(Row row,Sheet sheet, String value, int i) throws ApplicationException {
+        try{
+            LOGGER.info("Inside function of create heading.");
+            row = sheet.createRow(i);
+            CellStyle cellStyle = sheet.getWorkbook().createCellStyle();
+            Font font = sheet.getWorkbook().createFont();
+            font.setBold(true);
+            font.setFontHeightInPoints((short) 16);
+            cellStyle.setFont(font);
+            cellStyle.setAlignment(HorizontalAlignment.CENTER);
+
+            Cell cell = row.createCell(0);
+            cell.setCellStyle(cellStyle);
+            cell.setCellValue(value);
+
+            sheet.addMergedRegion( new CellRangeAddress(i,i + 1,0,3));
+        }catch (Exception e){
+            LOGGER.error("An Error occurred while creating heading.",e);
+            throw new ApplicationException("An Error occurred while creating heading.",e);
+        }
+    }
+
+    public void createRow(Row row,Sheet sheet,String fieldName, String fieldValue, boolean isDate, Date date, int i) throws ApplicationException {
+        try{
+            LOGGER.info("Inside function of create row.");
+            row = sheet.createRow(i);
+            createLabelCell(row,fieldName,sheet,i);
+            if(!isDate){
+                createValueCell(row,fieldValue,sheet,i);
+            }else {
+                createDateValueCell(row,date,sheet,i);
+            }
+        }catch (Exception e){
+            LOGGER.error("An Error occurred while creating row for Asset sheet.",e);
+            throw new ApplicationException("An Error occurred while creating row for Asset sheet.",e);
+        }
+    }
+
+    public void createLabelCell(Row row,String fieldName, Sheet sheet, int i) throws ApplicationException {
+        Cell cellLabel = null;
+        try{
+            LOGGER.info("Inside function of create label cell.");
+            CellStyle cellStyle = sheet.getWorkbook().createCellStyle();
+            Font font = sheet.getWorkbook().createFont();
+            font.setBold(true);
+            font.setFontHeightInPoints((short) 14);
+            cellStyle.setFont(font);
+
+            cellLabel = row.createCell(0);
+            cellLabel.setCellStyle(cellStyle);
+            cellLabel.setCellValue(fieldName);
+            sheet.addMergedRegion( new CellRangeAddress(i,i,0,2));
+
+        }catch (Exception e){
+            LOGGER.error("An Error occurred while creating cell.",e);
+            throw new ApplicationException("An Error occurred while creating cell.",e);
+        }
+    }
+
+    public void createValueCell(Row row,String fieldValue,Sheet sheet, int i) throws  ApplicationException {
+        Cell cellFieldValue = null;
+        try{
+            LOGGER.info("Inside service function of create Value Cell.");
+            CellStyle cellStyle = sheet.getWorkbook().createCellStyle();
+            Font font = sheet.getWorkbook().createFont();
+            font.setFontHeightInPoints((short) 14);
+            cellStyle.setFont(font);
+
+            cellFieldValue = row.createCell(3);
+            cellFieldValue.setCellStyle(cellStyle);
+            cellFieldValue.setCellValue(fieldValue != null ? fieldValue: "");
+            sheet.addMergedRegion( new CellRangeAddress(i,i,3,5));
+
+        }catch (Exception e){
+            LOGGER.error("An Error occurred while creating value cell",e);
+            throw new ApplicationException("An Error occurred while creating value cell",e);
+        }
+    }
+
+    public void createDateValueCell(Row row,Date fieldValue,Sheet sheet, int i) throws  ApplicationException {
+        Cell cellFieldValue = null;
+        try{
+            LOGGER.info("Inside service function of create date Value Cell.");
+            CellStyle cellStyle = sheet.getWorkbook().createCellStyle();
+            Font font = sheet.getWorkbook().createFont();
+            font.setFontHeightInPoints((short) 14);
+            cellStyle.setFont(font);
+            cellStyle.setDataFormat((short) 14);
+
+            cellFieldValue = row.createCell(3);
+            cellFieldValue.setCellStyle(cellStyle);
+            Date value = fieldValue != null ? fieldValue : new Date();
+            cellFieldValue.setCellValue(value);
+            sheet.addMergedRegion( new CellRangeAddress(i,i,3,5));
+
+        }catch (Exception e){
+            LOGGER.error("An Error occurred while creating date value cell",e);
+            throw new ApplicationException("An Error occurred while creating date value cell",e);
+        }
     }
     /******************************************* END Asset Functions ************************************************/
 

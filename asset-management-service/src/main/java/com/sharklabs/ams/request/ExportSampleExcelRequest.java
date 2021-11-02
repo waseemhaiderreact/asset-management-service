@@ -1,7 +1,10 @@
 package com.sharklabs.ams.request;
 
+import com.sharklabs.ams.field.FieldDTO;
+
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 
 public class ExportSampleExcelRequest {
 
@@ -29,12 +32,12 @@ public class ExportSampleExcelRequest {
 
     private String description;
 
-    private HashMap<String,Object> additionalFields;
+    private List<FieldDTO> additionalFields;
 
     public ExportSampleExcelRequest() {
     }
 
-    public ExportSampleExcelRequest(String name, String category, String modelNumber, String manufacturer, Date purchaseDate, String status, String warrantyUnit, String warranty, String primaryUsageUnit, String secondaryUsageUnit, String consumptionUnit, String description, HashMap<String, Object> additionalFields) {
+    public ExportSampleExcelRequest(String name, String category, String modelNumber, String manufacturer, Date purchaseDate, String status, String warrantyUnit, String warranty, String primaryUsageUnit, String secondaryUsageUnit, String consumptionUnit, String description, List<FieldDTO> additionalFields) {
         this.name = name;
         this.category = category;
         this.modelNumber = modelNumber;
@@ -146,11 +149,11 @@ public class ExportSampleExcelRequest {
         this.description = description;
     }
 
-    public HashMap<String, Object> getAdditionalFields() {
+    public List<FieldDTO> getAdditionalFields() {
         return additionalFields;
     }
 
-    public void setAdditionalFields(HashMap<String, Object> additionalFields) {
+    public void setAdditionalFields(List<FieldDTO> additionalFields) {
         this.additionalFields = additionalFields;
     }
 }
