@@ -1081,6 +1081,29 @@ public class AssetController {
         return responseEntity;
     }
 
+    @PostMapping("/import/excel")
+    public @ResponseBody
+    ResponseEntity importExcelFile(@RequestParam("file") MultipartFile file, @RequestParam String category) {
+        Util util = new Util();
+        ResponseEntity responseEntity = null;
+        try{
+            util.setThreadContextForLogging(scim2Util);
+            LOGGER.info("Request received in controller of import excel file");
+            responseEntity = new ResponseEntity<ImportExcelResponse>(assetService.importExcelSample(file,category),HttpStatus.OK);
+        }catch (AccessDeniedException ade){
+            responseEntity = new ResponseEntity<String>(ade.getMessage(),HttpStatus.FORBIDDEN);
+            ade = null;
+        }catch (Exception e){
+            responseEntity = new ResponseEntity<String>(e.getMessage(),HttpStatus.INTERNAL_SERVER_ERROR);
+            e = null;
+        }finally {
+            LOGGER.info("Returning from controller of import excel file.");
+            util.clearThreadContextForLogging();
+            util = null;
+        }
+        return responseEntity;
+    }
+
     /*******************************************END Asset Functions**********************************************/
 
     /******************************************* Consumption Functions *******************************************/

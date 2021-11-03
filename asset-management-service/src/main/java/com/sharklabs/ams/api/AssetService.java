@@ -1015,6 +1015,10 @@ public class   AssetService {
                 if(!editAssetRequest.getAsset().getStatus().isEmpty())
                     asset.setStatus(editAssetRequest.getAsset().getStatus());
 
+            if(editAssetRequest.getAsset().getAssetFields() != null && editAssetRequest.getAsset().getAssetFields().size() > 0){
+                asset.setAssetFields(editAssetRequest.getAsset().getAssetFields());
+            }
+
             //saving in db
             assetRepository.save(asset);
             response = new EditAssetResponse();
@@ -2205,21 +2209,21 @@ public class   AssetService {
 //            sheet.setColumnWidth(0,256 * 30);
 //            sheet.setColumnWidth(1,256 * 30);
             createHeading(row,sheet,"Asset Info",0);
-            createRow(row,sheet,"Asset Name",request.getName(),false,null,3);
-            createRow(row,sheet,"Category",request.getCategory(),false,null,4);
-            createRow(row,sheet,"Model Number",request.getModelNumber(),false,null,5);
-            createRow(row,sheet,"Manufacturer",request.getManufacturer(),false,null,6);
-            createRow(row,sheet,"Purchase Date",null,true,request.getPurchaseDate(),7);
-            createRow(row,sheet,"Status",request.getStatus(),false,null,8);
-            createRow(row,sheet,"Warranty",request.getWarranty(),false,null,9);
-            createRow(row,sheet,"Warranty Unit",request.getWarrantyUnit(),false,null,10);
-            createRow(row,sheet,"Primary Usage Unit",request.getPrimaryUsageUnit(),false,null,11);
-            createRow(row,sheet,"Secondary Usage Unit",request.getSecondaryUsageUnit(),false,null,12);
-            createRow(row,sheet,"Consumption Unit",request.getConsumptionUnit(),false,null,13);
-            createRow(row,sheet,"Description",request.getDescription(),false,null,14);
+            createRow(row,sheet,"Asset Name",request.getAssetExcelData().getName(),false,null,3);
+            createRow(row,sheet,"Category",request.getAssetExcelData().getCategory(),false,null,4);
+            createRow(row,sheet,"Model Number",request.getAssetExcelData().getModelNumber(),false,null,5);
+            createRow(row,sheet,"Manufacturer",request.getAssetExcelData().getManufacturer(),false,null,6);
+            createRow(row,sheet,"Purchase Date",null,true,request.getAssetExcelData().getPurchaseDate(),7);
+            createRow(row,sheet,"Status",request.getAssetExcelData().getStatus(),false,null,8);
+            createRow(row,sheet,"Warranty",request.getAssetExcelData().getWarranty(),false,null,9);
+            createRow(row,sheet,"Warranty Unit",request.getAssetExcelData().getWarrantyUnit(),false,null,10);
+            createRow(row,sheet,"Primary Usage Unit",request.getAssetExcelData().getPrimaryUsageUnit(),false,null,11);
+            createRow(row,sheet,"Secondary Usage Unit",request.getAssetExcelData().getSecondaryUsageUnit(),false,null,12);
+            createRow(row,sheet,"Consumption Unit",request.getAssetExcelData().getConsumptionUnit(),false,null,13);
+            createRow(row,sheet,"Description",request.getAssetExcelData().getDescription(),false,null,14);
             createHeading(row,sheet,"Additional Details",16);
             int j = 19;
-            for(FieldDTO fieldDTO:request.getAdditionalFields()){
+            for(FieldDTO fieldDTO:request.getAssetExcelData().getAdditionalFields()){
                 createRow(row,sheet,fieldDTO.getFieldLabel(),fieldDTO.getFieldValue(),false,null,j);
                 j += 1;
             }
@@ -2244,6 +2248,7 @@ public class   AssetService {
         return response;
     }
 
+    //purpose of function to create heading for Export Excel
     public void createHeading(Row row,Sheet sheet, String value, int i) throws ApplicationException {
         try{
             LOGGER.info("Inside function of create heading.");
@@ -2266,6 +2271,7 @@ public class   AssetService {
         }
     }
 
+    //purpose of function to create rows for Export Excel
     public void createRow(Row row,Sheet sheet,String fieldName, String fieldValue, boolean isDate, Date date, int i) throws ApplicationException {
         try{
             LOGGER.info("Inside function of create row.");
@@ -2282,6 +2288,7 @@ public class   AssetService {
         }
     }
 
+    //purpose of function to create Labels
     public void createLabelCell(Row row,String fieldName, Sheet sheet, int i) throws ApplicationException {
         Cell cellLabel = null;
         try{
@@ -2303,6 +2310,7 @@ public class   AssetService {
         }
     }
 
+    //purpose of function to create Values
     public void createValueCell(Row row,String fieldValue,Sheet sheet, int i) throws  ApplicationException {
         Cell cellFieldValue = null;
         try{
@@ -2323,6 +2331,7 @@ public class   AssetService {
         }
     }
 
+    //purpose of function of create Date values
     public void createDateValueCell(Row row,Date fieldValue,Sheet sheet, int i) throws  ApplicationException {
         Cell cellFieldValue = null;
         try{
@@ -2344,6 +2353,97 @@ public class   AssetService {
             throw new ApplicationException("An Error occurred while creating date value cell",e);
         }
     }
+
+    //purpose of function of import Excel file
+    public ImportExcelResponse importExcelSample(MultipartFile file, String category) throws AccessDeniedException, ApplicationException{
+        if(!privilegeHandler.hasCreate()){
+            LOGGER.error("Access is Denied");
+            throw new AccessDeniedException();
+        }
+
+        Util util = new Util();
+        ImportExcelResponse response = new ImportExcelResponse();
+        try{
+
+            util.setThreadContextForLogging(scim2Util);
+            LOGGER.info("Inside service function of import excel sample.");
+            InputStream in = file.getInputStream();
+            Workbook workbook = new XSSFWorkbook(in);
+            Sheet assetSheet = workbook.getSheetAt(0);
+            if(!(assetSheet.getRow(0).getCell(0).getCellTypeEnum() == CellType.STRING && assetSheet.getRow(0).getCell(0).getStringCellValue().equalsIgnoreCase("Asset Info"))){
+                LOGGER.info("Invalid Excel Format");
+                response.setResponseIdentifier(FAILURE);
+                throw new ApplicationException("Invalid Excel Format");
+            }
+
+            if(!(assetSheet.getRow(16).getCell(0).getCellTypeEnum() == CellType.STRING && assetSheet.getRow(16).getCell(0).getStringCellValue().equalsIgnoreCase("Additional Details"))){
+                LOGGER.info("Invalid Excel Format");
+                response.setResponseIdentifier(FAILURE);
+                throw new ApplicationException("Invalid Excel Format");
+            }
+            response.setAssetExcelData(new AssetExcelData());
+            for(int i = 3; i < 15; i++){
+                Row row = assetSheet.getRow(i);
+                if(row.getCell(0).getCellTypeEnum() == CellType.STRING && row.getCell(0).getStringCellValue().equalsIgnoreCase("Asset Name")){
+                    response.getAssetExcelData().setName(row.getCell(3).getStringCellValue() != null ? row.getCell(3).getStringCellValue() : "");
+                }else if(row.getCell(0).getCellTypeEnum() == CellType.STRING && row.getCell(0).getStringCellValue().equalsIgnoreCase("Category")){
+                    if(row.getCell(3).getStringCellValue().equalsIgnoreCase(category)){
+                        LOGGER.info("Invalid Excel Format");
+                        response.setResponseIdentifier(FAILURE);
+                        throw new ApplicationException("Invalid Excel Format");
+                    }
+                    response.getAssetExcelData().setCategory(row.getCell(3).getStringCellValue());
+                }else if(row.getCell(0).getCellTypeEnum() == CellType.STRING && row.getCell(0).getStringCellValue().equalsIgnoreCase("Model Number")){
+                    response.getAssetExcelData().setModelNumber(row.getCell(3).getStringCellValue());
+                }else if(row.getCell(0).getCellTypeEnum() == CellType.STRING && row.getCell(0).getStringCellValue().equalsIgnoreCase("Manufacturer")){
+                    response.getAssetExcelData().setManufacturer(row.getCell(3).getStringCellValue());
+                }else if(row.getCell(0).getCellTypeEnum() == CellType.STRING && row.getCell(0).getStringCellValue().equalsIgnoreCase("Purchase Date")){
+                    response.getAssetExcelData().setPurchaseDate(row.getCell(3).getDateCellValue());
+                }else if(row.getCell(0).getCellTypeEnum() == CellType.STRING && row.getCell(0).getStringCellValue().equalsIgnoreCase("Status")){
+                    response.getAssetExcelData().setStatus(row.getCell(3).getStringCellValue());
+                }else if(row.getCell(0).getCellTypeEnum() == CellType.STRING && row.getCell(0).getStringCellValue().equalsIgnoreCase("Warranty")){
+                    response.getAssetExcelData().setWarranty(row.getCell(3).getStringCellValue());
+                }else if(row.getCell(0).getCellTypeEnum() == CellType.STRING && row.getCell(0).getStringCellValue().equalsIgnoreCase("Warranty Unit")){
+                    response.getAssetExcelData().setWarrantyUnit(row.getCell(3).getStringCellValue());
+                }else if(row.getCell(0).getCellTypeEnum() == CellType.STRING && row.getCell(0).getStringCellValue().equalsIgnoreCase("Primary Usage Unit")){
+                    response.getAssetExcelData().setPrimaryUsageUnit(row.getCell(3).getStringCellValue());
+                }else if(row.getCell(0).getCellTypeEnum() == CellType.STRING && row.getCell(0).getStringCellValue().equalsIgnoreCase("Secondary Usage Unit")){
+                    response.getAssetExcelData().setSecondaryUsageUnit(row.getCell(3).getStringCellValue());
+                }else if(row.getCell(0).getCellTypeEnum() == CellType.STRING && row.getCell(0).getStringCellValue().equalsIgnoreCase("Consumption Unit")){
+                    response.getAssetExcelData().setConsumptionUnit(row.getCell(3).getStringCellValue());
+                }else if(row.getCell(0).getCellTypeEnum() == CellType.STRING && row.getCell(0).getStringCellValue().equalsIgnoreCase("Description")){
+                    response.getAssetExcelData().setDescription(row.getCell(3).getStringCellValue());
+                }else{
+                    LOGGER.info("Invalid Excel Format");
+                    response.setResponseIdentifier(FAILURE);
+                    throw new ApplicationException("Invalid Excel Format");
+                }
+            }
+            response.getAssetExcelData().setAdditionalFields(new ArrayList<>());
+            for(int i = 19; i < assetSheet.getLastRowNum() + 1; i++){
+                Row row = assetSheet.getRow(i);
+                if(row.getCell(0).getCellTypeEnum() == CellType.STRING && !row.getCell(0).getStringCellValue().equals("")){
+                    FieldDTO fieldDTO = new FieldDTO();
+                    fieldDTO.setFieldLabel(row.getCell(0).getStringCellValue());
+                    fieldDTO.setFieldValue(row.getCell(3).getStringCellValue());
+                    response.getAssetExcelData().getAdditionalFields().add(fieldDTO);
+                }else{
+                    LOGGER.info("Invalid Excel Format");
+                    response.setResponseIdentifier(FAILURE);
+                    throw new ApplicationException("Invalid Excel Format");
+                }
+            }
+            response.setResponseIdentifier(SUCCESS);
+        }catch (Exception e){
+            response.setResponseIdentifier(FAILURE);
+            LOGGER.info("An Error occurred while importing excel file.",e);
+            throw new ApplicationException("An Error occurred while importing excel file.",e);
+        }finally {
+
+        }
+        return response;
+    }
+
     /******************************************* END Asset Functions ************************************************/
 
     /******************************************* Consumption Functions **********************************************/
