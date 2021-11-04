@@ -2387,7 +2387,7 @@ public class   AssetService {
                 if(row.getCell(0).getCellTypeEnum() == CellType.STRING && row.getCell(0).getStringCellValue().equalsIgnoreCase("Asset Name")){
                     response.getAssetExcelData().setName(row.getCell(3).getStringCellValue() != null ? row.getCell(3).getStringCellValue() : "");
                 }else if(row.getCell(0).getCellTypeEnum() == CellType.STRING && row.getCell(0).getStringCellValue().equalsIgnoreCase("Category")){
-                    if(row.getCell(3).getStringCellValue().equalsIgnoreCase(category)){
+                    if(!row.getCell(3).getStringCellValue().equalsIgnoreCase(category)){
                         LOGGER.info("Invalid Excel Format");
                         response.setResponseIdentifier(FAILURE);
                         throw new ApplicationException("Invalid Excel Format");
@@ -2402,7 +2402,7 @@ public class   AssetService {
                 }else if(row.getCell(0).getCellTypeEnum() == CellType.STRING && row.getCell(0).getStringCellValue().equalsIgnoreCase("Status")){
                     response.getAssetExcelData().setStatus(row.getCell(3).getStringCellValue());
                 }else if(row.getCell(0).getCellTypeEnum() == CellType.STRING && row.getCell(0).getStringCellValue().equalsIgnoreCase("Warranty")){
-                    response.getAssetExcelData().setWarranty(row.getCell(3).getStringCellValue());
+                    response.getAssetExcelData().setWarranty(String.valueOf(row.getCell(3).getNumericCellValue()));
                 }else if(row.getCell(0).getCellTypeEnum() == CellType.STRING && row.getCell(0).getStringCellValue().equalsIgnoreCase("Warranty Unit")){
                     response.getAssetExcelData().setWarrantyUnit(row.getCell(3).getStringCellValue());
                 }else if(row.getCell(0).getCellTypeEnum() == CellType.STRING && row.getCell(0).getStringCellValue().equalsIgnoreCase("Primary Usage Unit")){
