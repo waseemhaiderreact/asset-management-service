@@ -1104,6 +1104,27 @@ public class AssetController {
         return responseEntity;
     }
 
+    @PostMapping("/export/details")
+    public @ResponseBody
+    ResponseEntity exportAssetDetails(@RequestBody ExportAssetDetailRequest request){
+        Util util = new Util();
+        ResponseEntity responseEntity = null;
+        try{
+            util.setThreadContextForLogging(scim2Util);
+            LOGGER.info("Request received in controller of export Asset details: " + convertToJSON(request));
+            responseEntity = new ResponseEntity<ExportSampleExcelResponse>(assetService.exportAssetDetails(request),HttpStatus.OK);
+        }catch (AccessDeniedException ade){
+            responseEntity = new ResponseEntity<String>(ade.getMessage(),HttpStatus.FORBIDDEN);
+        }catch (Exception e){
+            responseEntity = new ResponseEntity<String>(e.getMessage(),HttpStatus.INTERNAL_SERVER_ERROR);
+        }finally {
+            LOGGER.info("Returning from controller of export Asset Details.");
+            util.clearThreadContextForLogging();
+            util = null;
+        }
+        return responseEntity;
+    }
+
     /*******************************************END Asset Functions**********************************************/
 
     /******************************************* Consumption Functions *******************************************/

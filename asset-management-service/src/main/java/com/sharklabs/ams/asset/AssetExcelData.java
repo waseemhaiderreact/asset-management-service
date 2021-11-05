@@ -31,6 +31,10 @@ public class AssetExcelData {
 
     private String description;
 
+    private int cost;
+
+    private String currency;
+
     private List<FieldDTO> additionalFields;
 
     public AssetExcelData() {
@@ -146,6 +150,22 @@ public class AssetExcelData {
 
     public void setDescription(String description) {
         this.description = description;
+    }
+
+    public int getCost() {
+        return cost;
+    }
+
+    public void setCost(int cost) {
+        this.cost = cost;
+    }
+
+    public String getCurrency() {
+        return currency;
+    }
+
+    public void setCurrency(String currency) {
+        this.currency = currency;
     }
 
     public List<FieldDTO> getAdditionalFields() {

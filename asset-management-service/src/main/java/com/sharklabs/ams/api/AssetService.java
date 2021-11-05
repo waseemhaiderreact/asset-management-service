@@ -2264,7 +2264,7 @@ public class   AssetService {
             cell.setCellStyle(cellStyle);
             cell.setCellValue(value);
 
-            sheet.addMergedRegion( new CellRangeAddress(i,i + 1,0,3));
+            sheet.addMergedRegion( new CellRangeAddress(i,i + 1,0,5));
         }catch (Exception e){
             LOGGER.error("An Error occurred while creating heading.",e);
             throw new ApplicationException("An Error occurred while creating heading.",e);
@@ -2442,6 +2442,67 @@ public class   AssetService {
 
         }
         return response;
+    }
+
+    public ExportSampleExcelResponse exportAssetDetails(ExportAssetDetailRequest request) throws AccessDeniedException, ApplicationException{
+        if(!privilegeHandler.hasRead()){
+            LOGGER.error("Access is Denied");
+            throw new AccessDeniedException();
+        }
+        Util util = new Util();
+        ExportSampleExcelResponse response = new ExportSampleExcelResponse();
+        Workbook workbook = new XSSFWorkbook();
+        Sheet sheet = workbook.createSheet("Asset Detail");
+        Row row = null;
+        Cell cell = null;
+        try{
+            util.setThreadContextForLogging(scim2Util);
+            LOGGER.info("Inside service function of export Asset details: " + convertToJSON(request));
+            addAssetBasicInfo(row,sheet,request.getAssetExcelData());
+
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            workbook.write(out);
+            out.close();
+            workbook.close();
+
+            byte [] file = out.toByteArray();
+            response.setResponseIdentifier(SUCCESS);
+            response.setFileName("Asset Details");
+            response.setFile(file);
+            response.setContentLength(file.length);
+        }catch (Exception e){
+
+        }finally {
+
+        }
+        return  response;
+    }
+
+    public void addAssetBasicInfo(Row row, Sheet sheet, AssetExcelData assetExcelData) throws ApplicationException{
+        try{
+            LOGGER.info("Inside function of add Asset Basic info.");
+            createHeading(row,sheet,"Asset Info",0);
+            createRow(row,sheet,"Asset Name",assetExcelData.getName(),false,null,3);
+            createRow(row,sheet,"Model Number",assetExcelData.getModelNumber(),false,null,4);
+            createRow(row,sheet,"Manufacturer",assetExcelData.getManufacturer(),false,null,5);
+            createRow(row,sheet,"Purchase Date",null,true,assetExcelData.getPurchaseDate(),6);
+            createRow(row,sheet,"Status",assetExcelData.getStatus(),false,null,7);
+            createRow(row,sheet,"Warranty",assetExcelData.getWarranty(),false,null,8);
+            createRow(row,sheet,"Primary Usage Unit",assetExcelData.getPrimaryUsageUnit(),false,null,9);
+            createRow(row,sheet,"Secondary Usage Unit",assetExcelData.getSecondaryUsageUnit(),false,null,10);
+            createRow(row,sheet,"Consumption Unit",assetExcelData.getConsumptionUnit(),false,null,11);
+            createRow(row,sheet,"Consumption Unit",assetExcelData.getConsumptionUnit(),false,null,12);
+            createRow(row,sheet,"Description",assetExcelData.getDescription(),false,null,13);
+            createHeading(row,sheet,"Additional Details",15);
+            int j = 18;
+            for(FieldDTO fieldDTO:assetExcelData.getAdditionalFields()){
+                createRow(row,sheet,fieldDTO.getFieldLabel(),fieldDTO.getFieldValue(),false,null,j);
+                j += 1;
+            }
+        }catch (Exception e){
+            LOGGER.error("An Error occurred while adding Asset basic info.",e);
+            throw new ApplicationException("An Error occurred while adding Asset basic info.",e);
+        }
     }
 
     /******************************************* END Asset Functions ************************************************/
