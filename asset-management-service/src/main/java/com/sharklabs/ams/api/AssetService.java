@@ -35,6 +35,7 @@ import com.sharklabs.ams.fact.FactRepository;
 import com.sharklabs.ams.feign.ApsServiceProxy;
 import com.sharklabs.ams.feign.AuthServiceProxy;
 import com.sharklabs.ams.field.Field;
+import com.sharklabs.ams.field.FieldDTO;
 import com.sharklabs.ams.field.FieldRepository;
 import com.sharklabs.ams.fieldtemplate.FieldTemplate;
 import com.sharklabs.ams.fieldtemplate.FieldTemplateRepository;
@@ -47,6 +48,10 @@ import com.sharklabs.ams.inspectiontemplate.InspectionTemplateRepository;
 import com.sharklabs.ams.message.Message;
 import com.sharklabs.ams.message.MessageRepository;
 import com.sharklabs.ams.minimalinfo.MinimalInfo;
+import com.sharklabs.ams.model.assignment.Assignment;
+import com.sharklabs.ams.model.assignment.AssignmentHistory;
+import com.sharklabs.ams.model.issue.Issue;
+import com.sharklabs.ams.model.workorder.WorkOrder;
 import com.sharklabs.ams.page.AssetPage;
 import com.sharklabs.ams.reply.Reply;
 import com.sharklabs.ams.reply.ReplyRepository;
@@ -64,6 +69,9 @@ import com.sharklabs.ams.wallet.*;
 import org.apache.commons.io.IOUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.ss.util.CellRangeAddress;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.stream.annotation.EnableBinding;
@@ -84,9 +92,7 @@ import javax.persistence.PersistenceContext;
 import javax.persistence.criteria.*;
 import javax.sql.DataSource;
 import javax.transaction.Transactional;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
+import java.io.*;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.net.URLEncoder;
@@ -1012,6 +1018,10 @@ public class   AssetService {
             if(editAssetRequest.getAsset().getStatus() != null)
                 if(!editAssetRequest.getAsset().getStatus().isEmpty())
                     asset.setStatus(editAssetRequest.getAsset().getStatus());
+
+            if(editAssetRequest.getAsset().getAssetFields() != null && editAssetRequest.getAsset().getAssetFields().size() > 0){
+                asset.setAssetFields(editAssetRequest.getAsset().getAssetFields());
+            }
 
             //saving in db
             assetRepository.save(asset);
@@ -2181,6 +2191,661 @@ public class   AssetService {
             assetImages = null;
         }
         return response;
+    }
+
+    //purpose of function to export sample excel
+    public ExportSampleExcelResponse exportExcelSample(ExportSampleExcelRequest request) throws ApplicationException,AccessDeniedException {
+
+        //check if user have access read Assets
+        if(!privilegeHandler.hasRead()){
+            LOGGER.error("Access is Denied.");
+            throw new AccessDeniedException();
+        }
+        Util util = new Util();
+        ExportSampleExcelResponse response = new ExportSampleExcelResponse();
+        Workbook workbook = new XSSFWorkbook();
+        Sheet sheet = workbook.createSheet("Asset");
+        Row row = null;
+        Cell cell = null;
+        try{
+            util.setThreadContextForLogging(scim2Util);
+            LOGGER.info("Inside service function export Excel sample. Details: " + convertToJSON(request));
+//            sheet.setColumnWidth(0,256 * 30);
+//            sheet.setColumnWidth(1,256 * 30);
+            createHeading(row,sheet,"Asset Info",0,6);
+            createRow(row,sheet,"Asset Name",request.getAssetExcelData().getName(),false,null,3);
+            createRow(row,sheet,"Category",request.getAssetExcelData().getCategory(),false,null,4);
+            createRow(row,sheet,"Model Number",request.getAssetExcelData().getModelNumber(),false,null,5);
+            createRow(row,sheet,"Manufacturer",request.getAssetExcelData().getManufacturer(),false,null,6);
+            createRow(row,sheet,"Purchase Date",null,true,request.getAssetExcelData().getPurchaseDate(),7);
+            createRow(row,sheet,"Status",request.getAssetExcelData().getStatus(),false,null,8);
+            createRow(row,sheet,"Warranty",request.getAssetExcelData().getWarranty(),false,null,9);
+            createRow(row,sheet,"Warranty Unit",request.getAssetExcelData().getWarrantyUnit(),false,null,10);
+            createRow(row,sheet,"Primary Usage Unit",request.getAssetExcelData().getPrimaryUsageUnit(),false,null,11);
+            createRow(row,sheet,"Secondary Usage Unit",request.getAssetExcelData().getSecondaryUsageUnit(),false,null,12);
+            createRow(row,sheet,"Consumption Unit",request.getAssetExcelData().getConsumptionUnit(),false,null,13);
+            createRow(row,sheet,"Description",request.getAssetExcelData().getDescription(),false,null,14);
+            createHeading(row,sheet,"Additional Details",16,6);
+            int j = 19;
+            for(FieldDTO fieldDTO:request.getAssetExcelData().getAdditionalFields()){
+                createRow(row,sheet,fieldDTO.getFieldLabel(),fieldDTO.getFieldValue(),false,null,j);
+                j += 1;
+            }
+
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            workbook.write(out);
+            out.close();
+            workbook.close();
+
+            byte [] file = out.toByteArray();
+            response.setResponseIdentifier(SUCCESS);
+            response.setFileName("Asset");
+            response.setFile(file);
+            response.setContentLength(file.length);
+        }catch (Exception e){
+            LOGGER.error("An Error occurred while exporting excel sample file.",e);
+        }finally {
+            LOGGER.info("Returning to controller of export excel sample.");
+            util.clearThreadContextForLogging();
+            util = null;
+        }
+        return response;
+    }
+
+    //purpose of function to create heading for Export Excel
+    public void createHeading(Row row,Sheet sheet, String value, int i,int endCol) throws ApplicationException {
+        try{
+            LOGGER.info("Inside function of create heading.");
+            row = sheet.createRow(i);
+            Row row2 = sheet.createRow(i + 1);
+            CellStyle cellStyle = sheet.getWorkbook().createCellStyle();
+            Font font = sheet.getWorkbook().createFont();
+            font.setBold(true);
+            font.setFontHeightInPoints((short) 16);
+            cellStyle.setFont(font);
+            cellStyle.setAlignment(HorizontalAlignment.CENTER);
+            setBorders(cellStyle);
+            cellStyle.setFillForegroundColor(IndexedColors.GREY_25_PERCENT.getIndex());
+            cellStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+            for (int j = 0; j < endCol; j++){
+                Cell cell = row.createCell(j);
+                cell.setCellStyle(cellStyle);
+                Cell cell2 = row2.createCell(j);
+                cell2.setCellStyle(cellStyle);
+                if(j == 0)
+                    cell.setCellValue(value);
+            }
+
+            sheet.addMergedRegion( new CellRangeAddress(i,i + 1,0,endCol - 1));
+        }catch (Exception e){
+            LOGGER.error("An Error occurred while creating heading.",e);
+            throw new ApplicationException("An Error occurred while creating heading.",e);
+        }
+    }
+
+    //purpose of function to create rows for Export Excel
+    public void createRow(Row row,Sheet sheet,String fieldName, String fieldValue, boolean isDate, Date date, int i) throws ApplicationException {
+        try{
+            LOGGER.info("Inside function of create row.");
+            row = sheet.createRow(i);
+            createLabelCell(row,fieldName,sheet,i);
+            if(!isDate){
+                createValueCell(row,fieldValue,sheet,i);
+            }else {
+                createDateValueCell(row,date,sheet,i);
+            }
+        }catch (Exception e){
+            LOGGER.error("An Error occurred while creating row for Asset sheet.",e);
+            throw new ApplicationException("An Error occurred while creating row for Asset sheet.",e);
+        }
+    }
+
+    //purpose of function to create Labels
+    public void createLabelCell(Row row,String fieldName, Sheet sheet, int i) throws ApplicationException {
+        Cell cellLabel = null;
+        try{
+            LOGGER.info("Inside function of create label cell.");
+            CellStyle cellStyle = sheet.getWorkbook().createCellStyle();
+            Font font = sheet.getWorkbook().createFont();
+            font.setBold(true);
+            font.setFontHeightInPoints((short) 14);
+            cellStyle.setFont(font);
+
+            cellLabel = row.createCell(0);
+            cellLabel.setCellStyle(cellStyle);
+            cellLabel.setCellValue(fieldName);
+            sheet.addMergedRegion( new CellRangeAddress(i,i,0,2));
+
+        }catch (Exception e){
+            LOGGER.error("An Error occurred while creating cell.",e);
+            throw new ApplicationException("An Error occurred while creating cell.",e);
+        }
+    }
+
+    //purpose of function to create Values
+    public void createValueCell(Row row,String fieldValue,Sheet sheet, int i) throws  ApplicationException {
+        Cell cellFieldValue = null;
+        try{
+            LOGGER.info("Inside service function of create Value Cell.");
+            CellStyle cellStyle = sheet.getWorkbook().createCellStyle();
+            Font font = sheet.getWorkbook().createFont();
+            font.setFontHeightInPoints((short) 14);
+            cellStyle.setFont(font);
+            cellStyle.setAlignment(HorizontalAlignment.RIGHT);
+
+            cellFieldValue = row.createCell(3);
+            cellFieldValue.setCellStyle(cellStyle);
+            cellFieldValue.setCellValue(fieldValue != null ? fieldValue: "");
+            sheet.addMergedRegion( new CellRangeAddress(i,i,3,5));
+
+        }catch (Exception e){
+            LOGGER.error("An Error occurred while creating value cell",e);
+            throw new ApplicationException("An Error occurred while creating value cell",e);
+        }
+    }
+
+    //purpose of function of create Date values
+    public void createDateValueCell(Row row,Date fieldValue,Sheet sheet, int i) throws  ApplicationException {
+        Cell cellFieldValue = null;
+        try{
+            LOGGER.info("Inside service function of create date Value Cell.");
+            CellStyle cellStyle = sheet.getWorkbook().createCellStyle();
+            Font font = sheet.getWorkbook().createFont();
+            font.setFontHeightInPoints((short) 14);
+            cellStyle.setFont(font);
+            cellStyle.setDataFormat((short) 14);
+            cellStyle.setAlignment(HorizontalAlignment.RIGHT);
+
+            cellFieldValue = row.createCell(3);
+            cellFieldValue.setCellStyle(cellStyle);
+            Date value = fieldValue != null ? fieldValue : new Date();
+            cellFieldValue.setCellValue(value);
+            sheet.addMergedRegion( new CellRangeAddress(i,i,3,5));
+
+        }catch (Exception e){
+            LOGGER.error("An Error occurred while creating date value cell",e);
+            throw new ApplicationException("An Error occurred while creating date value cell",e);
+        }
+    }
+
+    //purpose of function of import Excel file
+    public ImportExcelResponse importExcelSample(MultipartFile file, String category) throws AccessDeniedException, ApplicationException{
+        if(!privilegeHandler.hasCreate()){
+            LOGGER.error("Access is Denied");
+            throw new AccessDeniedException();
+        }
+
+        Util util = new Util();
+        ImportExcelResponse response = new ImportExcelResponse();
+        try{
+
+            util.setThreadContextForLogging(scim2Util);
+            LOGGER.info("Inside service function of import excel sample.");
+            InputStream in = file.getInputStream();
+            Workbook workbook = new XSSFWorkbook(in);
+            Sheet assetSheet = workbook.getSheetAt(0);
+            if(!(assetSheet.getRow(0).getCell(0).getCellTypeEnum() == CellType.STRING && assetSheet.getRow(0).getCell(0).getStringCellValue().equalsIgnoreCase("Asset Info"))){
+                LOGGER.info("Invalid Excel Format");
+                response.setResponseIdentifier(FAILURE);
+                throw new ApplicationException("Invalid Excel Format");
+            }
+
+            if(!(assetSheet.getRow(16).getCell(0).getCellTypeEnum() == CellType.STRING && assetSheet.getRow(16).getCell(0).getStringCellValue().equalsIgnoreCase("Additional Details"))){
+                LOGGER.info("Invalid Excel Format");
+                response.setResponseIdentifier(FAILURE);
+                throw new ApplicationException("Invalid Excel Format");
+            }
+            response.setAssetExcelData(new AssetExcelData());
+            for(int i = 3; i < 15; i++){
+                Row row = assetSheet.getRow(i);
+                if(row.getCell(0).getCellTypeEnum() == CellType.STRING && row.getCell(0).getStringCellValue().equalsIgnoreCase("Asset Name")){
+                    response.getAssetExcelData().setName(row.getCell(3).getStringCellValue() != null ? row.getCell(3).getStringCellValue() : "");
+                }else if(row.getCell(0).getCellTypeEnum() == CellType.STRING && row.getCell(0).getStringCellValue().equalsIgnoreCase("Category")){
+                    if(!row.getCell(3).getStringCellValue().equalsIgnoreCase(category)){
+                        LOGGER.info("Invalid Excel Format");
+                        response.setResponseIdentifier(FAILURE);
+                        throw new ApplicationException("Invalid Excel Format");
+                    }
+                    response.getAssetExcelData().setCategory(row.getCell(3).getStringCellValue());
+                }else if(row.getCell(0).getCellTypeEnum() == CellType.STRING && row.getCell(0).getStringCellValue().equalsIgnoreCase("Model Number")){
+                    response.getAssetExcelData().setModelNumber(row.getCell(3).getStringCellValue());
+                }else if(row.getCell(0).getCellTypeEnum() == CellType.STRING && row.getCell(0).getStringCellValue().equalsIgnoreCase("Manufacturer")){
+                    response.getAssetExcelData().setManufacturer(row.getCell(3).getStringCellValue());
+                }else if(row.getCell(0).getCellTypeEnum() == CellType.STRING && row.getCell(0).getStringCellValue().equalsIgnoreCase("Purchase Date")){
+                    response.getAssetExcelData().setPurchaseDate(row.getCell(3).getDateCellValue());
+                }else if(row.getCell(0).getCellTypeEnum() == CellType.STRING && row.getCell(0).getStringCellValue().equalsIgnoreCase("Status")){
+                    response.getAssetExcelData().setStatus(row.getCell(3).getStringCellValue());
+                }else if(row.getCell(0).getCellTypeEnum() == CellType.STRING && row.getCell(0).getStringCellValue().equalsIgnoreCase("Warranty")){
+                    response.getAssetExcelData().setWarranty(String.valueOf(row.getCell(3).getNumericCellValue()));
+                }else if(row.getCell(0).getCellTypeEnum() == CellType.STRING && row.getCell(0).getStringCellValue().equalsIgnoreCase("Warranty Unit")){
+                    response.getAssetExcelData().setWarrantyUnit(row.getCell(3).getStringCellValue());
+                }else if(row.getCell(0).getCellTypeEnum() == CellType.STRING && row.getCell(0).getStringCellValue().equalsIgnoreCase("Primary Usage Unit")){
+                    response.getAssetExcelData().setPrimaryUsageUnit(row.getCell(3).getStringCellValue());
+                }else if(row.getCell(0).getCellTypeEnum() == CellType.STRING && row.getCell(0).getStringCellValue().equalsIgnoreCase("Secondary Usage Unit")){
+                    response.getAssetExcelData().setSecondaryUsageUnit(row.getCell(3).getStringCellValue());
+                }else if(row.getCell(0).getCellTypeEnum() == CellType.STRING && row.getCell(0).getStringCellValue().equalsIgnoreCase("Consumption Unit")){
+                    response.getAssetExcelData().setConsumptionUnit(row.getCell(3).getStringCellValue());
+                }else if(row.getCell(0).getCellTypeEnum() == CellType.STRING && row.getCell(0).getStringCellValue().equalsIgnoreCase("Description")){
+                    response.getAssetExcelData().setDescription(row.getCell(3).getStringCellValue());
+                }else{
+                    LOGGER.info("Invalid Excel Format");
+                    response.setResponseIdentifier(FAILURE);
+                    throw new ApplicationException("Invalid Excel Format");
+                }
+            }
+            response.getAssetExcelData().setAdditionalFields(new ArrayList<>());
+            for(int i = 19; i < assetSheet.getLastRowNum() + 1; i++){
+                Row row = assetSheet.getRow(i);
+                if(row.getCell(0).getCellTypeEnum() == CellType.STRING && !row.getCell(0).getStringCellValue().equals("")){
+                    FieldDTO fieldDTO = new FieldDTO();
+                    fieldDTO.setFieldLabel(row.getCell(0).getStringCellValue());
+                    fieldDTO.setFieldValue(row.getCell(3).getStringCellValue());
+                    response.getAssetExcelData().getAdditionalFields().add(fieldDTO);
+                }else{
+                    LOGGER.info("Invalid Excel Format");
+                    response.setResponseIdentifier(FAILURE);
+                    throw new ApplicationException("Invalid Excel Format");
+                }
+            }
+            response.setResponseIdentifier(SUCCESS);
+        }catch (Exception e){
+            response.setResponseIdentifier(FAILURE);
+            LOGGER.info("An Error occurred while importing excel file.",e);
+            throw new ApplicationException("An Error occurred while importing excel file.",e);
+        }finally {
+
+        }
+        return response;
+    }
+
+    //purpose of function to export Asset Details
+    public ExportSampleExcelResponse exportAssetDetails(ExportAssetDetailRequest request) throws AccessDeniedException, ApplicationException{
+        if(!privilegeHandler.hasRead()){
+            LOGGER.error("Access is Denied");
+            throw new AccessDeniedException();
+        }
+        Util util = new Util();
+        ExportSampleExcelResponse response = new ExportSampleExcelResponse();
+        Workbook workbook = new XSSFWorkbook();
+        Sheet sheet = workbook.createSheet("Asset Detail");
+        Row row = null;
+        Cell cell = null;
+        int lastIndex = 0; // purpose to get last created row index in Excel
+        try{
+            util.setThreadContextForLogging(scim2Util);
+            LOGGER.info("Inside service function of export Asset details: " + convertToJSON(request));
+            lastIndex = addAssetBasicInfo(row,sheet,request.getAssetExcelData(),lastIndex);
+            lastIndex = addAssignmentInfo(row,sheet,request.getAssignments(),lastIndex);
+            lastIndex = addAssignmentHistoryInfo(row,sheet,request.getAssignmentHistories(),lastIndex);
+            lastIndex = addAssetIssuesInfo(row,sheet,request.getIssues(),lastIndex);
+            lastIndex = addAssetWorkOrdersInfo(row,sheet,request.getWorkOrders(),lastIndex);
+            lastIndex = addAssetConsumptionsInfo(row,sheet,request.getConsumptions(),lastIndex);
+            addAssetUsagesInfo(row,sheet,request.getUsages(),lastIndex,request.getAssetExcelData().getPrimaryUsageUnit(),request.getAssetExcelData().getSecondaryUsageUnit());
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            workbook.write(out);
+            out.close();
+            workbook.close();
+
+            byte [] file = out.toByteArray();
+            response.setResponseIdentifier(SUCCESS);
+            response.setFileName("Asset Details");
+            response.setFile(file);
+            response.setContentLength(file.length);
+        }catch (Exception e){
+
+        }finally {
+
+        }
+        return  response;
+    }
+
+    //purpose of function to set borders around cells
+    public void setBorders(CellStyle cellStyle) throws ApplicationException{
+        try{
+            LOGGER.info("Inside service function of set borders.");
+            cellStyle.setBorderBottom(BorderStyle.THIN);
+            cellStyle.setBorderTop(BorderStyle.THIN);
+            cellStyle.setBorderLeft(BorderStyle.THIN);
+            cellStyle.setBorderRight(BorderStyle.THIN);
+            cellStyle.setLeftBorderColor(IndexedColors.BLACK.getIndex());
+            cellStyle.setRightBorderColor(IndexedColors.BLACK.getIndex());
+            cellStyle.setTopBorderColor(IndexedColors.BLACK.getIndex());
+            cellStyle.setBottomBorderColor(IndexedColors.BLACK.getIndex());
+        }catch (Exception e){
+            LOGGER.error("An Error occurred while settings borders.",e);
+            throw new ApplicationException("An Error occurred while settings borders.",e);
+        }
+    }
+
+    //purpose of function to create headers row for table type data
+    public void createHeadersRow(Row row, Sheet sheet, String [] headerRow, int lastIndex) throws ApplicationException {
+        try{
+            LOGGER.info("Inside function of create headers row.");
+            row = sheet.createRow(lastIndex);
+            CellStyle cellStyle = sheet.getWorkbook().createCellStyle();
+            Font font = sheet.getWorkbook().createFont();
+            font.setBold(true);
+            font.setFontHeightInPoints((short) 14);
+            cellStyle.setAlignment(HorizontalAlignment.CENTER);
+            cellStyle.setFont(font);
+            setBorders(cellStyle);
+            cellStyle.setFillForegroundColor(IndexedColors.GREY_25_PERCENT.getIndex());
+            cellStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+            int cellIndex = 0;
+            for(int i = 0; i < headerRow.length; i++){
+                Cell cell = row.createCell(cellIndex * 3);
+                cell.setCellValue(headerRow[i]);
+                cell.setCellStyle(cellStyle);
+                Cell blankCell = row.createCell((cellIndex * 3) + 1);
+                blankCell.setCellStyle(cellStyle);
+                Cell blankCell2 = row.createCell((cellIndex * 3) + 2);
+                blankCell2.setCellStyle(cellStyle);
+                sheet.addMergedRegion(new CellRangeAddress(lastIndex,lastIndex,i*3,(i * 3) + 2));
+                cellIndex++;
+            }
+        }catch (Exception e){
+            LOGGER.error("An Error occurred while creating headers row.",e);
+            throw new ApplicationException("An Error occurred while creating headers row.",e);
+        }
+    }
+
+    //purpose of function to create string type cells style
+    public CellStyle createStringCellStyle(Sheet sheet) throws ApplicationException{
+        CellStyle stringStyle = null;
+        try{
+            LOGGER.info("Inside function of create string cell style");
+            Font font = sheet.getWorkbook().createFont();
+            font.setFontHeightInPoints((short) 14);
+            stringStyle = sheet.getWorkbook().createCellStyle();
+            stringStyle.setAlignment(HorizontalAlignment.RIGHT);
+            stringStyle.setFont(font);
+        }catch (Exception e){
+            LOGGER.error("An Error occurred while creating string cell style.",e);
+            throw new ApplicationException("An Error occurred while creating string cell style.",e);
+        }
+        return stringStyle;
+    }
+
+    //purpose of function to create date type cells style
+    public CellStyle createDateCellStyle(Sheet sheet) throws ApplicationException{
+        CellStyle dateStyle = null;
+        try{
+            LOGGER.info("Inside function of create date cell style.");
+            Font font = sheet.getWorkbook().createFont();
+            font.setFontHeightInPoints((short) 14);
+            dateStyle = sheet.getWorkbook().createCellStyle();
+            dateStyle.setFont(font);
+            dateStyle.setAlignment(HorizontalAlignment.RIGHT);
+            dateStyle.setDataFormat((short) 14);
+        }catch (Exception e){
+            LOGGER.error("An error occurred while creating date cell style.",e);
+            throw new ApplicationException("An error occurred while creating date cell style.",e);
+        }
+        return dateStyle;
+    }
+
+    //purpose of function to add Asset Usages info
+    public int addAssetUsagesInfo(Row row, Sheet sheet, List<com.sharklabs.ams.model.usage.Usage> usages, int lastIndex, String primaryUnit, String secondaryUnit) throws ApplicationException{
+        try{
+            LOGGER.info("Inside function of add Asset usages info. Details: " + convertToJSON(usages));
+            String [] headersRow = {"Created At","Primary Usage ("+primaryUnit+")" ,"Secondary Usage ("+secondaryUnit+")"};
+            createHeading(row,sheet,"Usages",lastIndex,headersRow.length * 3);
+            createHeadersRow(row,sheet,headersRow,lastIndex + 2);
+            lastIndex += 3;
+            CellStyle cellStyle = createStringCellStyle(sheet);
+            CellStyle dateStyle = createDateCellStyle(sheet);
+            for(com.sharklabs.ams.model.usage.Usage usage: usages){
+                row = sheet.createRow(lastIndex);
+                Cell createdAtCell = row.createCell(0);
+                createdAtCell.setCellValue(usage.getDate());
+                createdAtCell.setCellStyle(dateStyle);
+                sheet.addMergedRegion(new CellRangeAddress(lastIndex,lastIndex,0,2));
+                Cell primaryUsageCell = row.createCell(3);
+                primaryUsageCell.setCellStyle(cellStyle);
+                primaryUsageCell.setCellValue(usage.getValue());
+                sheet.addMergedRegion(new CellRangeAddress(lastIndex,lastIndex,3,5));
+                Cell secondaryValueCell = row.createCell(6);
+                secondaryValueCell.setCellValue(usage.getSecondaryValue());
+                secondaryValueCell.setCellStyle(cellStyle);
+                sheet.addMergedRegion(new CellRangeAddress(lastIndex,lastIndex,6,8));
+                lastIndex++;
+            }
+        }catch (Exception e){
+            LOGGER.info("An Error occurred while adding Asset usages info.",e);
+            throw new ApplicationException("An Error occurred while adding Asset usages info.",e);
+        }
+        return lastIndex += 1;
+    }
+
+    //adding Asset consumption info to Excel file
+    public int addAssetConsumptionsInfo(Row row, Sheet sheet, List<com.sharklabs.ams.model.consumption.Consumption> consumptions, int lastIndex) throws ApplicationException{
+        try{
+            LOGGER.info("Inside service function add Asset consumption info. Details: " + convertToJSON(consumptions));
+            String [] headersRow = {"Created At","Consumption Value","Consumption Unit"};
+            createHeading(row,sheet,"Consumptions",lastIndex,headersRow.length * 3);
+            createHeadersRow(row,sheet,headersRow,lastIndex + 2);
+            lastIndex += 3;
+            CellStyle cellStyle = createStringCellStyle(sheet);
+            CellStyle dateStyle = createDateCellStyle(sheet);
+            for(com.sharklabs.ams.model.consumption.Consumption consumption:consumptions){
+                row = sheet.createRow(lastIndex);
+                Cell createdAtCell = row.createCell(0);
+                createdAtCell.setCellStyle(dateStyle);
+                createdAtCell.setCellValue(consumption.getDate());
+                sheet.addMergedRegion(new CellRangeAddress(lastIndex,lastIndex,0,2));
+                Cell consumptionValueCell = row.createCell(3);
+                consumptionValueCell.setCellStyle(cellStyle);
+                consumptionValueCell.setCellValue(consumption.getConsumptionValue());
+                sheet.addMergedRegion(new CellRangeAddress(lastIndex,lastIndex,3,5));
+                Cell consumptionUnit = row.createCell(6);
+                consumptionUnit.setCellStyle(cellStyle);
+                consumptionUnit.setCellValue(consumption.getUnit());
+                sheet.addMergedRegion(new CellRangeAddress(lastIndex,lastIndex,6,8));
+                lastIndex++;
+            }
+        }catch (Exception e){
+            LOGGER.error("An Error occurred while adding consumption info.",e);
+            throw new ApplicationException("An Error occurred while adding consumption info.",e);
+        }
+        return lastIndex += 1;
+    }
+
+    //adding Asset Work orders info to Excel file
+    public int addAssetWorkOrdersInfo(Row row, Sheet sheet, List<WorkOrder> workOrders, int lastIndex) throws ApplicationException{
+        try{
+            LOGGER.info("Inside function of add Asst work Orders info. Details: " + convertToJSON(workOrders));
+            String [] headersRow = {"Work Order #","Asset Name","Issues","Created At","Priority","Assigned To","Status"};
+            createHeading(row,sheet,"Work Orders",lastIndex,headersRow.length * 3);
+            createHeadersRow(row,sheet,headersRow,lastIndex + 2);
+            lastIndex += 3;
+            CellStyle cellStyle = createStringCellStyle(sheet);
+            CellStyle dateStyle = createDateCellStyle(sheet);
+            for(WorkOrder workOrder: workOrders){
+                row = sheet.createRow(lastIndex);
+                Cell workOrderCell = row.createCell(0);
+                workOrderCell.setCellStyle(cellStyle);
+                workOrderCell.setCellValue(workOrder.getWorkOrderNumber());
+                sheet.addMergedRegion(new CellRangeAddress(lastIndex,lastIndex,0,2));
+                Cell assetName = row.createCell(3);
+                assetName.setCellValue(workOrder.getAssetName());
+                assetName.setCellStyle(cellStyle);
+                sheet.addMergedRegion(new CellRangeAddress(lastIndex,lastIndex,3,5));
+                Cell issues = row.createCell(6);
+                issues.setCellStyle(cellStyle);
+                issues.setCellValue(workOrder.getIssues());
+                sheet.addMergedRegion(new CellRangeAddress(lastIndex,lastIndex,6,8));
+                Cell createdAt = row.createCell(9);
+                createdAt.setCellValue(workOrder.getCreatedAt());
+                createdAt.setCellStyle(dateStyle);
+                sheet.addMergedRegion(new CellRangeAddress(lastIndex,lastIndex,9,11));
+                Cell priority = row.createCell(12);
+                priority.setCellStyle(cellStyle);
+                priority.setCellValue(workOrder.getPriority());
+                sheet.addMergedRegion(new CellRangeAddress(lastIndex,lastIndex,12,15));
+                Cell assignedTo = row.createCell(16);
+                assignedTo.setCellStyle(cellStyle);
+                assignedTo.setCellValue(workOrder.getAssignedTo());
+                sheet.addMergedRegion(new CellRangeAddress(lastIndex,lastIndex,16,18));
+                Cell status = row.createCell(19);
+                status.setCellValue(workOrder.getStatus());
+                status.setCellStyle(cellStyle);
+                sheet.addMergedRegion(new CellRangeAddress(lastIndex,lastIndex,19,21));
+                lastIndex++;
+            }
+        }catch (Exception e){
+            LOGGER.error("An Error occurred while adding Asset work orders info.",e);
+            throw new ApplicationException("An Error occurred while adding Asset work orders info.",e);
+        }
+        return lastIndex += 1;
+    }
+
+    //adding Asset Issues info to Excel file
+    public int addAssetIssuesInfo(Row row, Sheet sheet, List<Issue> issues, int lastIndex) throws ApplicationException{
+        try{
+            LOGGER.info("Inside function of add Asset issues info. Details: " + convertToJSON(issues));
+            String [] headersRow = {"Issue #","Name","Status","Reported At","Work Order #","Reported By"};
+            createHeading(row,sheet,"Issues",lastIndex,headersRow.length * 3);
+            createHeadersRow(row,sheet,headersRow,lastIndex + 2);
+            lastIndex += 3;
+            CellStyle cellStyle = createStringCellStyle(sheet);
+            CellStyle dateStyle = createDateCellStyle(sheet);
+            for(Issue issue:issues){
+                row = sheet.createRow(lastIndex);
+                Cell issueNumCell = row.createCell(0);
+                issueNumCell.setCellStyle(cellStyle);
+                issueNumCell.setCellValue(issue.getIssueNumber());
+                sheet.addMergedRegion(new CellRangeAddress(lastIndex,lastIndex,0,2));
+                Cell nameCell = row.createCell(3);
+                nameCell.setCellValue(issue.getIssueName());
+                nameCell.setCellStyle(cellStyle);
+                sheet.addMergedRegion(new CellRangeAddress(lastIndex,lastIndex,3,5));
+                Cell statusCell = row.createCell(6);
+                statusCell.setCellValue(issue.getStatus());
+                statusCell.setCellStyle(cellStyle);
+                sheet.addMergedRegion(new CellRangeAddress(lastIndex,lastIndex,6,8));
+                Cell reportedAtCell = row.createCell(9);
+                reportedAtCell.setCellStyle(dateStyle);
+                reportedAtCell.setCellValue(issue.getReportedAt());
+                sheet.addMergedRegion(new CellRangeAddress(lastIndex,lastIndex,9,11));
+                Cell workOrderCell = row.createCell(12);
+                workOrderCell.setCellStyle(cellStyle);
+                workOrderCell.setCellValue(issue.getWorkOrderNumber());
+                sheet.addMergedRegion(new CellRangeAddress(lastIndex,lastIndex,12,14));
+                Cell reportedByCell = row.createCell(15);
+                reportedByCell.setCellStyle(cellStyle);
+                reportedByCell.setCellValue(issue.getReportedBy());
+                sheet.addMergedRegion(new CellRangeAddress(lastIndex,lastIndex,15,17));
+                lastIndex++;
+            }
+        }catch (Exception e){
+            LOGGER.error("An Error occurred while add Asset Issues info.",e);
+            throw new ApplicationException("An Error occurred while add Asset Issues info.",e);
+        }
+        return lastIndex += 1;
+    }
+
+    //adding Assignment History into to Excel file
+    public int addAssignmentHistoryInfo(Row row, Sheet sheet, List<AssignmentHistory> assignmentHistories, int lastIndex) throws ApplicationException{
+        try{
+            LOGGER.info("Inside function of adding assignment history info. Details: " + convertToJSON(assignmentHistories));
+            String [] headersRow = {"Name","Duration","Start Date","Ending Date"};
+            createHeading(row,sheet,"Assignment History",lastIndex,headersRow.length * 3);
+            createHeadersRow(row,sheet,headersRow,lastIndex + 2);
+            lastIndex += 3;
+            CellStyle cellStyle = createStringCellStyle(sheet);
+            CellStyle dateStyle = createDateCellStyle(sheet);
+            for(AssignmentHistory assignmentHistory: assignmentHistories){
+                row = sheet.createRow(lastIndex);
+                Cell nameCell = row.createCell(0);
+                nameCell.setCellStyle(cellStyle);
+                nameCell.setCellValue(assignmentHistory.getName());
+                sheet.addMergedRegion(new CellRangeAddress(lastIndex,lastIndex,0,2));
+                Cell durationCell = row.createCell(3);
+                durationCell.setCellValue(assignmentHistory.getDuration());
+                durationCell.setCellStyle(cellStyle);
+                sheet.addMergedRegion(new CellRangeAddress(lastIndex,lastIndex,3,5));
+                Cell startDateCell = row.createCell(6);
+                startDateCell.setCellValue(assignmentHistory.getStartDate());
+                startDateCell.setCellStyle(dateStyle);
+                sheet.addMergedRegion(new CellRangeAddress(lastIndex,lastIndex,6,8));
+                Cell endDateCell = row.createCell(9);
+                endDateCell.setCellStyle(dateStyle);
+                endDateCell.setCellValue(assignmentHistory.getEndDate());
+                sheet.addMergedRegion(new CellRangeAddress(lastIndex,lastIndex,9,11));
+                lastIndex++;
+            }
+        }catch (Exception e){
+            LOGGER.error("An Error occurred while adding assignment history info.",e);
+            throw new ApplicationException("An Error occurred while adding assignment history info.",e);
+        }
+        return lastIndex += 1;
+    }
+
+    //adding Assignment Info to Excel file
+    public int addAssignmentInfo(Row row, Sheet sheet, List<Assignment> assignments, int lastIndex) throws ApplicationException {
+        try{
+            LOGGER.info("Inside service function of add assignment info. Details: " + convertToJSON(assignments));
+            String [] headersRow = {"Name","Started Date","Status","No.of Time Assigned"};
+            createHeading(row,sheet,"Assignments",lastIndex,headersRow.length * 3);
+            createHeadersRow(row,sheet,headersRow,lastIndex + 2);
+            lastIndex += 3;
+            CellStyle cellStyle = createStringCellStyle(sheet);
+            CellStyle dateStyle = createDateCellStyle(sheet);
+            for(Assignment assignment: assignments) {
+                row = sheet.createRow(lastIndex);
+                Cell nameCell = row.createCell(0);
+                nameCell.setCellStyle(cellStyle);
+                nameCell.setCellValue(assignment.getName());
+                sheet.addMergedRegion(new CellRangeAddress(lastIndex, lastIndex, 0, 2));
+                Cell dateCell = row.createCell(3);
+                dateCell.setCellStyle(dateStyle);
+                dateCell.setCellValue(assignment.getStartDate());
+                sheet.addMergedRegion(new CellRangeAddress(lastIndex, lastIndex, 3, 5));
+                Cell statusCell = row.createCell(6);
+                statusCell.setCellStyle(cellStyle);
+                statusCell.setCellValue(assignment.getStatus());
+                sheet.addMergedRegion(new CellRangeAddress(lastIndex, lastIndex, 6, 8));
+                Cell assignedStatus = row.createCell(9);
+                assignedStatus.setCellValue(assignment.getAssigned());
+                assignedStatus.setCellStyle(cellStyle);
+                sheet.addMergedRegion(new CellRangeAddress(lastIndex, lastIndex, 9, 11));
+                lastIndex++;
+            }
+        }catch (Exception e){
+            LOGGER.error("An Error occurred while add assignment info.",e);
+            throw new ApplicationException("An Error occurred while add assignment info.",e);
+        }
+        return lastIndex += 1;
+    }
+
+    //adding Asset basic info
+    public int addAssetBasicInfo(Row row, Sheet sheet, AssetExcelData assetExcelData, int lastIndex) throws ApplicationException{
+        try{
+            LOGGER.info("Inside function of add Asset Basic info. Details: " + convertToJSON(assetExcelData));
+            createHeading(row,sheet,"Asset Info",0,6);
+            createRow(row,sheet,"Asset Name",assetExcelData.getName(),false,null,2);
+            createRow(row,sheet,"Model Number",assetExcelData.getModelNumber(),false,null,3);
+            createRow(row,sheet,"Manufacturer",assetExcelData.getManufacturer(),false,null,4);
+            createRow(row,sheet,"Purchase Date",null,true,assetExcelData.getPurchaseDate(),5);
+            createRow(row,sheet,"Status",assetExcelData.getStatus(),false,null,6);
+            createRow(row,sheet,"Warranty",assetExcelData.getWarranty(),false,null,7);
+            createRow(row,sheet,"Primary Usage Unit",assetExcelData.getPrimaryUsageUnit(),false,null,8);
+            createRow(row,sheet,"Secondary Usage Unit",assetExcelData.getSecondaryUsageUnit(),false,null,9);
+            createRow(row,sheet,"Consumption Unit",assetExcelData.getConsumptionUnit(),false,null,10);
+            createRow(row,sheet,"Consumption Unit",assetExcelData.getConsumptionUnit(),false,null,11);
+            createRow(row,sheet,"Description",assetExcelData.getDescription(),false,null,12);
+            createHeading(row,sheet,"Additional Details",14,6);
+            int j = 16;
+            for(FieldDTO fieldDTO:assetExcelData.getAdditionalFields()){
+                createRow(row,sheet,fieldDTO.getFieldLabel(),fieldDTO.getFieldValue(),false,null,j);
+                j += 1;
+            }
+            lastIndex = j + 1;
+        }catch (Exception e){
+            LOGGER.error("An Error occurred while adding Asset basic info.",e);
+            throw new ApplicationException("An Error occurred while adding Asset basic info.",e);
+        }
+        return lastIndex;
     }
 
     /******************************************* END Asset Functions ************************************************/
