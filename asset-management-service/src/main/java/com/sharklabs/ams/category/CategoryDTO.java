@@ -1,6 +1,10 @@
 package com.sharklabs.ams.category;
 
+import com.sharklabs.ams.field.Field;
+
 import java.io.Serializable;
+import java.util.List;
+import java.util.Set;
 
 public class CategoryDTO implements Serializable {
 
@@ -31,4 +35,5 @@ public class CategoryDTO implements Serializable {
     public void setName(String name) {
         this.name = name;
     }
+
 }
