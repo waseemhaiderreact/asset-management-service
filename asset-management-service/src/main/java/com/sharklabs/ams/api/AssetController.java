@@ -434,6 +434,31 @@ public class AssetController {
 
     /*******************************************END Field Template Functions*****************************************/
 
+    /*******************************************Import Template Functions*****************************************/
+
+    @GetMapping("/import/templates")
+    public @ResponseBody
+    ResponseEntity getListOfImportTemplateByUserUUIDAndTenantUUID(@RequestParam String userUUID, @RequestParam String tenantUUID){
+        Util util = new Util();
+        ResponseEntity responseEntity = null;
+        try{
+            util.setThreadContextForLogging(scim2Util);
+            LOGGER.info("Request received in get list of import template by user uuid: " + userUUID + " and tenant uuid: " + tenantUUID);
+            responseEntity = new ResponseEntity<ImportTemplateListResponse>(assetService.getListOfImportTemplateByUserUUIDAndTenantUUID(userUUID,tenantUUID),HttpStatus.OK);
+        } catch (AccessDeniedException ade){
+            responseEntity = new ResponseEntity<String>(ade.getMessage(),HttpStatus.FORBIDDEN);
+        } catch (Exception e){
+            responseEntity = new ResponseEntity<String>(e.getMessage(),HttpStatus.INTERNAL_SERVER_ERROR);
+        }finally {
+            LOGGER.info("Returning from controller of get list of import template by user uuid and tenant uuid.");
+            util.clearThreadContextForLogging();
+            util = null;
+        }
+        return responseEntity;
+    }
+
+    /*******************************************Import Template Functions*****************************************/
+
     /*******************************************Asset Functions**********************************************/
     //add asset AMS_UC_10
     @RequestMapping(method = RequestMethod.POST,value="")

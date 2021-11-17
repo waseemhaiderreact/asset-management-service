@@ -42,6 +42,8 @@ import com.sharklabs.ams.fieldtemplate.FieldTemplate;
 import com.sharklabs.ams.fieldtemplate.FieldTemplateRepository;
 import com.sharklabs.ams.fieldtemplate.FieldTemplateResponse;
 import com.sharklabs.ams.imagevoice.ImageVoiceRepository;
+import com.sharklabs.ams.importtemplate.ImportTemplate;
+import com.sharklabs.ams.importtemplate.ImportTemplateRepository;
 import com.sharklabs.ams.inspectionitem.InspectionItem;
 import com.sharklabs.ams.inspectionitemcategory.InspectionItemCategory;
 import com.sharklabs.ams.inspectiontemplate.InspectionTemplate;
@@ -159,6 +161,9 @@ public class   AssetService {
 
     @Autowired
     AuthServiceProxy authServiceProxy;
+
+    @Autowired
+    ImportTemplateRepository importTemplateRepository;
 
     private WalletRequestModel walletRequestModel=null;
     @PersistenceContext
@@ -865,6 +870,36 @@ public class   AssetService {
         return response;
     }
     /*******************************************END Field Template Functions*************************************/
+
+    /*******************************************Import Template Functions*************************************/
+
+    public ImportTemplateListResponse getListOfImportTemplateByUserUUIDAndTenantUUID(String userUUID, String tenantUUID) throws ApplicationException,AccessDeniedException{
+        if(!privilegeHandler.hasRead()){
+            LOGGER.error("Access is Denied.");
+            throw new AccessDeniedException();
+        }
+        Util util = new Util();
+        ImportTemplateListResponse response = new ImportTemplateListResponse();
+        try{
+            util.setThreadContextForLogging(scim2Util);
+            LOGGER.info("Inside service function of get list of import templates by user uuid: " + userUUID + " and tenantUUID: " + tenantUUID);
+            List<ImportTemplate> importTemplates = importTemplateRepository.findByTenantUUIDAndUserUUID(tenantUUID,userUUID);
+            response.setImportTemplates(importTemplates);
+            response.setResponseIdentifier(SUCCESS);
+        }catch (Exception e){
+            response.setResponseIdentifier(FAILURE);
+            LOGGER.error("An Error occurred while getting list of import template by user uuid and tenant uuid.",e);
+            throw new ApplicationException("An Error occurred while getting list of import template by user uuid and tenant uuid.",e);
+        }finally {
+            LOGGER.info("Returning from controller of get list of import template by user uuid and tenant uuid.");
+            util.clearThreadContextForLogging();
+            util = null;
+        }
+        return response;
+    }
+
+    /*******************************************Import Template Functions*************************************/
+
 
     /******************************************* Asset Functions ************************************************/
 
