@@ -1,21 +1,21 @@
 package com.sharklabs.ams.response;
 
-import com.sharklabs.ams.field.FieldDetailedDTO;
+import com.sharklabs.ams.category.CategoryFieldDTO;
 
 import java.util.List;
 
 public class CategoriesFieldsListResponse {
 
-    private List<FieldDetailedDTO> fieldDetailedDTOS;
+    private List<CategoryFieldDTO> categoryFieldDTOS;
 
     private String responseIdentifier;
 
-    public List<FieldDetailedDTO> getFieldDetailedDTOS() {
-        return fieldDetailedDTOS;
+    public List<CategoryFieldDTO> getCategoryFieldDTOS() {
+        return categoryFieldDTOS;
     }
 
-    public void setFieldDetailedDTOS(List<FieldDetailedDTO> fieldDetailedDTOS) {
-        this.fieldDetailedDTOS = fieldDetailedDTOS;
+    public void setCategoryFieldDTOS(List<CategoryFieldDTO> categoryFieldDTOS) {
+        this.categoryFieldDTOS = categoryFieldDTOS;
     }
 
     public String getResponseIdentifier() {

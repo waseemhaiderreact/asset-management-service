@@ -289,8 +289,8 @@ public class AssetController {
         ResponseEntity responseEntity = null;
         try{
             util.setThreadContextForLogging(scim2Util);
-            LOGGER.info("Request received in get categories fields list by uuid: " + uuid);
-            responseEntity = new ResponseEntity<CategoriesFieldsListResponse>(assetService.getCategoriesFieldsListByUUID(uuid),HttpStatus.OK);
+            LOGGER.info("Request received in get categories fields list by tenant uuid: " + uuid);
+            responseEntity = new ResponseEntity<CategoriesFieldsListResponse>(assetService.getCategoriesFieldsListByTenantUUID(uuid),HttpStatus.OK);
         }catch (AccessDeniedException ae){
             responseEntity = new ResponseEntity<String>(ae.getMessage(),HttpStatus.FORBIDDEN);
         }catch (Exception e){

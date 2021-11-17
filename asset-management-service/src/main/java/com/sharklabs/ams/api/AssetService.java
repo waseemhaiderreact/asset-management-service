@@ -19,6 +19,7 @@ import com.sharklabs.ams.assetfield.AssetFieldRepository;
 import com.sharklabs.ams.attachment.Attachment;
 import com.sharklabs.ams.attachment.AttachmentRepository;
 import com.sharklabs.ams.category.Category;
+import com.sharklabs.ams.category.CategoryFieldDTO;
 import com.sharklabs.ams.category.CategoryRepository;
 import com.sharklabs.ams.consumption.Consumption;
 import com.sharklabs.ams.consumption.ConsumptionRepository;
@@ -36,7 +37,6 @@ import com.sharklabs.ams.feign.ApsServiceProxy;
 import com.sharklabs.ams.feign.AuthServiceProxy;
 import com.sharklabs.ams.field.Field;
 import com.sharklabs.ams.field.FieldDTO;
-import com.sharklabs.ams.field.FieldDetailedDTO;
 import com.sharklabs.ams.field.FieldRepository;
 import com.sharklabs.ams.fieldtemplate.FieldTemplate;
 import com.sharklabs.ams.fieldtemplate.FieldTemplateRepository;
@@ -647,7 +647,7 @@ public class   AssetService {
         return response;
     }
 
-    public  CategoriesFieldsListResponse getCategoriesFieldsListByUUID(String uuid) throws ApplicationException,AccessDeniedException{
+    public  CategoriesFieldsListResponse getCategoriesFieldsListByTenantUUID(String uuid) throws ApplicationException,AccessDeniedException{
         if(!privilegeHandler.hasCategory()){
             LOGGER.error("Access is Denied.");
             throw new AccessDeniedException();
@@ -655,29 +655,16 @@ public class   AssetService {
         Util util = new Util();
         CategoriesFieldsListResponse response = new CategoriesFieldsListResponse();
         try{
-            LOGGER.info("Inside service function of get categories fields list by uuid: " + uuid);
-            Category category = categoryRepository.findCategoryByUuid(uuid);
-            if(category != null){
-                if(category.getFieldTemplate() != null){
-                    response.setFieldDetailedDTOS(new ArrayList<>());
-                    for(Field field:category.getFieldTemplate().getFields()){
-                        FieldDetailedDTO fieldDTO = new FieldDetailedDTO(field.getUuid(),field.getLabel(),field.getFieldMetadata(),
-                                field.getType(),field.getOptions(),field.getIconUrl(),field.getFieldPosition(),field.isMandatory(),category.getFieldTemplate().getUuid());
-                        response.getFieldDetailedDTOS().add(fieldDTO);
-                    }
-                    response.setResponseIdentifier(SUCCESS);
-                } else{
-                    response.setResponseIdentifier(FAILURE);
-                }
-            } else {
-                response.setResponseIdentifier(FAILURE);
-            }
+            LOGGER.info("Inside service function of get categories fields list by tenant uuid: " + uuid);
+            List<CategoryFieldDTO> categoryFieldDTOS = categoryRepository.findCategoriesFieldsByTenantUUID(uuid);
+            response.setCategoryFieldDTOS(categoryFieldDTOS);
+            response.setResponseIdentifier(SUCCESS);
         }catch (Exception e){
             response.setResponseIdentifier(FAILURE);
             LOGGER.error("An Error occurred while getting categories fields list.",e);
             throw new ApplicationException("An Error occurred while getting categories fields list.",e);
         }finally {
-            LOGGER.info("Returning to controller get categories fields list by uuid.");
+            LOGGER.info("Returning to controller get categories fields list by tenant uuid.");
             util.clearThreadContextForLogging();
             util = null;
         }
