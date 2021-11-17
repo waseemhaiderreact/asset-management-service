@@ -1,8 +1,6 @@
 package com.sharklabs.ams.field;
 
-import java.io.Serializable;
-
-public class FieldDetailDTO implements Serializable {
+public class FieldDetailedDTO {
 
     private String uuid;
 
@@ -11,7 +9,6 @@ public class FieldDetailDTO implements Serializable {
     private String fieldMetadata; // will hold JSON
 
     private String type;
-
 
     private String options;
 
@@ -23,7 +20,7 @@ public class FieldDetailDTO implements Serializable {
 
     private String fieldTemplateUUID;
 
-    public FieldDetailDTO(String uuid, String label, String fieldMetadata, String type, String options, String iconUrl, int fieldPosition, boolean isMandatory, String fieldTemplateUUID) {
+    public FieldDetailedDTO(String uuid, String label, String fieldMetadata, String type, String options, String iconUrl, int fieldPosition, boolean isMandatory, String fieldTemplateUUID) {
         this.uuid = uuid;
         this.label = label;
         this.fieldMetadata = fieldMetadata;

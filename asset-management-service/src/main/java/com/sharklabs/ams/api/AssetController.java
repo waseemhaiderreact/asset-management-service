@@ -282,22 +282,21 @@ public class AssetController {
         return response;
     }
 
-    //Web App get Categories list by tenant uuid
     @GetMapping("/categories/fields")
     public @ResponseBody
-    ResponseEntity getCategoriesFieldsListByTenantUUID(@RequestParam("tenantUUID") String tenantUUID){
+    ResponseEntity getCategoriesFieldsListByUUID(@RequestParam("uuid") String uuid){
         Util util = new Util();
         ResponseEntity responseEntity = null;
         try{
             util.setThreadContextForLogging(scim2Util);
-            LOGGER.info("Request received in get categories list by tenant uuid: " + tenantUUID);
-            responseEntity = new ResponseEntity<CategoriesFieldsListResponse>(assetService.getCategoriesFieldsListByTenantUUID(tenantUUID),HttpStatus.OK);
+            LOGGER.info("Request received in get categories fields list by uuid: " + uuid);
+            responseEntity = new ResponseEntity<CategoriesFieldsListResponse>(assetService.getCategoriesFieldsListByUUID(uuid),HttpStatus.OK);
         }catch (AccessDeniedException ae){
             responseEntity = new ResponseEntity<String>(ae.getMessage(),HttpStatus.FORBIDDEN);
         }catch (Exception e){
             responseEntity = new ResponseEntity<String>(e.getMessage(),HttpStatus.OK);
         }finally {
-            LOGGER.info("Returning from controller of get categories list by tenant uuid.");
+            LOGGER.info("Returning from controller of get categories fields list by tenant uuid.");
         }
         return responseEntity;
     }

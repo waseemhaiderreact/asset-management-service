@@ -13,9 +13,6 @@ public interface FieldRepository extends JpaRepository<Field,Long> {
 
     boolean existsByUuidAndLabelContainingIgnoreCase(String uuid,String label);
 
-    @Query("SELECT new com.sharklabs.ams.field.FieldDetailDTO(f.uuid,f.label,f.fieldMetadata,f.type,f.options,f.iconUrl,f.fieldPosition,f.isMandatory,f.fieldTemplateUUID) FROM t_field f WHERE f.id in (ids)")
-    List<FieldDetailDTO> findFieldsByCategoriesUUID(@Param("ids") List<Long> ids);
-
     @Transactional
     Long deleteByUuid(String uuid);
 }

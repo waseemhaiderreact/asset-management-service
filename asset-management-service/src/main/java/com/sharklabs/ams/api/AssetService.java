@@ -36,6 +36,7 @@ import com.sharklabs.ams.feign.ApsServiceProxy;
 import com.sharklabs.ams.feign.AuthServiceProxy;
 import com.sharklabs.ams.field.Field;
 import com.sharklabs.ams.field.FieldDTO;
+import com.sharklabs.ams.field.FieldDetailedDTO;
 import com.sharklabs.ams.field.FieldRepository;
 import com.sharklabs.ams.fieldtemplate.FieldTemplate;
 import com.sharklabs.ams.fieldtemplate.FieldTemplateRepository;
@@ -47,7 +48,6 @@ import com.sharklabs.ams.inspectiontemplate.InspectionTemplate;
 import com.sharklabs.ams.inspectiontemplate.InspectionTemplateRepository;
 import com.sharklabs.ams.message.Message;
 import com.sharklabs.ams.message.MessageRepository;
-import com.sharklabs.ams.minimalinfo.MinimalInfo;
 import com.sharklabs.ams.model.assignment.Assignment;
 import com.sharklabs.ams.model.assignment.AssignmentHistory;
 import com.sharklabs.ams.model.issue.Issue;
@@ -632,7 +632,7 @@ public class   AssetService {
         Util util = new Util();
         CategoriesListResponse response = null;
         try{
-            LOGGER.info("Request received in get categories list by tenant uuid: " + tenantUUID);
+            LOGGER.info("Inside service function of get categories list by tenant uuid: " + tenantUUID);
             response = new CategoriesListResponse();
             response.setCategoryDTOS(categoryRepository.findCategoriesListByTenantUUID(tenantUUID));
             response.setResponseIdentifier(SUCCESS);
@@ -640,30 +640,44 @@ public class   AssetService {
             LOGGER.error("An Error occurred while getting categories list.",e);
             throw new ApplicationException("An Error occurred while getting categories list.",e);
         }finally {
-            LOGGER.info("Returning from controller of get categories list by tenant uuid.");
+            LOGGER.info("Returning to controller get categories list by tenant uuid.");
             util.clearThreadContextForLogging();
             util = null;
         }
         return response;
     }
 
-    public  CategoriesFieldsListResponse getCategoriesFieldsListByTenantUUID(String tenantUUID) throws ApplicationException,AccessDeniedException{
+    public  CategoriesFieldsListResponse getCategoriesFieldsListByUUID(String uuid) throws ApplicationException,AccessDeniedException{
         if(!privilegeHandler.hasCategory()){
             LOGGER.error("Access is Denied.");
             throw new AccessDeniedException();
         }
         Util util = new Util();
-        CategoriesFieldsListResponse response = null;
+        CategoriesFieldsListResponse response = new CategoriesFieldsListResponse();
         try{
-            LOGGER.info("Request received in get categories list by tenant uuid: " + tenantUUID);
-//            response = new CategoriesListResponse();
-//            response.setCategoryDTOS(categoryRepository.findCategoriesListByTenantUUID(tenantUUID));
-//            response.setResponseIdentifier(SUCCESS);
+            LOGGER.info("Inside service function of get categories fields list by uuid: " + uuid);
+            Category category = categoryRepository.findCategoryByUuid(uuid);
+            if(category != null){
+                if(category.getFieldTemplate() != null){
+                    response.setFieldDetailedDTOS(new ArrayList<>());
+                    for(Field field:category.getFieldTemplate().getFields()){
+                        FieldDetailedDTO fieldDTO = new FieldDetailedDTO(field.getUuid(),field.getLabel(),field.getFieldMetadata(),
+                                field.getType(),field.getOptions(),field.getIconUrl(),field.getFieldPosition(),field.isMandatory(),category.getFieldTemplate().getUuid());
+                        response.getFieldDetailedDTOS().add(fieldDTO);
+                    }
+                    response.setResponseIdentifier(SUCCESS);
+                } else{
+                    response.setResponseIdentifier(FAILURE);
+                }
+            } else {
+                response.setResponseIdentifier(FAILURE);
+            }
         }catch (Exception e){
-            LOGGER.error("An Error occurred while getting categories list.",e);
-            throw new ApplicationException("An Error occurred while getting categories list.",e);
+            response.setResponseIdentifier(FAILURE);
+            LOGGER.error("An Error occurred while getting categories fields list.",e);
+            throw new ApplicationException("An Error occurred while getting categories fields list.",e);
         }finally {
-            LOGGER.info("Returning from controller of get categories list by tenant uuid.");
+            LOGGER.info("Returning to controller get categories fields list by uuid.");
             util.clearThreadContextForLogging();
             util = null;
         }
