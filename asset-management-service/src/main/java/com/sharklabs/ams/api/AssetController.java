@@ -686,6 +686,20 @@ public class AssetController {
         }
     }
 
+    @PostMapping ("/asset/asset-group/uuid")
+    public @ResponseBody
+    AssetAndAssetGroupResponse getAssetAndAssetGroup(@RequestBody AssetAndAssetGroupRequest request){
+        try{
+            LOGGER.info("Request received in Controller to get Asset Group By AssetUUIDs: "+convertToJSON(request));
+            return assetService.getAssetAndAssetGroup(request);
+        }catch (AccessDeniedException ae){
+            return new AssetAndAssetGroupResponse();
+        }catch (Exception e){
+            return new AssetAndAssetGroupResponse();
+        }
+    }
+
+
     //get asset basic detail by tenant AMS_UC_31
     @RequestMapping(method = RequestMethod.GET,value="/basicinfo",params = {"tenantuuid"})
     public @ResponseBody
