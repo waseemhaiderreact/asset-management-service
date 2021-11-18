@@ -23,6 +23,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import shark.commons.util.ApplicationException;
 
+import javax.persistence.Access;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -670,6 +671,34 @@ public class AssetController {
             return new AssetsNameAndUUIDResponse(null,null,null,Constant.FAILURE);
         }
     }
+
+    /* Written By Kumail Ahmed Khan */
+    @PostMapping ("/asset-groups")
+    public @ResponseBody
+    AssetGroupByAssetResponse getAssetGroupsByAssets(@RequestBody AssetGroupByAssetUUIDsRequest request){
+        try{
+            LOGGER.info("Request received in Controller to get Asset Group By AssetUUIDs: "+convertToJSON(request));
+            return assetService.getAssetGroupsByAssets(request);
+        }catch (AccessDeniedException ae){
+            return new AssetGroupByAssetResponse();
+        }catch (Exception e){
+            return new AssetGroupByAssetResponse();
+        }
+    }
+
+    @PostMapping ("/asset/asset-group/uuid")
+    public @ResponseBody
+    AssetAndAssetGroupResponse getAssetAndAssetGroup(@RequestBody AssetAndAssetGroupRequest request){
+        try{
+            LOGGER.info("Request received in Controller to get Asset Group By AssetUUIDs: "+convertToJSON(request));
+            return assetService.getAssetAndAssetGroup(request);
+        }catch (AccessDeniedException ae){
+            return new AssetAndAssetGroupResponse();
+        }catch (Exception e){
+            return new AssetAndAssetGroupResponse();
+        }
+    }
+
 
     //get asset basic detail by tenant AMS_UC_31
     @RequestMapping(method = RequestMethod.GET,value="/basicinfo",params = {"tenantuuid"})
