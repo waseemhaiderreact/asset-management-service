@@ -1456,6 +1456,37 @@ public class   AssetService {
         return response;
 
     }
+    public AssetAndAssetGroupResponse getAssetAndAssetGroup (AssetAndAssetGroupRequest request) throws AccessDeniedException,ApplicationException{
+        if(!request.getAccessKey().equals(Constant.SECRET_KEY)){
+            LOGGER.info("Access is Denied.");
+            throw new AccessDeniedException();
+        }
+        Util util = new Util();
+        AssetAndAssetGroupResponse response =new AssetAndAssetGroupResponse();
+        try{
+            util.setThreadContextForLogging(scim2Util);
+            LOGGER.info("Inside service function of get Asset and Asset Greoup.");
+            if(request.getAssetUUIDs().size()>0){
+
+                response.setAssetDTOS(assetRepository.findAssetByUuidAndRemoveFromCategoryUUIDIsNull(request.getAssetUUIDs()));
+                response.setResponseIdentifier(SUCCESS);
+                LOGGER.info("Successfully got Assets and Asset groups name and uuid."+convertToJSON(response));
+            }
+            if(request.getAssetGroupUUIDs().size()>0){
+                response.setAssetGroupDTOS(assetGroupRepository.findAssetGroupByUuidInAndDeletefromGroupUUIDIsNull(request.getAssetGroupUUIDs()));
+                response.setResponseIdentifier(SUCCESS);
+                LOGGER.info("Successfully got Assets and Asset groups name and uuid."+convertToJSON(response));
+
+            }
+        }catch(Exception e){
+            LOGGER.error("An Error occurred while getting Asset and Asset groups name and uuid by Assets.",e);
+            throw new ApplicationException("An Error occurred while getting Asset and Assets groups name and uuid by Assets..",e);
+        }finally {
+            LOGGER.info("Returning to controller of get Asset and Asset groups name and uuid by Assets..");
+        }
+        return response;
+
+    }
 
     //get asset basic detail by tenant AMS_UC_31
 //    @HasRead
