@@ -31,6 +31,10 @@ public class ImportTemplate {
 
     private Date createdDate;
 
+    private String importType;
+
+    private String importedData;
+
     public Long getId() {
         return id;
     }
@@ -117,5 +121,21 @@ public class ImportTemplate {
 
     public void setCreatedDate(Date createdDate) {
         this.createdDate = createdDate;
+    }
+
+    public String getImportType() {
+        return importType;
+    }
+
+    public void setImportType(String importType) {
+        this.importType = importType;
+    }
+
+    public String getImportedData() {
+        return importedData;
+    }
+
+    public void setImportedData(String importedData) {
+        this.importedData = importedData;
     }
 }

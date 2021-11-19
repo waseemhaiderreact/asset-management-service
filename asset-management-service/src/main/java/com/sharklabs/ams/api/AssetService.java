@@ -43,6 +43,7 @@ import com.sharklabs.ams.fieldtemplate.FieldTemplateRepository;
 import com.sharklabs.ams.fieldtemplate.FieldTemplateResponse;
 import com.sharklabs.ams.imagevoice.ImageVoiceRepository;
 import com.sharklabs.ams.importtemplate.ImportTemplate;
+import com.sharklabs.ams.importtemplate.ImportTemplateDTO;
 import com.sharklabs.ams.importtemplate.ImportTemplateRepository;
 import com.sharklabs.ams.inspectionitem.InspectionItem;
 import com.sharklabs.ams.inspectionitemcategory.InspectionItemCategory;
@@ -883,7 +884,7 @@ public class   AssetService {
         try{
             util.setThreadContextForLogging(scim2Util);
             LOGGER.info("Inside service function of get list of import templates by user uuid: " + userUUID + " and tenantUUID: " + tenantUUID);
-            List<ImportTemplate> importTemplates = importTemplateRepository.findByTenantUUIDAndUserUUID(tenantUUID,userUUID);
+            List<ImportTemplateDTO> importTemplates = importTemplateRepository.findListByTenantUUIDAndUserUUID(tenantUUID,userUUID);
             response.setImportTemplates(importTemplates);
             response.setResponseIdentifier(SUCCESS);
         }catch (Exception e){

@@ -1,20 +1,20 @@
 package com.sharklabs.ams.response;
 
-import com.sharklabs.ams.importtemplate.ImportTemplate;
+import com.sharklabs.ams.importtemplate.ImportTemplateDTO;
 
 import java.util.List;
 
 public class ImportTemplateListResponse {
 
-    private List<ImportTemplate> importTemplates;
+    private List<ImportTemplateDTO> importTemplates;
 
     private String responseIdentifier;
 
-    public List<ImportTemplate> getImportTemplates() {
+    public List<ImportTemplateDTO> getImportTemplates() {
         return importTemplates;
     }
 
-    public void setImportTemplates(List<ImportTemplate> importTemplates) {
+    public void setImportTemplates(List<ImportTemplateDTO> importTemplates) {
         this.importTemplates = importTemplates;
     }
 
