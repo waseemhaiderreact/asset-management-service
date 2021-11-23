@@ -6,6 +6,8 @@ public class ImportTemplateDTO {
 
     private byte[] csvColumnData;
 
+    private String columnData;
+
     private String templateName;
 
     private String templateNumber;
@@ -72,5 +74,13 @@ public class ImportTemplateDTO {
 
     public void setCategoryName(String categoryName) {
         this.categoryName = categoryName;
+    }
+
+    public String getColumnData() {
+        return columnData;
+    }
+
+    public void setColumnData(String columnData) {
+        this.columnData = columnData;
     }
 }

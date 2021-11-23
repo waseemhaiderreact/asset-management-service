@@ -100,6 +100,8 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.net.URLEncoder;
 import java.util.*;
+import java.util.zip.GZIPInputStream;
+import java.util.zip.GZIPOutputStream;
 
 import static com.sharklabs.ams.util.Constant.*;
 
@@ -874,6 +876,147 @@ public class   AssetService {
 
     /*******************************************Import Template Functions*************************************/
 
+    public DefaultResponse addAssetImportTemplate(ImportTemplateRequest request) throws ApplicationException, AccessDeniedException{
+        if(!privilegeHandler.hasCreate()){
+            LOGGER.error("Access is Denied.");
+            throw new AccessDeniedException();
+        }
+        Util util = new Util();
+        DefaultResponse response = null;
+        try{
+            util.setThreadContextForLogging(scim2Util);
+            LOGGER.info("Inside service function of add Asset import template. Details: " + convertToJSON(request));
+            ImportTemplate importTemplate = new ImportTemplate();
+            importTemplate.setUuid(UUID.randomUUID().toString());
+            importTemplate.setCreatedDate(new Date());
+            importTemplate.setImportType("CSV");
+            importTemplate.setImportedData("Asset");
+            importTemplate.setTemplateName(request.getTemplateName());
+            importTemplate.setCategoryName(request.getCategoryName());
+            importTemplate.setUserUUID(request.getUserUUID());
+            importTemplate.setUserName(request.getUserName());
+            importTemplate.setCategoryUUID(request.getCategoryUUID());
+            importTemplate.setTenantUUID(request.getTenantUUID());
+            importTemplate.setCsvColumnData(stringToByteCompress(request.getCsvColumnData()));
+            importTemplateRepository.save(importTemplate);
+            importTemplate = importTemplateRepository.findByUuid(importTemplate.getUuid());
+            importTemplate.setTemplateNumber(generateAssetImportTemplateNumber(importTemplate.getId()));
+            importTemplateRepository.save(importTemplate);
+            response = new DefaultResponse(SUCCESS,"Successfully Added Asset Import Template.","F200");
+            LOGGER.info("Successfully Added Asset Import Template.");
+        }catch (Exception e){
+            response = new DefaultResponse(FAILURE,"An Error occurred while adding Asset template.","F500");
+            LOGGER.info("An Error Occurred while adding Asset import template.",e);
+            throw new ApplicationException("An Error Occurred while adding Asset import template.",e);
+        }finally {
+            LOGGER.info("Returning to controller of add Asset import template.");
+            util.clearThreadContextForLogging();
+            util = null;
+        }
+        return response;
+    }
+
+    public byte[] stringToByteCompress(String str) throws IOException {
+        if (str == null || str.length() == 0) {
+            return null;
+        }
+        System.out.println("String length : " + str.length());
+        ByteArrayOutputStream obj=new ByteArrayOutputStream();
+        GZIPOutputStream gzip = new GZIPOutputStream(obj);
+        gzip.write(str.getBytes("UTF-8"));
+        gzip.close();
+        return obj.toByteArray();
+    }
+
+    public String generateAssetImportTemplateNumber(Long id){
+        String assetNumber = "7";
+        String formatted = String.format("%06d", id);
+        return assetNumber + formatted;
+    }
+
+    public GetPaginatedDataForSDTResponse getPaginatedAssetImportTemplatesForSDT(GetPaginatedDataForSDTRequest request) throws AccessDeniedException,ApplicationException{
+        if(!privilegeHandler.hasRead()){
+            LOGGER.error("Access is Denied.");
+            throw new AccessDeniedException();
+        }
+        Util util = new Util();
+        GetPaginatedDataForSDTResponse response = new GetPaginatedDataForSDTResponse();
+        CriteriaBuilder criteriaBuilder = null;
+        CriteriaQuery query = null;
+        Root root = null;
+        List<Predicate> clauses = null;
+        try{
+            util.setThreadContextForLogging(scim2Util);
+            LOGGER.info("Inside service function of get paginated Asset import template for sdt." + convertToJSON(request));
+            criteriaBuilder = entityManager.getCriteriaBuilder();
+            query = criteriaBuilder.createQuery(Long.class);
+            root = query.from(ImportTemplate.class);
+            clauses = new ArrayList<>();
+            clauses.add(criteriaBuilder.equal(root.get("tenantUUID"),request.getTenantUUID()));
+            clauses.add(criteriaBuilder.equal(root.get("userUUID"),request.getUserUUID()));
+            clauses.add(criteriaBuilder.equal(root.get("importType"),"CSV"));
+            clauses.add(criteriaBuilder.equal(root.get("importedData"),"Asset"));
+
+            clauses = addInspectionFilters(criteriaBuilder,root,clauses,request.getFilters(),request.getSearchQuery());
+
+            response.getSdtData().put(TOTAL_ELEMENTS,(Long) entityManager.createQuery(query.select(criteriaBuilder.count(root)).where(clauses.toArray(new Predicate[]{}))).getSingleResult());
+
+            List<ImportTemplate> importTemplates = (List<ImportTemplate>) entityManager.createQuery(query.select(root).where(clauses.toArray(new Predicate[]{}))
+                    .orderBy(criteriaBuilder.desc(root.get(request.getSortField()))))
+                    .setFirstResult(request.getLimit() * request.getOffset())
+                    .setMaxResults(request.getLimit())
+                    .getResultList();
+
+            response.getSdtData().put(CONTENT,new ArrayList<>());
+            for(ImportTemplate importTemplate: importTemplates){
+                ((ArrayList) response.getSdtData().get(CONTENT)).add(new HashMap<>());
+
+                ((HashMap) ((ArrayList) response.getSdtData().get(CONTENT)).get(((ArrayList) response.getSdtData().get(CONTENT)).size() - 1)).put("uuid", importTemplate.getUuid());
+                ((HashMap) ((ArrayList) response.getSdtData().get(CONTENT)).get(((ArrayList) response.getSdtData().get(CONTENT)).size() - 1)).put("categoryUUID", importTemplate.getCategoryUUID());
+                ((HashMap) ((ArrayList) response.getSdtData().get(CONTENT)).get(((ArrayList) response.getSdtData().get(CONTENT)).size() - 1)).put("categoryName", importTemplate.getCategoryName());
+                ((HashMap) ((ArrayList) response.getSdtData().get(CONTENT)).get(((ArrayList) response.getSdtData().get(CONTENT)).size() - 1)).put("userUUID", importTemplate.getUserUUID());
+                ((HashMap) ((ArrayList) response.getSdtData().get(CONTENT)).get(((ArrayList) response.getSdtData().get(CONTENT)).size() - 1)).put("userName", importTemplate.getUserName());
+                ((HashMap) ((ArrayList) response.getSdtData().get(CONTENT)).get(((ArrayList) response.getSdtData().get(CONTENT)).size() - 1)).put("tenantUUID", importTemplate.getTenantUUID());
+                ((HashMap) ((ArrayList) response.getSdtData().get(CONTENT)).get(((ArrayList) response.getSdtData().get(CONTENT)).size() - 1)).put("csvColumnData", stringDecompress(importTemplate.getCsvColumnData()));
+                ((HashMap) ((ArrayList) response.getSdtData().get(CONTENT)).get(((ArrayList) response.getSdtData().get(CONTENT)).size() - 1)).put("templateName", importTemplate.getTemplateName());
+                ((HashMap) ((ArrayList) response.getSdtData().get(CONTENT)).get(((ArrayList) response.getSdtData().get(CONTENT)).size() - 1)).put("templateNumber", importTemplate.getTemplateNumber());
+                ((HashMap) ((ArrayList) response.getSdtData().get(CONTENT)).get(((ArrayList) response.getSdtData().get(CONTENT)).size() - 1)).put("createdDate", importTemplate.getCreatedDate());
+                ((HashMap) ((ArrayList) response.getSdtData().get(CONTENT)).get(((ArrayList) response.getSdtData().get(CONTENT)).size() - 1)).put("importType", importTemplate.getImportType());
+                ((HashMap) ((ArrayList) response.getSdtData().get(CONTENT)).get(((ArrayList) response.getSdtData().get(CONTENT)).size() - 1)).put("importedData", importTemplate.getImportedData());
+
+            }
+
+            response.getSdtData().put(TOTAL_PAGES,((Long)response.getSdtData().get(TOTAL_ELEMENTS) / request.getLimit()) + 1);
+            if((Long)response.getSdtData().get(TOTAL_ELEMENTS) == request.getLimit())
+                response.getSdtData().replace(TOTAL_PAGES,(Long)response.getSdtData().get(TOTAL_PAGES) - 1);
+            response.setResponseIdentifier(SUCCESS);
+            LOGGER.info("Page of Asset Import templates got successfully");
+        }catch (Exception e){
+            LOGGER.error("An Error Occurred while get paginated Asset import template fr sdt.",e);
+            throw new ApplicationException("An Error Occurred while get paginated Asset import template fr sdt.",e);
+        }finally {
+            LOGGER.info("Returning from controller of get paginated Asset import templates for sdt.");
+            util.clearThreadContextForLogging();
+            util = null;
+        }
+        return response;
+    }
+
+    public String stringDecompress(byte[] str) throws Exception {
+        if (str == null ) {
+            return null;
+        }
+
+        GZIPInputStream gis = new GZIPInputStream(new ByteArrayInputStream(str));
+        BufferedReader bf = new BufferedReader(new InputStreamReader(gis, "UTF-8"));
+        String outStr = "";
+        String line;
+        while ((line=bf.readLine())!=null) {
+            outStr += line;
+        }
+        return outStr;
+    }
+
     public ImportTemplateListResponse getListOfImportTemplateByUserUUIDAndTenantUUID(String userUUID, String tenantUUID) throws ApplicationException,AccessDeniedException{
         if(!privilegeHandler.hasRead()){
             LOGGER.error("Access is Denied.");
@@ -885,6 +1028,9 @@ public class   AssetService {
             util.setThreadContextForLogging(scim2Util);
             LOGGER.info("Inside service function of get list of import templates by user uuid: " + userUUID + " and tenantUUID: " + tenantUUID);
             List<ImportTemplateDTO> importTemplates = importTemplateRepository.findListByTenantUUIDAndUserUUID(tenantUUID,userUUID);
+            for(ImportTemplateDTO importTemplate: importTemplates){
+                importTemplate.setColumnData(stringDecompress(importTemplate.getCsvColumnData()));
+            }
             response.setImportTemplates(importTemplates);
             response.setResponseIdentifier(SUCCESS);
         }catch (Exception e){

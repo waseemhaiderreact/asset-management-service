@@ -436,6 +436,47 @@ public class AssetController {
 
     /*******************************************Import Template Functions*****************************************/
 
+    @PostMapping("/import/template")
+    public @ResponseBody
+    ResponseEntity addAssetImportTemplate(@RequestBody ImportTemplateRequest request) {
+        Util util = new Util();
+        ResponseEntity response = null;
+        try{
+            util.setThreadContextForLogging(scim2Util);
+            LOGGER.info("Request receive in add Asset import template controller.");
+            response = new ResponseEntity<DefaultResponse>(assetService.addAssetImportTemplate(request),HttpStatus.OK);
+        }catch (AccessDeniedException ade){
+            response = new ResponseEntity<String>(ade.getMessage(),HttpStatus.FORBIDDEN);
+        }catch (Exception e){
+            response = new ResponseEntity<String>(e.getMessage(),HttpStatus.INTERNAL_SERVER_ERROR);
+        }finally {
+            LOGGER.info("Returning from controller of add Asset import template.");
+            util.clearThreadContextForLogging();
+            util = null;
+        }
+        return response;
+    }
+
+    @PostMapping("/import/templates")
+    public @ResponseBody
+    ResponseEntity getPaginatedAssetImportTemplatesForSDT(@RequestBody GetPaginatedDataForSDTRequest request){
+        Util util = new Util();
+        ResponseEntity responseEntity = null;
+        try{
+            util.setThreadContextForLogging(scim2Util);
+            LOGGER.info("Request received in get paginated Asset import templates for Sdt.");
+            responseEntity = new ResponseEntity<GetPaginatedDataForSDTResponse>(assetService.getPaginatedAssetImportTemplatesForSDT(request),HttpStatus.OK);
+        }catch (AccessDeniedException ade){
+            responseEntity = new ResponseEntity<String>(ade.getMessage(),HttpStatus.FORBIDDEN);
+        }catch (Exception e){
+            responseEntity = new ResponseEntity<String>(e.getMessage(),HttpStatus.INTERNAL_SERVER_ERROR);
+        }finally {
+            LOGGER.info("Returning from controller of get paginated Asset import templates for sdt.");
+            util.clearThreadContextForLogging();
+            util = null;
+        }
+        return responseEntity;
+    }
     @GetMapping("/import/templates")
     public @ResponseBody
     ResponseEntity getListOfImportTemplateByUserUUIDAndTenantUUID(@RequestParam String userUUID, @RequestParam String tenantUUID){
