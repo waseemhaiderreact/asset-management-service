@@ -25,8 +25,10 @@ public class Wallet {
     private String userUUID;
     private Double thresholdValue;
     private String thresholdType;
+    private Boolean archived;
     private Double balance;
     private String walletName;
+    private String deletedWalletUUID;
 
     public String getWalletName() {
         return walletName;
@@ -118,4 +120,8 @@ public class Wallet {
     public void setUserUUID(String userUUID) {
         this.userUUID = userUUID;
     }
+    public Boolean getArchived() { return archived;}
+    public void setArchived(Boolean archived) {this.archived = archived;  }
+    public String getDeletedWalletUUID() { return deletedWalletUUID; }
+    public void setDeletedWalletUUID(String deletedWalletUUID) {this.deletedWalletUUID = deletedWalletUUID; }
 }

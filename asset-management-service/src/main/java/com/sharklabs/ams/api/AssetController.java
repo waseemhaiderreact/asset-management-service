@@ -564,6 +564,8 @@ public class AssetController {
         return response;
     }
 
+
+
     //get asset AMS_UC_13
     @RequestMapping(method = RequestMethod.GET,value="",params={"id"})
     public @ResponseBody
@@ -2535,6 +2537,27 @@ public class AssetController {
             wallet=null;
         }
         return  responseEntity;
+    }
+
+    //archive or delete wallet by UUID qasim.....
+    @DeleteMapping("wallet/archive-delete")
+    public @ResponseBody
+    DefaultResponse archiveOrDeleteWalletByUUID(@RequestParam String uuid, @RequestParam String type){
+        Util util = new Util();
+        DefaultResponse response = null;
+        try{
+            util.setThreadContextForLogging(scim2Util);
+            LOGGER.info("Request received in controller of archive or delete Wallet by uuid: " + uuid);
+             response = assetService.archiveOrDeleteWalletByUUID(uuid,type);
+        }catch (Exception e){
+            LOGGER.error("An Error occurred while archive or delete Wallet by uuid.",e);
+            response = new DefaultResponse("failure","Failed","F500");
+        }finally {
+            LOGGER.info("Returing from controller of archive or delete Wallet by uuid.");
+            util.clearThreadContextForLogging();
+            util = null;
+        }
+        return response;
     }
     @PostMapping("/wallet/spent")
     public  ResponseEntity addSpend(@RequestBody AddSpendRequest spendRequest) {
