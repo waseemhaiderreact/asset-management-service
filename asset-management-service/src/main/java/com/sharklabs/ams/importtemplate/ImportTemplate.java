@@ -1,5 +1,7 @@
 package com.sharklabs.ams.importtemplate;
 
+import org.hibernate.validator.constraints.Length;
+
 import javax.persistence.*;
 import java.util.Date;
 
@@ -13,8 +15,10 @@ public class ImportTemplate {
 
     private String uuid;
 
+    @Length(max = 999999)
     private String categoryUUID;
 
+    @Length(max = 999999)
     private String categoryName;
 
     private String userUUID;
@@ -23,6 +27,7 @@ public class ImportTemplate {
 
     private String tenantUUID;
 
+    @Lob
     private byte[] csvColumnData;
 
     private String templateName;

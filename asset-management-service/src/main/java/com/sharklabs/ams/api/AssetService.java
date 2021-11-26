@@ -69,6 +69,8 @@ import com.sharklabs.ams.util.AccessDeniedException;
 import com.sharklabs.ams.util.Constant;
 import com.sharklabs.ams.util.Util;
 import com.sharklabs.ams.wallet.*;
+import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVPrinter;
 import org.apache.commons.io.IOUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -1045,6 +1047,42 @@ public class   AssetService {
         return response;
     }
 
+    public  GetFileResponse downloadAssetImportTemplate(DownloadCSVTemplateRequest request) throws ApplicationException,AccessDeniedException {
+        if(!privilegeHandler.hasCreate()){
+            LOGGER.error("Access is Denied.");
+            throw new AccessDeniedException();
+        }
+
+        Util util = new Util();
+        GetFileResponse fileResponse = new GetFileResponse();
+        try{
+            util.setThreadContextForLogging(scim2Util);
+            LOGGER.info("Inside service function of download Asset import template. Details: " + convertToJSON(request));
+            String [] headers = request.getColumnsData().split(",");
+            try (final ByteArrayOutputStream stream = new ByteArrayOutputStream();
+                 final CSVPrinter printer = new CSVPrinter(new PrintWriter(stream), CSVFormat.DEFAULT.withHeader(headers))) {
+                printer.flush();
+                byte [] file = stream.toByteArray();
+                fileResponse.setResponseIdentifier(SUCCESS);
+                fileResponse.setFileName(request.getTemplateName()+".csv");
+                fileResponse.setContent(file);
+                fileResponse.setContentLength(file.length);
+            } catch (final IOException e) {
+                throw new RuntimeException("Csv writing error: " + e.getMessage());
+            }
+
+        }catch (Exception e){
+            fileResponse.setResponseIdentifier(FAILURE);
+            LOGGER.error("An Error Occurred while downloading Asset import template.",e);
+            throw  new ApplicationException("An Error Occurred while downloading Asset import template.",e);
+        }finally {
+            LOGGER.info("Returning to controller of download Asset import template.");
+            util.clearThreadContextForLogging();
+            util = null;
+        }
+
+        return fileResponse;
+    }
     /*******************************************Import Template Functions*************************************/
 
 

@@ -498,6 +498,27 @@ public class AssetController {
         return responseEntity;
     }
 
+    @PostMapping("/download/template")
+    public @ResponseBody
+    ResponseEntity downloadAssetImportTemplate(@RequestBody DownloadCSVTemplateRequest request) {
+        Util util = new Util();
+        ResponseEntity response = null;
+        try{
+            util.setThreadContextForLogging(scim2Util);
+            LOGGER.info("Request receive in download Asset import template controller.");
+            response = new ResponseEntity<GetFileResponse>(assetService.downloadAssetImportTemplate(request),HttpStatus.OK);
+        }catch (AccessDeniedException ade){
+            response = new ResponseEntity<String>(ade.getMessage(),HttpStatus.FORBIDDEN);
+        }catch (Exception e){
+            response = new ResponseEntity<String>(e.getMessage(),HttpStatus.INTERNAL_SERVER_ERROR);
+        }finally {
+            LOGGER.info("Returning from controller of download Asset import template.");
+            util.clearThreadContextForLogging();
+            util = null;
+        }
+        return response;
+    }
+
     /*******************************************Import Template Functions*****************************************/
 
     /*******************************************Asset Functions**********************************************/
