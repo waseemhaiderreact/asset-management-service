@@ -1223,18 +1223,6 @@ public class   AssetService {
 
             response.getAsset().setAssetImages(assetImageRepository.findAllByAssetUUID(uuid));
 
-//            Set<AssetImage> assetImages = null;
-//            assetImages = response.getAsset().getAssetImages();
-//
-//            if(assetImages!=null){
-//                assetImages.stream().forEach((image) -> {
-//                    GetFileResponse getFileResponse = null;
-//                    getFileResponse = getFile(image.getImageUrl());
-//                    image.setContent(getFileResponse.getContent());
-//                });
-//            }
-
-           //  response.getAsset().setAsset(assetRepository.findAssetByUuid(uuid));
             response.getAsset().setActivityWall(activityWallRepository.findActivityWallByAssetUuid(response.getAsset().getUuid()));
             if (response.getAsset().getActivityWall() == null) {
                 response.getAsset().setActivityWall(new ActivityWall());
@@ -1243,70 +1231,19 @@ public class   AssetService {
                 response.getAsset().getActivityWall().setAssetUuid(response.getAsset().getUuid());
                 activityWallRepository.save(response.getAsset().getActivityWall());
             }
-            //map it to a new object
-//            List <Usage> usageList = new ArrayList<>();
-//            usageList = usageRepository.findUsageByAssetUUID(response.getAsset().getUuid());
-//            if(usageList.size()>0){
-//                LOGGER.info("Usage list"+"    "+convertToJSON(usageList));
-//                int primaryMaxValue=0;
-//                int secondaryMaxValue=0;
-//
-//                if(usageList.get(0).getPrimaryUsageValue() !=null){
-//                    primaryMaxValue =  Integer.parseInt(usageList.get(0).getPrimaryUsageValue());
-//                }
-//                if(usageList.get(0).getSecondaryUsageValue() !=null){
-//                    secondaryMaxValue =  Integer.parseInt(usageList.get(0).getSecondaryUsageValue());
-//                }
-//                for(int index=0;index<usageList.size();index++){
-//                    if(usageList.get(index).getPrimaryUsageValue() !=null){
-//                        if(Integer.parseInt(usageList.get(index).getPrimaryUsageValue())>primaryMaxValue){
-//                            primaryMaxValue = Integer.parseInt(usageList.get(index).getPrimaryUsageValue());
-//                        }
-//                    }
-//                    if(usageList.get(index).getSecondaryUsageValue() !=null) {
-//
-//                        if (Integer.parseInt(usageList.get(index).getSecondaryUsageValue()) > secondaryMaxValue) {
-//                            secondaryMaxValue = Integer.parseInt(usageList.get(index).getSecondaryUsageValue());
-//                        }
-//                    }
-//                }
-//                LOGGER.info("Primary Max Value"+"    "+primaryMaxValue+"    "+"   "+"Secondary Max value "+ "  "+ secondaryMaxValue);
-//            }
-//
-
              usageObj = usageRepository.findUsageByAssetUUIDAndMaxPrimaryUsageValue(response.getAsset().getUuid());
-            LOGGER.info("Primary Usage List"+convertToJSON(usageObj)+"  ");
             if(usageObj != null){
                 response.setPrimaryUsageValue(usageObj);
                 usagecombined.setPrimaryUsageValue(usageObj.getPrimaryUsageValue());
-
-
             }
             usageObj = usageRepository.findUsageByAssetUUIDAndMaxSecondaryUsageValue(response.getAsset().getUuid());
-            LOGGER.info("Secondary Usage List"+convertToJSON(usageObj)+"  ");
             if(usageObj != null){
                 response.setSecondaryUsageValue(usageObj);
                 usagecombined.setSecondaryUsageValue(usageObj.getSecondaryUsageValue());
-
             }
-//            Set<Usage> usages = usageRepository.findByAssetUUIDOrderByIdDesc(response.getAsset().getUuid());
-//
-//            if(usages.size() == 0)
-//                LOGGER.warn("No Usages Exist for Asset id: "+uuid);
-//            else {
-//                for(Usage usage : usages){
-//                    response.getAsset().setLastUsage(usage);
-//                    usages = null;
-//                    break;
-//                }
-//
-//            }
-            LOGGER.info("Usage Combined List"+convertToJSON(usagecombined)+"  ");
-
             if((usagecombined != null)  ){
                 response.getAsset().setLastUsage(usagecombined);
             }
-
             category = categoryRepository.findByAssetsUuid(response.getAsset().getUuid());
             response.setCategoryId(category.getUuid());
             //set field template of asset
@@ -1315,7 +1252,6 @@ public class   AssetService {
                 response.getFieldTemplate().setFieldTemplate(category.getFieldTemplate());
                 Collections.sort(response.getFieldTemplate().getFields());
             }
-
             response.setResponseIdentifier("Success");
             LOGGER.info("Received Asset From database. Sending it to controller");
 
