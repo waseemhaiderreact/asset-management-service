@@ -1207,6 +1207,8 @@ public class   AssetService {
         Category category = null;
         String status = null;
         GetAssetResponse response = new GetAssetResponse();
+        Usage usagecombined = new Usage();
+        Usage usageObj = new Usage();
 
         try {
             LOGGER.info("Inside Service function of get asset of uuid: "+uuid);
@@ -1242,18 +1244,67 @@ public class   AssetService {
                 activityWallRepository.save(response.getAsset().getActivityWall());
             }
             //map it to a new object
+//            List <Usage> usageList = new ArrayList<>();
+//            usageList = usageRepository.findUsageByAssetUUID(response.getAsset().getUuid());
+//            if(usageList.size()>0){
+//                LOGGER.info("Usage list"+"    "+convertToJSON(usageList));
+//                int primaryMaxValue=0;
+//                int secondaryMaxValue=0;
+//
+//                if(usageList.get(0).getPrimaryUsageValue() !=null){
+//                    primaryMaxValue =  Integer.parseInt(usageList.get(0).getPrimaryUsageValue());
+//                }
+//                if(usageList.get(0).getSecondaryUsageValue() !=null){
+//                    secondaryMaxValue =  Integer.parseInt(usageList.get(0).getSecondaryUsageValue());
+//                }
+//                for(int index=0;index<usageList.size();index++){
+//                    if(usageList.get(index).getPrimaryUsageValue() !=null){
+//                        if(Integer.parseInt(usageList.get(index).getPrimaryUsageValue())>primaryMaxValue){
+//                            primaryMaxValue = Integer.parseInt(usageList.get(index).getPrimaryUsageValue());
+//                        }
+//                    }
+//                    if(usageList.get(index).getSecondaryUsageValue() !=null) {
+//
+//                        if (Integer.parseInt(usageList.get(index).getSecondaryUsageValue()) > secondaryMaxValue) {
+//                            secondaryMaxValue = Integer.parseInt(usageList.get(index).getSecondaryUsageValue());
+//                        }
+//                    }
+//                }
+//                LOGGER.info("Primary Max Value"+"    "+primaryMaxValue+"    "+"   "+"Secondary Max value "+ "  "+ secondaryMaxValue);
+//            }
+//
 
-            Set<Usage> usages = usageRepository.findByAssetUUIDOrderByIdDesc(response.getAsset().getUuid());
+             usageObj = usageRepository.findUsageByAssetUUIDAndMaxPrimaryUsageValue(response.getAsset().getUuid());
+            LOGGER.info("Primary Usage List"+convertToJSON(usageObj)+"  ");
+            if(usageObj != null){
+                response.setPrimaryUsageValue(usageObj);
+                usagecombined.setPrimaryUsageValue(usageObj.getPrimaryUsageValue());
 
-            if(usages.size() == 0)
-                LOGGER.warn("No Usages Exist for Asset id: "+uuid);
-            else {
-                for(Usage usage : usages){
-                    response.getAsset().setLastUsage(usage);
-                    usages = null;
-                    break;
-                }
 
+            }
+            usageObj = usageRepository.findUsageByAssetUUIDAndMaxSecondaryUsageValue(response.getAsset().getUuid());
+            LOGGER.info("Secondary Usage List"+convertToJSON(usageObj)+"  ");
+            if(usageObj != null){
+                response.setSecondaryUsageValue(usageObj);
+                usagecombined.setSecondaryUsageValue(usageObj.getSecondaryUsageValue());
+
+            }
+//            Set<Usage> usages = usageRepository.findByAssetUUIDOrderByIdDesc(response.getAsset().getUuid());
+//
+//            if(usages.size() == 0)
+//                LOGGER.warn("No Usages Exist for Asset id: "+uuid);
+//            else {
+//                for(Usage usage : usages){
+//                    response.getAsset().setLastUsage(usage);
+//                    usages = null;
+//                    break;
+//                }
+//
+//            }
+            LOGGER.info("Usage Combined List"+convertToJSON(usagecombined)+"  ");
+
+            if((usagecombined != null)  ){
+                response.getAsset().setLastUsage(usagecombined);
             }
 
             category = categoryRepository.findByAssetsUuid(response.getAsset().getUuid());
@@ -1461,11 +1512,9 @@ public class   AssetService {
             LOGGER.info("Access is Denied.");
             throw new AccessDeniedException();
         }
-        Util util = new Util();
         AssetAndAssetGroupResponse response =new AssetAndAssetGroupResponse();
         try{
-            util.setThreadContextForLogging(scim2Util);
-            LOGGER.info("Inside service function of get Asset and Asset Greoup.");
+            LOGGER.info("Inside service function of get Asset and Asset Group.");
             if(request.getAssetUUIDs().size()>0){
 
                 response.setAssetDTOS(assetRepository.findAssetByUuidAndRemoveFromCategoryUUIDIsNull(request.getAssetUUIDs()));

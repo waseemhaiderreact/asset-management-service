@@ -15,6 +15,30 @@ public interface  UsageRepository extends JpaRepository<Usage,Long> {
     Set<Usage> findByAssetUUID(String uuid);
     Set<Usage> findByAssetUUIDOrderByIdDesc(String uuid);
     Usage findFirstByAssetUUIDOrderByIdDesc(String uuid);
+//    @Query(value = "SELECT u from t_usages u where (u.primaryUsageValue)  = (" +
+//            " SELECT CAST(MAX (uu.primaryUsageValue) AS INT) from t_usages uu where uu.assetUUID=:assetUUID) ")
+//    Usage findUsageByAssetUUIDAndMaxPrimaryUsageValue(@Param("assetUUID") String assetUUID);
+//
+    @Query("SELECT u from t_usages u where cast(u.secondaryUsageValue as int)  = ( SELECT MAX(cast (uu.secondaryUsageValue as int)) from t_usages uu where uu.assetUUID=:assetUUID ) ")
+    Usage findUsageByAssetUUIDAndMaxSecondaryUsageValue(@Param("assetUUID") String assetUUID);
+
+    @Query("SELECT u from t_usages u where cast(u.primaryUsageValue as int)  = ( SELECT MAX(cast (uu.primaryUsageValue as int)) from t_usages uu where uu.assetUUID=:assetUUID ) ")
+    Usage findUsageByAssetUUIDAndMaxPrimaryUsageValue(@Param("assetUUID") String assetUUID);
+    //
+    List <Usage> findUsageByAssetUUID(String assetUUID);
+//    @Query(value = "SELECT u from t_usages u where u.primaryUsageValue = (" +
+//            " SELECT MAX (uu.primaryUsageValue) from t_usages uu where u.assetUUID=:assetUUID) ")
+//    List<Usage> findUsageByAssetUUIDAndMaxPrimaryUsageValue(@Param("assetUUID") String assetUUID);
+//    @Query(value = "SELECT u from t_usages u where u.secondaryUsageValue = (" +
+//            " SELECT MAX (uu.secondaryUsageValue) from t_usages uu where u.assetUUID=:assetUUID) ")
+//    List<Usage> findUsageByAssetUUIDAndMaxSecondaryUsageValue(@Param("assetUUID") String assetUUID);
+//
+
+//    @Query(value =  " SELECT MAX (uu.primaryUsageValue) from t_usages uu where uu.assetUUID=:assetUUID ")
+//    List<Usage> findUsageByAssetUUIDAndPrimaryUsageValue(@Param("assetUUID") String assetUUID);
+//    @Query(value =
+//            " SELECT MAX (uu.secondaryUsageValue) from t_usages uu where uu.assetUUID=:assetUUID ")
+//    List<Usage> findUsageByAssetUUIDAndSecondaryUsageValue(@Param("assetUUID") String assetUUID);
 
     Page<Usage> findByAssetUUIDOrderByCreatedAtDesc(String assetUUID, Pageable pageable);
 
