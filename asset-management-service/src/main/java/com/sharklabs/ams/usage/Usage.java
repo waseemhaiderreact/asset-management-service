@@ -26,6 +26,7 @@ public class Usage{
     private Date startTime;
     private Date stopTime;
     private Double tripEndUsageValue;
+    private String tripEndUsageUnit;
     private Date createdAt;
     private String assetUUID; //asset uuid (the asset of which these usage values will be stored)
     private String tenantUUID;
@@ -33,6 +34,13 @@ public class Usage{
     private String assetNumber;
     private String primaryUsageUnit;
     private String secondaryUsageUnit;
+    public String getTripEndUsageUnit() {
+        return tripEndUsageUnit;
+    }
+
+    public void setTripEndUsageUnit(String tripEndUsageUnit) {
+        this.tripEndUsageUnit = tripEndUsageUnit;
+    }
     public String getSecondaryUsageUnit() {
         return secondaryUsageUnit;
     }
