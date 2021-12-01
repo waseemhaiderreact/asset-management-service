@@ -21,18 +21,48 @@ public class Usage{
     private Date secondaryUsageTime;
     private Double secondaryUsageLat;
     private Double secondaryUsageLng;
-
     // trip fields
     private String category;
     private Date startTime;
     private Date stopTime;
     private Double tripEndUsageValue;
-
     private Date createdAt;
     private String assetUUID; //asset uuid (the asset of which these usage values will be stored)
-
     private String tenantUUID;
+    private String assetName;
+    private String assetNumber;
+    private String primaryUsageUnit;
+    private String secondaryUsageUnit;
+    public String getSecondaryUsageUnit() {
+        return secondaryUsageUnit;
+    }
 
+    public void setSecondaryUsageUnit(String secondaryUsageUnit) {
+        this.secondaryUsageUnit = secondaryUsageUnit;
+    }
+    public String getAssetName() {
+        return assetName;
+    }
+
+    public void setAssetName(String assetName) {
+        this.assetName = assetName;
+    }
+
+    public String getAssetNumber() {
+        return assetNumber;
+    }
+
+    public void setAssetNumber(String assetNumber) {
+        this.assetNumber = assetNumber;
+    }
+
+    public String getPrimaryUsageUnit() {
+        return primaryUsageUnit;
+    }
+
+    public void setPrimaryUsageUnit(String primaryUsageUnit) {
+        this.primaryUsageUnit = primaryUsageUnit;
+    }
 //    @JsonIgnore
 //    @ManyToOne(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
 //    @JoinColumn(name = "asset_id",referencedColumnName = "id")
