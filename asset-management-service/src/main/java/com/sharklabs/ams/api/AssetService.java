@@ -1209,6 +1209,8 @@ public class   AssetService {
         Category category = null;
         String status = null;
         GetAssetResponse response = new GetAssetResponse();
+        Usage usagecombined = new Usage();
+        Usage usageObj = new Usage();
 
         try {
             LOGGER.info("Inside Service function of get asset of uuid: "+uuid);
@@ -1223,18 +1225,6 @@ public class   AssetService {
 
             response.getAsset().setAssetImages(assetImageRepository.findAllByAssetUUID(uuid));
 
-//            Set<AssetImage> assetImages = null;
-//            assetImages = response.getAsset().getAssetImages();
-//
-//            if(assetImages!=null){
-//                assetImages.stream().forEach((image) -> {
-//                    GetFileResponse getFileResponse = null;
-//                    getFileResponse = getFile(image.getImageUrl());
-//                    image.setContent(getFileResponse.getContent());
-//                });
-//            }
-
-           //  response.getAsset().setAsset(assetRepository.findAssetByUuid(uuid));
             response.getAsset().setActivityWall(activityWallRepository.findActivityWallByAssetUuid(response.getAsset().getUuid()));
             if (response.getAsset().getActivityWall() == null) {
                 response.getAsset().setActivityWall(new ActivityWall());
@@ -1243,21 +1233,19 @@ public class   AssetService {
                 response.getAsset().getActivityWall().setAssetUuid(response.getAsset().getUuid());
                 activityWallRepository.save(response.getAsset().getActivityWall());
             }
-            //map it to a new object
-
-            Set<Usage> usages = usageRepository.findByAssetUUIDOrderByIdDesc(response.getAsset().getUuid());
-
-            if(usages.size() == 0)
-                LOGGER.warn("No Usages Exist for Asset id: "+uuid);
-            else {
-                for(Usage usage : usages){
-                    response.getAsset().setLastUsage(usage);
-                    usages = null;
-                    break;
-                }
-
+             usageObj = usageRepository.findUsageByAssetUUIDAndMaxPrimaryUsageValue(response.getAsset().getUuid());
+            if(usageObj != null){
+                response.setPrimaryUsageValue(usageObj);
+                usagecombined.setPrimaryUsageValue(usageObj.getPrimaryUsageValue());
             }
-
+            usageObj = usageRepository.findUsageByAssetUUIDAndMaxSecondaryUsageValue(response.getAsset().getUuid());
+            if(usageObj != null){
+                response.setSecondaryUsageValue(usageObj);
+                usagecombined.setSecondaryUsageValue(usageObj.getSecondaryUsageValue());
+            }
+            if((usagecombined != null)  ){
+                response.getAsset().setLastUsage(usagecombined);
+            }
             category = categoryRepository.findByAssetsUuid(response.getAsset().getUuid());
             response.setCategoryId(category.getUuid());
             //set field template of asset
@@ -1266,7 +1254,6 @@ public class   AssetService {
                 response.getFieldTemplate().setFieldTemplate(category.getFieldTemplate());
                 Collections.sort(response.getFieldTemplate().getFields());
             }
-
             response.setResponseIdentifier("Success");
             LOGGER.info("Received Asset From database. Sending it to controller");
 
@@ -1463,11 +1450,9 @@ public class   AssetService {
             LOGGER.info("Access is Denied.");
             throw new AccessDeniedException();
         }
-        Util util = new Util();
         AssetAndAssetGroupResponse response =new AssetAndAssetGroupResponse();
         try{
-            util.setThreadContextForLogging(scim2Util);
-            LOGGER.info("Inside service function of get Asset and Asset Greoup.");
+            LOGGER.info("Inside service function of get Asset and Asset Group.");
             if(request.getAssetUUIDs().size()>0){
 
                 response.setAssetDTOS(assetRepository.findAssetByUuidAndRemoveFromCategoryUUIDIsNull(request.getAssetUUIDs()));
