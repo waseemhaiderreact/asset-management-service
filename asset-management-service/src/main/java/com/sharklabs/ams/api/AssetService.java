@@ -16,6 +16,7 @@ import com.sharklabs.ams.assetGroup.AssetGroup;
 import com.sharklabs.ams.assetGroup.AssetGroupRepository;
 import com.sharklabs.ams.assetfield.AssetField;
 import com.sharklabs.ams.assetfield.AssetFieldRepository;
+import com.sharklabs.ams.assetimport.AssetImport;
 import com.sharklabs.ams.attachment.Attachment;
 import com.sharklabs.ams.attachment.AttachmentRepository;
 import com.sharklabs.ams.category.Category;
@@ -42,6 +43,7 @@ import com.sharklabs.ams.fieldtemplate.FieldTemplate;
 import com.sharklabs.ams.fieldtemplate.FieldTemplateRepository;
 import com.sharklabs.ams.fieldtemplate.FieldTemplateResponse;
 import com.sharklabs.ams.imagevoice.ImageVoiceRepository;
+import com.sharklabs.ams.importrecord.ImportRecord;
 import com.sharklabs.ams.importtemplate.ImportTemplate;
 import com.sharklabs.ams.importtemplate.ImportTemplateDTO;
 import com.sharklabs.ams.importtemplate.ImportTemplateRepository;
@@ -70,7 +72,9 @@ import com.sharklabs.ams.util.Constant;
 import com.sharklabs.ams.util.Util;
 import com.sharklabs.ams.wallet.*;
 import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVPrinter;
+import org.apache.commons.csv.CSVRecord;
 import org.apache.commons.io.IOUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -101,7 +105,9 @@ import java.io.*;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.net.URLEncoder;
+import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.stream.Collectors;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
@@ -1083,8 +1089,201 @@ public class   AssetService {
 
         return fileResponse;
     }
-    /*******************************************Import Template Functions*************************************/
 
+    @Transactional
+    public ImportBulkAssetResponse importBulkAssetsByCSV(MultipartFile file, String tenantUUID) throws ApplicationException,AccessDeniedException{
+        if(!privilegeHandler.hasCreate()){
+            LOGGER.error("Access is Denied.");
+            throw new AccessDeniedException();
+        }
+        Util util = new Util();
+        ImportBulkAssetResponse response = new ImportBulkAssetResponse();
+        AssetImport assetImport = new AssetImport();
+        List<Asset> assets = new ArrayList<>();
+        List<ImportRecord> importRecords = new ArrayList<>();
+        List<Category> categories = new ArrayList<>();
+        try{
+            util.setThreadContextForLogging(scim2Util);
+            LOGGER.info("Inside service function of import bulk Asset by CSV.");
+            if(!file.getContentType().equals("text/csv")){
+                LOGGER.error("File Type is not compatible.");
+                response.setResponseIdentifier(FAILURE);
+                response.setDescription("Only CSV file Accepted.");
+                return response;
+            }
+            assetImport.setImportName(file.getOriginalFilename() + " on " + new Date());
+            assetImport.setImportDate(new Date());
+            assetImport.setUuid(UUID.randomUUID().toString());
+            try (BufferedReader fileReader = new BufferedReader(new InputStreamReader(file.getInputStream(), "UTF-8"));
+                CSVParser csvParser = new CSVParser(fileReader,
+                        CSVFormat.DEFAULT.withFirstRecordAsHeader().withIgnoreHeaderCase().withTrim());) {
+
+                Iterable<CSVRecord> csvRecords = csvParser.getRecords();
+                int i = 0;
+                List<String> headers = csvParser.getHeaderNames().stream()
+                        .map(String::toLowerCase)
+                        .collect(Collectors.toList());
+                if(!headers.contains("category name")){
+                    LOGGER.error("Required column Catgegory Name missing.");
+                    response.setDescription("Required column Catgegory Name missing.");
+                    response.setResponseIdentifier(FAILURE);
+                    return response;
+                }
+                categories = categoryRepository.findByTenantUUID(tenantUUID);
+                for(CSVRecord record: csvRecords){
+                    int categoryIndex = 0;
+                    List<AssetField> assetFields = new ArrayList<>();
+                    Asset asset = new Asset();
+                    ImportRecord importRecord = new ImportRecord();
+                    asset.setUuid(UUID.randomUUID().toString());
+                    Boolean success = true;
+                    for(Map.Entry<String,String> column: record.toMap().entrySet()){
+                        if(ASSET_INFO.contains(column.getKey().toLowerCase())){
+                            if(ASSET_REQUIRED_FIELDS.contains(column.getKey().toLowerCase())){
+                                if(column.getKey().toLowerCase().equals("category name") ){
+                                    if(!column.getValue().isEmpty()) {
+                                        LOGGER.info("Required Field category.");
+                                        Category category = categories.stream().filter(c -> c.getName().equals(column.getValue())).findFirst().orElse(null);
+                                        if (category == null) {
+                                            importRecord.setMessage("Invalid Category For Asset.");
+                                            importRecord.setStatus(IMPORT_FAILURE);
+                                            success = false;
+                                            break;
+                                        } else {
+                                            asset.setCategoryUUID(category.getUuid());
+                                        }
+                                    }else{
+                                        importRecord.setMessage("Missing Asset Category.");
+                                        importRecord.setStatus(IMPORT_FAILURE);
+                                        success = false;
+                                        break;
+                                    }
+                                }else if(column.getKey().toLowerCase().equals("asset name")){
+                                    if(!column.getValue().isEmpty()) {
+                                        LOGGER.info("Required Feild asset.");
+                                        asset.setName(column.getValue());
+                                    }else{
+                                        importRecord.setMessage("Missing Asset Name.");
+                                        importRecord.setStatus(IMPORT_FAILURE);
+                                        success = false;
+                                        break;
+                                    }
+                                }else if(column.getKey().toLowerCase().equals("model #")){
+                                    if(!column.getValue().isEmpty()) {
+                                        LOGGER.info("Required Feild model.");
+                                        asset.setModelNumber(column.getValue());
+                                    }else{
+                                        importRecord.setMessage("Missing Model Number");
+                                        importRecord.setStatus(IMPORT_FAILURE);
+                                        success = false;
+                                        break;
+                                    }
+                                }else if(column.getKey().toLowerCase().equals("manufacturer name/id")){
+                                    if(!column.getValue().isEmpty()){
+                                        LOGGER.info("Required Feild manufacturer.");
+                                        asset.setManufacture(column.getValue());
+                                    }else{
+                                        importRecord.setMessage("Missing Manufacturer name/id");
+                                        importRecord.setStatus(IMPORT_FAILURE);
+                                        success = false;
+                                        break;
+                                    }
+                                }else if(column.getKey().toLowerCase().equals("warranty")){
+                                    if(!column.getValue().isEmpty()){
+                                        LOGGER.info("Required Feild warranty.");
+                                        asset.setWarranty(column.getValue());
+                                    }else{
+                                        importRecord.setMessage("Missing Warranty.");
+                                        importRecord.setStatus(IMPORT_FAILURE);
+                                        success = false;
+                                        break;
+                                    }
+                                }else if(column.getKey().toLowerCase().equals("primary usage unit") ){
+                                    if(!column.getValue().isEmpty()){
+                                        LOGGER.info("Required Feild primary.");
+                                        asset.setPrimaryUsageUnit(column.getValue());
+                                    }else{
+                                        importRecord.setMessage("Missing Primary Usage Unit.");
+                                        importRecord.setStatus(IMPORT_FAILURE);
+                                        success = false;
+                                        break;
+                                    }
+                                }else if(column.getKey().toLowerCase().equals("secondary usage unit")){
+                                    if(!column.getValue().isEmpty()) {
+                                        LOGGER.info("Required Feild secondary.");
+                                        asset.setSecondaryUsageUnit(column.getKey());
+                                    }else{
+                                        importRecord.setMessage("Missing Secondary Usage Unit.");
+                                        importRecord.setStatus(IMPORT_FAILURE);
+                                        success = false;
+                                        break;
+                                    }
+                                }else if(column.getKey().toLowerCase().equals("consumption unit")){
+                                    if(!column.getValue().isEmpty()) {
+                                        LOGGER.info("Required Feild consumption.");
+                                    }else{
+                                        importRecord.setMessage("Missing Consumption unit");
+                                        importRecord.setStatus(IMPORT_FAILURE);
+                                        success = false;
+                                        break;
+                                    }
+                                }
+                            }else{
+                                if(column.getKey().toLowerCase().equals("status") && !column.getValue().isEmpty()){
+                                    asset.setStatus(column.getValue());
+                                } else if(column.getKey().toLowerCase().equals("purchase date") && !column.getValue().isEmpty()){
+                                    Date date = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").parse(column.getValue());
+                                    asset.setPurchaseDate(date);
+                                }else if(column.getKey().toLowerCase().contains("description") && !column.getValue().isEmpty()){
+                                    asset.setDescription(column.getValue());
+                                }
+                            }
+                        }else{
+                            AssetField assetField = new AssetField();
+                            Category category = categories.stream().filter(c -> c.getName().equals(record.get("column name"))).findFirst().orElse(null);
+                            if(category != null){
+                                Field field = category.getFieldTemplate().getFields().stream().filter(field1 -> field1.getLabel().equals(column.getKey())).findFirst().orElse(null);
+                                if(field != null){
+                                    if(field.isMandatory() && !column.getValue().isEmpty()) {
+                                        assetField.setAssetUUID(asset.getUuid());
+                                        assetField.setFieldId(field.getUuid());
+                                        assetField.setFieldTemplateId(field.getFieldTemplateUUID());
+                                        assetField.setUuid(UUID.randomUUID().toString());
+                                        assetField.setFieldValue("{\"values\":[\"\"]}");
+                                        assetFields.add(assetField);
+                                    }else if(!field.isMandatory()){
+                                        assetField.setAssetUUID(asset.getUuid());
+                                        assetField.setFieldId(field.getUuid());
+                                        assetField.setFieldTemplateId(field.getFieldTemplateUUID());
+                                        assetField.setUuid(UUID.randomUUID().toString());
+                                        assetFields.add(assetField);
+                                    }else{
+                                        importRecord.setMessage("Missing required Additional Field: " + column.getKey());
+                                        importRecord.setStatus(IMPORT_FAILURE);
+                                        success = false;
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+
+                    }
+                }
+            }catch (Exception e){
+                LOGGER.error("An Error occurred while reading csv file.",e);
+                throw new ApplicationException("An Error occurred while reading csv file..",e);
+            }
+        }catch (Exception e){
+            LOGGER.error("An Error occurred while importing bulk Asset by CSV.",e);
+            throw new ApplicationException("An Error occurred while importing bulk Assets by CSV.",e);
+        }finally {
+            LOGGER.info("Returning to controller of import bulk Assets by csv.");
+            util.clearThreadContextForLogging();
+            util = null;
+        }
+        return response;
+    }
+    /*******************************************Import Template Functions*************************************/
 
     /******************************************* Asset Functions ************************************************/
 

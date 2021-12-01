@@ -11,6 +11,8 @@ import java.util.List;
 public interface FieldRepository extends JpaRepository<Field,Long> {
     Field findByUuid(String uuid);
 
+    Field findFieldByLabelAndFie(String label);
+
     boolean existsByUuidAndLabelContainingIgnoreCase(String uuid,String label);
 
     @Transactional

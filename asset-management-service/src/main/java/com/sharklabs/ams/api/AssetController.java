@@ -46,6 +46,7 @@ public class AssetController {
     SCIM2Util scim2Util;
 
     /*******************************************Category Functions*******************************************/
+
     //add a category AMS_UC_01
     @RequestMapping(method = RequestMethod.POST,value="/categories")
     @Caching(evict = {
@@ -300,9 +301,11 @@ public class AssetController {
         }
         return responseEntity;
     }
+
     /*******************************************END Category Functions*******************************************/
 
     /*******************************************Field Template Functions*****************************************/
+
     //add a field template AMS_UC_06
     @RequestMapping(method = RequestMethod.POST,value="/fieldtemplate")
     public @ResponseBody
@@ -477,6 +480,7 @@ public class AssetController {
         }
         return responseEntity;
     }
+
     @GetMapping("/import/templates")
     public @ResponseBody
     ResponseEntity getListOfImportTemplateByUserUUIDAndTenantUUID(@RequestParam String userUUID, @RequestParam String tenantUUID){
@@ -517,6 +521,29 @@ public class AssetController {
             util = null;
         }
         return response;
+    }
+
+    @PostMapping("/import/csv")
+    public @ResponseBody
+    ResponseEntity importBulkAssetsByCSV(@RequestParam("file") MultipartFile file,@RequestParam("tenantUUID") String tenantUUID) {
+        Util util = new Util();
+        ResponseEntity responseEntity = null;
+        try{
+            util.setThreadContextForLogging(scim2Util);
+            LOGGER.info("Request received in controller of import bulk Asset by csv.");
+            responseEntity = new ResponseEntity<ImportBulkAssetResponse>(assetService.importBulkAssetsByCSV(file,tenantUUID),HttpStatus.OK);
+        }catch (AccessDeniedException ade){
+            responseEntity = new ResponseEntity<String>(ade.getMessage(),HttpStatus.FORBIDDEN);
+            ade = null;
+        }catch (Exception e){
+            responseEntity = new ResponseEntity<String>(e.getMessage(),HttpStatus.INTERNAL_SERVER_ERROR);
+            e = null;
+        }finally {
+            LOGGER.info("Returning from controller of import bulk Asset by csv.");
+            util.clearThreadContextForLogging();
+            util = null;
+        }
+        return responseEntity;
     }
 
     /*******************************************Import Template Functions*****************************************/
