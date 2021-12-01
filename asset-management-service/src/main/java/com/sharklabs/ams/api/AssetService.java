@@ -3860,13 +3860,11 @@ public class   AssetService {
             throw new AccessDeniedException();
 
             Util util = new Util();
-
             GetPaginatedUsagesByAssetsAndCategoryResponse response=new GetPaginatedUsagesByAssetsAndCategoryResponse();
             try{
                 util.setThreadContextForLogging(scim2Util);
                 LOGGER.info("In service method of fetching paginated usages by asset and category, details: request: "+convertToJSON(request));
-
-                response.setUsages(usageRepository.findByAssetUUIDInAndCategoryOrderByIdDesc(request.getAssetUUIDS(),request.getCategory(),new PageRequest(request.getOffset(),request.getLimit())));
+                response.setUsages(usageRepository.findByAssetUUIDInAndCategory(request.getAssetUUIDS(),request.getCategory(),new PageRequest(request.getOffset(),request.getLimit())));
                 response.setResponseIdentifier("Success");
                 LOGGER.info("Page of usages by asset uuids got successfully");
 
