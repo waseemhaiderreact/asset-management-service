@@ -63,4 +63,8 @@ public class Constant {
 
     public static final String IMPORT_PARTIAL_SUCCESS = "Partial Success";
 
+    public static final String IMPORT_COMPLETE = "Complete";
+
+    public static final String IMPORT_IN_COMPLETE = "Incomplete";
+
 }

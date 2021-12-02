@@ -21,7 +21,7 @@ public class AssetImport {
 
     private String message;// range of records complete
 
-    private String status;// success/fail/partial fail
+    private String status;// success/fail/partial success
 
     @Lob
     private byte[] columns;

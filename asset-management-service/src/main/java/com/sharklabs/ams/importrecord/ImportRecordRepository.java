@@ -1,4 +1,6 @@
 package com.sharklabs.ams.importrecord;
 
-public interface ImportRecordRepository {
+import org.springframework.data.jpa.repository.JpaRepository;
+
+public interface ImportRecordRepository extends JpaRepository<ImportRecord,Long> {
 }

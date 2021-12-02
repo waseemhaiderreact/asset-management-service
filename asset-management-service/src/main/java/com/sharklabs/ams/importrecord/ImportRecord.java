@@ -19,8 +19,6 @@ public class ImportRecord {
 
     private String status;
 
-    private String importNumber;
-
     private String assetName;
 
     private String importUUID;
@@ -68,14 +66,6 @@ public class ImportRecord {
 
     public void setStatus(String status) {
         this.status = status;
-    }
-
-    public String getImportNumber() {
-        return importNumber;
-    }
-
-    public void setImportNumber(String importNumber) {
-        this.importNumber = importNumber;
     }
 
     public String getAssetName() {

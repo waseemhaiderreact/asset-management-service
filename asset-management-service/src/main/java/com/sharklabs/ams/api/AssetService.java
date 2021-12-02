@@ -7,6 +7,7 @@ import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.model.*;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.collect.Sets;
 import com.sharklabs.ams.AssetImage.AssetImage;
 import com.sharklabs.ams.AssetImage.AssetImageRepository;
 import com.sharklabs.ams.activitywall.ActivityWall;
@@ -17,6 +18,7 @@ import com.sharklabs.ams.assetGroup.AssetGroupRepository;
 import com.sharklabs.ams.assetfield.AssetField;
 import com.sharklabs.ams.assetfield.AssetFieldRepository;
 import com.sharklabs.ams.assetimport.AssetImport;
+import com.sharklabs.ams.assetimport.AssetImportRepository;
 import com.sharklabs.ams.attachment.Attachment;
 import com.sharklabs.ams.attachment.AttachmentRepository;
 import com.sharklabs.ams.category.Category;
@@ -44,6 +46,7 @@ import com.sharklabs.ams.fieldtemplate.FieldTemplateRepository;
 import com.sharklabs.ams.fieldtemplate.FieldTemplateResponse;
 import com.sharklabs.ams.imagevoice.ImageVoiceRepository;
 import com.sharklabs.ams.importrecord.ImportRecord;
+import com.sharklabs.ams.importrecord.ImportRecordRepository;
 import com.sharklabs.ams.importtemplate.ImportTemplate;
 import com.sharklabs.ams.importtemplate.ImportTemplateDTO;
 import com.sharklabs.ams.importtemplate.ImportTemplateRepository;
@@ -81,6 +84,7 @@ import org.apache.logging.log4j.Logger;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.joda.time.format.DateTimeFormatter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.stream.annotation.EnableBinding;
@@ -106,6 +110,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.net.URLEncoder;
 import java.text.SimpleDateFormat;
+import java.time.ZoneId;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.zip.GZIPInputStream;
@@ -157,6 +162,12 @@ public class   AssetService {
     KafkaAsyncService kafkaAsyncService;
     @Autowired
     AssetGroupRepository assetGroupRepository;
+
+    @Autowired
+    AssetImportRepository assetImportRepository;
+
+    @Autowired
+    ImportRecordRepository importRecordRepository;
 
     @Autowired
     InterceptorConfig resourceServerConfiguration;
@@ -1111,46 +1122,60 @@ public class   AssetService {
                 response.setDescription("Only CSV file Accepted.");
                 return response;
             }
-            assetImport.setImportName(file.getOriginalFilename() + " on " + new Date());
-            assetImport.setImportDate(new Date());
-            assetImport.setUuid(UUID.randomUUID().toString());
+
             try (BufferedReader fileReader = new BufferedReader(new InputStreamReader(file.getInputStream(), "UTF-8"));
                 CSVParser csvParser = new CSVParser(fileReader,
                         CSVFormat.DEFAULT.withFirstRecordAsHeader().withIgnoreHeaderCase().withTrim());) {
 
                 Iterable<CSVRecord> csvRecords = csvParser.getRecords();
-                int i = 0;
+
+                assetImport.setImportName(file.getOriginalFilename() + " on " + new Date().toInstant()
+                        .atZone(ZoneId.systemDefault())
+                        .toLocalDate());
+                assetImport.setImportDate(new Date());
+                assetImport.setUuid(UUID.randomUUID().toString());
+                assetImport.setColumns(stringToByteCompress(csvParser.getHeaderNames().toString()));
+                assetImport.setStatus(IMPORT_SUCCESS);
                 List<String> headers = csvParser.getHeaderNames().stream()
                         .map(String::toLowerCase)
                         .collect(Collectors.toList());
                 if(!headers.contains("category name")){
-                    LOGGER.error("Required column Catgegory Name missing.");
-                    response.setDescription("Required column Catgegory Name missing.");
+                    LOGGER.error("Required column Category Name missing.");
+                    response.setDescription("Required column Category Name missing.");
                     response.setResponseIdentifier(FAILURE);
                     return response;
                 }
                 categories = categoryRepository.findByTenantUUID(tenantUUID);
+                if(categories != null && categories.size() <=0){
+                    LOGGER.error("No Category Exists for this organization.");
+                    response.setDescription("No Category Exists for this organization.");
+                    response.setResponseIdentifier(FAILURE);
+                    return response;
+                }
+                List<String> assetUUIDS = new ArrayList<>();
                 for(CSVRecord record: csvRecords){
-                    int categoryIndex = 0;
                     List<AssetField> assetFields = new ArrayList<>();
                     Asset asset = new Asset();
                     ImportRecord importRecord = new ImportRecord();
                     asset.setUuid(UUID.randomUUID().toString());
+                    importRecord.setUuid(UUID.randomUUID().toString());
                     Boolean success = true;
+                    Category assetCategory = null;
                     for(Map.Entry<String,String> column: record.toMap().entrySet()){
-                        if(ASSET_INFO.contains(column.getKey().toLowerCase())){
-                            if(ASSET_REQUIRED_FIELDS.contains(column.getKey().toLowerCase())){
+                        if(ASSET_INFO.contains(column.getKey().toLowerCase().trim())){
+                            if(ASSET_REQUIRED_FIELDS.contains(column.getKey().toLowerCase().trim())){
                                 if(column.getKey().toLowerCase().equals("category name") ){
                                     if(!column.getValue().isEmpty()) {
                                         LOGGER.info("Required Field category.");
-                                        Category category = categories.stream().filter(c -> c.getName().equals(column.getValue())).findFirst().orElse(null);
+                                        Category category = categories.stream().filter(c -> c.getName().toLowerCase().trim().equals(column.getValue().toLowerCase().trim())).findFirst().orElse(null);
                                         if (category == null) {
-                                            importRecord.setMessage("Invalid Category For Asset.");
+                                            importRecord.setMessage("Invalid Category For Asset: " + column.getValue());
                                             importRecord.setStatus(IMPORT_FAILURE);
                                             success = false;
                                             break;
                                         } else {
                                             asset.setCategoryUUID(category.getUuid());
+                                            assetCategory = category;
                                         }
                                     }else{
                                         importRecord.setMessage("Missing Asset Category.");
@@ -1158,19 +1183,21 @@ public class   AssetService {
                                         success = false;
                                         break;
                                     }
-                                }else if(column.getKey().toLowerCase().equals("asset name")){
+                                }else if(column.getKey().toLowerCase().trim().equals("asset name")){
                                     if(!column.getValue().isEmpty()) {
-                                        LOGGER.info("Required Feild asset.");
+                                        LOGGER.info("Required field asset.");
                                         asset.setName(column.getValue());
+                                        importRecord.setAssetName(column.getValue());
+                                        importRecord.setMessage("Successfully imported Asset: " + column.getValue());
                                     }else{
                                         importRecord.setMessage("Missing Asset Name.");
                                         importRecord.setStatus(IMPORT_FAILURE);
                                         success = false;
                                         break;
                                     }
-                                }else if(column.getKey().toLowerCase().equals("model #")){
+                                }else if(column.getKey().toLowerCase().trim().equals("model #")){
                                     if(!column.getValue().isEmpty()) {
-                                        LOGGER.info("Required Feild model.");
+                                        LOGGER.info("Required field model.");
                                         asset.setModelNumber(column.getValue());
                                     }else{
                                         importRecord.setMessage("Missing Model Number");
@@ -1178,9 +1205,9 @@ public class   AssetService {
                                         success = false;
                                         break;
                                     }
-                                }else if(column.getKey().toLowerCase().equals("manufacturer name/id")){
+                                }else if(column.getKey().toLowerCase().trim().equals("manufacturer name/id")){
                                     if(!column.getValue().isEmpty()){
-                                        LOGGER.info("Required Feild manufacturer.");
+                                        LOGGER.info("Required field manufacturer.");
                                         asset.setManufacture(column.getValue());
                                     }else{
                                         importRecord.setMessage("Missing Manufacturer name/id");
@@ -1188,9 +1215,9 @@ public class   AssetService {
                                         success = false;
                                         break;
                                     }
-                                }else if(column.getKey().toLowerCase().equals("warranty")){
+                                }else if(column.getKey().toLowerCase().trim().equals("warranty")){
                                     if(!column.getValue().isEmpty()){
-                                        LOGGER.info("Required Feild warranty.");
+                                        LOGGER.info("Required field warranty.");
                                         asset.setWarranty(column.getValue());
                                     }else{
                                         importRecord.setMessage("Missing Warranty.");
@@ -1198,9 +1225,9 @@ public class   AssetService {
                                         success = false;
                                         break;
                                     }
-                                }else if(column.getKey().toLowerCase().equals("primary usage unit") ){
+                                }else if(column.getKey().toLowerCase().trim().equals("primary usage unit") ){
                                     if(!column.getValue().isEmpty()){
-                                        LOGGER.info("Required Feild primary.");
+                                        LOGGER.info("Required field primary.");
                                         asset.setPrimaryUsageUnit(column.getValue());
                                     }else{
                                         importRecord.setMessage("Missing Primary Usage Unit.");
@@ -1208,9 +1235,9 @@ public class   AssetService {
                                         success = false;
                                         break;
                                     }
-                                }else if(column.getKey().toLowerCase().equals("secondary usage unit")){
+                                }else if(column.getKey().toLowerCase().trim().equals("secondary usage unit")){
                                     if(!column.getValue().isEmpty()) {
-                                        LOGGER.info("Required Feild secondary.");
+                                        LOGGER.info("Required field secondary.");
                                         asset.setSecondaryUsageUnit(column.getKey());
                                     }else{
                                         importRecord.setMessage("Missing Secondary Usage Unit.");
@@ -1218,9 +1245,10 @@ public class   AssetService {
                                         success = false;
                                         break;
                                     }
-                                }else if(column.getKey().toLowerCase().equals("consumption unit")){
+                                }else if(column.getKey().toLowerCase().trim().equals("consumption unit")){
                                     if(!column.getValue().isEmpty()) {
-                                        LOGGER.info("Required Feild consumption.");
+                                        LOGGER.info("Required field consumption.");
+                                        asset.setConsumptionUnit(column.getValue());
                                     }else{
                                         importRecord.setMessage("Missing Consumption unit");
                                         importRecord.setStatus(IMPORT_FAILURE);
@@ -1229,46 +1257,104 @@ public class   AssetService {
                                     }
                                 }
                             }else{
-                                if(column.getKey().toLowerCase().equals("status") && !column.getValue().isEmpty()){
+                                if(column.getKey().toLowerCase().trim().equals("status") && !column.getValue().isEmpty()){
                                     asset.setStatus(column.getValue());
-                                } else if(column.getKey().toLowerCase().equals("purchase date") && !column.getValue().isEmpty()){
+                                } else if(column.getKey().toLowerCase().trim().equals("purchase date") && !column.getValue().isEmpty()){
                                     Date date = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").parse(column.getValue());
                                     asset.setPurchaseDate(date);
-                                }else if(column.getKey().toLowerCase().contains("description") && !column.getValue().isEmpty()){
+                                }else if(column.getKey().toLowerCase().trim().contains("description") && !column.getValue().isEmpty()){
                                     asset.setDescription(column.getValue());
                                 }
                             }
-                        }else{
-                            AssetField assetField = new AssetField();
-                            Category category = categories.stream().filter(c -> c.getName().equals(record.get("column name"))).findFirst().orElse(null);
-                            if(category != null){
-                                Field field = category.getFieldTemplate().getFields().stream().filter(field1 -> field1.getLabel().equals(column.getKey())).findFirst().orElse(null);
-                                if(field != null){
-                                    if(field.isMandatory() && !column.getValue().isEmpty()) {
-                                        assetField.setAssetUUID(asset.getUuid());
-                                        assetField.setFieldId(field.getUuid());
-                                        assetField.setFieldTemplateId(field.getFieldTemplateUUID());
-                                        assetField.setUuid(UUID.randomUUID().toString());
-                                        assetField.setFieldValue("{\"values\":[\"\"]}");
-                                        assetFields.add(assetField);
-                                    }else if(!field.isMandatory()){
-                                        assetField.setAssetUUID(asset.getUuid());
-                                        assetField.setFieldId(field.getUuid());
-                                        assetField.setFieldTemplateId(field.getFieldTemplateUUID());
-                                        assetField.setUuid(UUID.randomUUID().toString());
-                                        assetFields.add(assetField);
-                                    }else{
-                                        importRecord.setMessage("Missing required Additional Field: " + column.getKey());
-                                        importRecord.setStatus(IMPORT_FAILURE);
-                                        success = false;
-                                        break;
+                        }else {
+                            if (!ASSET_INFO.contains(column.getKey().toLowerCase().trim())) {
+                                AssetField assetField = new AssetField();
+                                Category category = categories.stream().filter(c -> c.getName().toLowerCase().trim().equals(record.get("category name").toLowerCase().trim())).findFirst().orElse(null);
+                                if (category != null) {
+                                    assetCategory = category;
+                                    Field field = category.getFieldTemplate().getFields().stream().filter(field1 -> field1.getLabel().toLowerCase().trim().equals(column.getKey().toLowerCase().trim())).findFirst().orElse(null);
+                                    if (field != null) {
+                                        if (field.isMandatory() && !column.getValue().isEmpty()) {
+                                            assetField.setAssetUUID(asset.getUuid());
+                                            assetField.setFieldId(field.getUuid());
+                                            assetField.setFieldTemplateId(field.getFieldTemplateUUID());
+                                            assetField.setUuid(UUID.randomUUID().toString());
+                                            assetField.setFieldValue("{\"values\":[\"" + column.getValue() + "\"]}");
+                                            assetFields.add(assetField);
+                                        } else if (!field.isMandatory()) {
+                                            assetField.setAssetUUID(asset.getUuid());
+                                            assetField.setFieldId(field.getUuid());
+                                            assetField.setFieldTemplateId(field.getFieldTemplateUUID());
+                                            assetField.setUuid(UUID.randomUUID().toString());
+                                            assetField.setFieldValue("{\"values\":[\"" + column.getValue() + "\"]}");
+                                            assetFields.add(assetField);
+                                        } else {
+                                            importRecord.setMessage("Missing required Additional Field: " + column.getKey());
+                                            importRecord.setStatus(IMPORT_FAILURE);
+                                            success = false;
+                                            break;
+                                        }
                                     }
+                                } else {
+                                    importRecord.setMessage("Invalid Category For Asset: " + column.getValue());
+                                    importRecord.setStatus(IMPORT_FAILURE);
+                                    success = false;
+                                    break;
                                 }
                             }
                         }
-
                     }
+
+                    if(success) {
+                        asset.setTenantUUID(tenantUUID);
+                        asset.setAssetFields(Sets.newHashSet(assetFields));
+                        assets.add(asset);
+                        assetUUIDS.add(asset.getUuid());
+                        importRecord.setStatus(IMPORT_SUCCESS);
+                        if (assetCategory != null) {
+                            categories.get(categories.indexOf(assetCategory)).getAssets().add(asset);
+                        }
+                    }
+                    importRecord.setRowNumber((int) record.getRecordNumber());
+                    importRecord.setImportUUID(assetImport.getUuid());
+                    importRecord.setData(stringToByteCompress(record.toString()));
+                    importRecord.setImportedDate(assetImport.getImportDate());
+                    importRecords.add(importRecord);
                 }
+                if(importRecords.size() > 0){
+                    float totalRecords = importRecords.size() ;
+                    float successRecords = assets.size();
+                    float calculatePercentage = (float) ((successRecords/totalRecords) * 100);
+                    if(calculatePercentage == 100.00){
+                        assetImport.setStatus(IMPORT_COMPLETE);
+                    }else{
+                        assetImport.setStatus(IMPORT_IN_COMPLETE);
+                    }
+                    String percentageComplete = (calculatePercentage) +"%";
+                    assetImport.setPercentageComplete(percentageComplete);
+                    assetImport.setMessage((int)successRecords + " of " + (int)totalRecords + " records imported Successfully.");
+                }else{
+                    assetImport.setPercentageComplete("0%");
+                    assetImport.setMessage("0 of 0 records imported Successfully.");
+                }
+                if(assets != null && assets.size() > 0){
+                    categoryRepository.save(categories);
+//                    assetRepository.save(assets);
+                    Set<Asset> savedAssets = assetRepository.findAssetsByUuidIn(assetUUIDS);
+                    for(Asset asset: savedAssets){
+                        asset.setAssetNumber(this.genrateAssetNumber(asset.getId()));
+                    }
+                    assetRepository.save(savedAssets);
+                }
+                assetImportRepository.save(assetImport);
+                if(importRecords != null && importRecords.size() > 0) {
+                    importRecordRepository.save(importRecords);
+                }
+                response.setAssetImport(assetImport);
+                response.setImportRecords(importRecords);
+                response.setResponseIdentifier(SUCCESS);
+                response.setDescription("Import Asset CSV Successfully.");
+                LOGGER.info("Import Asset CSV Successfully.");
             }catch (Exception e){
                 LOGGER.error("An Error occurred while reading csv file.",e);
                 throw new ApplicationException("An Error occurred while reading csv file..",e);
