@@ -546,6 +546,26 @@ public class AssetController {
         return responseEntity;
     }
 
+    @GetMapping("/download/failures")
+    public @ResponseBody
+    ResponseEntity downloadFailureImports(@RequestParam("importUUID") String importUUID) {
+        Util util = new Util();
+        ResponseEntity response = null;
+        try{
+            util.setThreadContextForLogging(scim2Util);
+            LOGGER.info("Request receive in download failure import controller.");
+            response = new ResponseEntity<GetFileResponse>(assetService.downloadFailureImports(importUUID),HttpStatus.OK);
+        }catch (AccessDeniedException ade){
+            response = new ResponseEntity<String>(ade.getMessage(),HttpStatus.FORBIDDEN);
+        }catch (Exception e){
+            response = new ResponseEntity<String>(e.getMessage(),HttpStatus.INTERNAL_SERVER_ERROR);
+        }finally {
+            LOGGER.info("Returning from controller of download failure import template.");
+            util.clearThreadContextForLogging();
+            util = null;
+        }
+        return response;
+    }
     /*******************************************Import Template Functions*****************************************/
 
     /*******************************************Asset Functions**********************************************/

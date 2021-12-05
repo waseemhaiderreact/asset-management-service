@@ -74,11 +74,13 @@ import com.sharklabs.ams.util.AccessDeniedException;
 import com.sharklabs.ams.util.Constant;
 import com.sharklabs.ams.util.Util;
 import com.sharklabs.ams.wallet.*;
+import org.apache.commons.collections.IteratorUtils;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVPrinter;
 import org.apache.commons.csv.CSVRecord;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.poi.ss.usermodel.*;
@@ -109,6 +111,7 @@ import java.io.*;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.net.URLEncoder;
+import java.sql.ResultSet;
 import java.text.SimpleDateFormat;
 import java.time.ZoneId;
 import java.util.*;
@@ -1085,6 +1088,7 @@ public class   AssetService {
                 fileResponse.setContent(file);
                 fileResponse.setContentLength(file.length);
             } catch (final IOException e) {
+                LOGGER.error("An Error occurred while writing CSV.",e);
                 throw new RuntimeException("Csv writing error: " + e.getMessage());
             }
 
@@ -1134,7 +1138,7 @@ public class   AssetService {
                         .toLocalDate());
                 assetImport.setImportDate(new Date());
                 assetImport.setUuid(UUID.randomUUID().toString());
-                assetImport.setColumns(stringToByteCompress(csvParser.getHeaderNames().toString()));
+                assetImport.setColumns(stringToByteCompress(StringUtils.join(csvParser.getHeaderNames(),",")));
                 assetImport.setStatus(IMPORT_SUCCESS);
                 List<String> headers = csvParser.getHeaderNames().stream()
                         .map(String::toLowerCase)
@@ -1317,7 +1321,7 @@ public class   AssetService {
                     }
                     importRecord.setRowNumber((int) record.getRecordNumber());
                     importRecord.setImportUUID(assetImport.getUuid());
-                    importRecord.setData(stringToByteCompress(record.toString()));
+                    importRecord.setData(stringToByteCompress(StringUtils.join(record.iterator(),",")));
                     importRecord.setImportedDate(assetImport.getImportDate());
                     importRecords.add(importRecord);
                 }
@@ -1368,6 +1372,49 @@ public class   AssetService {
             util = null;
         }
         return response;
+    }
+
+    public GetFileResponse downloadFailureImports(String importUUID) throws ApplicationException,AccessDeniedException{
+        if(!privilegeHandler.hasRead()){
+            LOGGER.error("Access is Denied.");
+            throw new AccessDeniedException();
+        }
+        Util util = new Util();
+        GetFileResponse fileResponse = new GetFileResponse();
+        try{
+            util.setThreadContextForLogging(scim2Util);
+            LOGGER.info("Inside service function of download failure imports by import uuid: " + importUUID);
+            AssetImport assetImport = assetImportRepository.findByUuid(importUUID);
+            String columns = stringDecompress(assetImport.getColumns());
+            List<String> headers = new LinkedList<String>(Arrays.asList(columns.split(",")));
+            headers.add(0,"Error");
+            List<ImportRecord> importRecords = importRecordRepository.findImportRecordsByImportUUIDAndStatus(importUUID,FAILURE);
+            try (final ByteArrayOutputStream stream = new ByteArrayOutputStream();
+                 final CSVPrinter printer = new CSVPrinter(new PrintWriter(stream), CSVFormat.DEFAULT.withHeader(headers.toArray(new String[0])))) {
+                for(ImportRecord importRecord:importRecords){
+                    List<String> data = new LinkedList<String>(Arrays.asList(stringDecompress(importRecord.getData()).split(",")));
+                    data.add(0,importRecord.getMessage());
+                    printer.printRecord(data);
+                }
+                printer.flush();
+                byte [] file = stream.toByteArray();
+                fileResponse.setResponseIdentifier(SUCCESS);
+                fileResponse.setFileName(assetImport.getImportName()+".csv");
+                fileResponse.setContent(file);
+                fileResponse.setContentLength(file.length);
+            } catch (final IOException e) {
+                LOGGER.error("An Error occurred while writing CSV.",e);
+                throw new RuntimeException("Csv writing error: " + e.getMessage());
+            }
+        }catch (Exception e){
+            LOGGER.error("An Error Occurred while downloading failure imports.",e);
+            throw new ApplicationException("An Error Occurred while downloading failure imports.",e);
+        }finally {
+            LOGGER.info("Returning to controller of download failure imports.");
+            util.clearThreadContextForLogging();
+            util = null;
+        }
+        return fileResponse;
     }
     /*******************************************Import Template Functions*************************************/
 
