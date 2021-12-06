@@ -1,5 +1,6 @@
 package com.sharklabs.ams.asset;
 
+import com.sharklabs.ams.assetfield.AssetField;
 import com.sharklabs.ams.minimalinfo.MinimalInfo;
 import com.sharklabs.ams.response.GetNameAndTypeOfAssetResponse;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -75,5 +76,6 @@ public interface AssetRepository extends JpaRepository<Asset,Long>, PagingAndSor
 
     @Query("SELECT c.name FROM t_asset a, t_category c WHERE a.uuid=?1 AND c.uuid=a.categoryUUID")
     String findCategoryNameByAssetUUID(@Param("uuid") String uuid);
+
 
 }

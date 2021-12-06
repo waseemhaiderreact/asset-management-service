@@ -81,12 +81,12 @@ import org.apache.commons.csv.CSVPrinter;
 import org.apache.commons.csv.CSVRecord;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang.WordUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
-import org.joda.time.format.DateTimeFormatter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.stream.annotation.EnableBinding;
@@ -113,7 +113,11 @@ import java.math.RoundingMode;
 import java.net.URLEncoder;
 import java.sql.ResultSet;
 import java.text.SimpleDateFormat;
+import java.time.LocalDate;
 import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeFormatterBuilder;
+import java.time.format.DateTimeParseException;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.zip.GZIPInputStream;
@@ -1014,8 +1018,8 @@ public class   AssetService {
             response.setResponseIdentifier(SUCCESS);
             LOGGER.info("Page of Asset Import templates got successfully");
         }catch (Exception e){
-            LOGGER.error("An Error Occurred while get paginated Asset import template fr sdt.",e);
-            throw new ApplicationException("An Error Occurred while get paginated Asset import template fr sdt.",e);
+            LOGGER.error("An Error Occurred while get paginated Asset import template for sdt.",e);
+            throw new ApplicationException("An Error Occurred while get paginated Asset import template for sdt.",e);
         }finally {
             LOGGER.info("Returning from controller of get paginated Asset import templates for sdt.");
             util.clearThreadContextForLogging();
@@ -1106,7 +1110,7 @@ public class   AssetService {
     }
 
     @Transactional
-    public ImportBulkAssetResponse importBulkAssetsByCSV(MultipartFile file, String tenantUUID) throws ApplicationException,AccessDeniedException{
+    public ImportBulkAssetResponse importBulkAssetsByCSV(MultipartFile file, ImportBulkAssetRequest request) throws ApplicationException,AccessDeniedException{
         if(!privilegeHandler.hasCreate()){
             LOGGER.error("Access is Denied.");
             throw new AccessDeniedException();
@@ -1139,6 +1143,9 @@ public class   AssetService {
                 assetImport.setImportDate(new Date());
                 assetImport.setUuid(UUID.randomUUID().toString());
                 assetImport.setColumns(stringToByteCompress(StringUtils.join(csvParser.getHeaderNames(),",")));
+                assetImport.setTenantUUID(request.getTenantUUID());
+                assetImport.setUserName(request.getUserName());
+                assetImport.setUserUUID(request.getUserUUID());
                 assetImport.setStatus(IMPORT_SUCCESS);
                 List<String> headers = csvParser.getHeaderNames().stream()
                         .map(String::toLowerCase)
@@ -1149,7 +1156,7 @@ public class   AssetService {
                     response.setResponseIdentifier(FAILURE);
                     return response;
                 }
-                categories = categoryRepository.findByTenantUUID(tenantUUID);
+                categories = categoryRepository.findByTenantUUID(request.getTenantUUID());
                 if(categories != null && categories.size() <=0){
                     LOGGER.error("No Category Exists for this organization.");
                     response.setDescription("No Category Exists for this organization.");
@@ -1263,9 +1270,19 @@ public class   AssetService {
                             }else{
                                 if(column.getKey().toLowerCase().trim().equals("status") && !column.getValue().isEmpty()){
                                     asset.setStatus(column.getValue());
-                                } else if(column.getKey().toLowerCase().trim().equals("purchase date") && !column.getValue().isEmpty()){
-                                    Date date = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").parse(column.getValue());
-                                    asset.setPurchaseDate(date);
+                                } else if(column.getKey().toLowerCase().trim().equals("purchased date") && !column.getValue().isEmpty()){
+                                    try{
+                                        DateTimeFormatter dtf = new DateTimeFormatterBuilder()
+                                                .parseCaseInsensitive()
+                                                .appendPattern("u/M/d")
+                                                .toFormatter(Locale.ENGLISH);
+                                        LocalDate localDate = LocalDate.parse(column.getValue(), dtf);
+                                        ZoneId defaultZoneId = ZoneId.systemDefault();
+                                        Date date = Date.from(localDate.atStartOfDay(defaultZoneId).toInstant());
+                                        asset.setPurchaseDate(date);
+                                    }catch (DateTimeParseException dt){
+                                        asset.setPurchaseDate(null);
+                                    }
                                 }else if(column.getKey().toLowerCase().trim().contains("description") && !column.getValue().isEmpty()){
                                     asset.setDescription(column.getValue());
                                 }
@@ -1310,7 +1327,7 @@ public class   AssetService {
                     }
 
                     if(success) {
-                        asset.setTenantUUID(tenantUUID);
+                        asset.setTenantUUID(request.getTenantUUID());
                         asset.setAssetFields(Sets.newHashSet(assetFields));
                         assets.add(asset);
                         assetUUIDS.add(asset.getUuid());
@@ -1343,7 +1360,6 @@ public class   AssetService {
                 }
                 if(assets != null && assets.size() > 0){
                     categoryRepository.save(categories);
-//                    assetRepository.save(assets);
                     Set<Asset> savedAssets = assetRepository.findAssetsByUuidIn(assetUUIDS);
                     for(Asset asset: savedAssets){
                         asset.setAssetNumber(this.genrateAssetNumber(asset.getId()));
@@ -1415,6 +1431,130 @@ public class   AssetService {
             util = null;
         }
         return fileResponse;
+    }
+
+    public GetPaginatedDataForSDTResponse getPaginatedLastImports(GetPaginatedDataForSDTRequest request) throws AccessDeniedException,ApplicationException{
+        if(!privilegeHandler.hasRead()){
+            LOGGER.error("Access is Denied.");
+            throw new AccessDeniedException();
+        }
+        Util util = new Util();
+        GetPaginatedDataForSDTResponse response = new GetPaginatedDataForSDTResponse();
+        CriteriaBuilder criteriaBuilder = null;
+        CriteriaQuery query = null;
+        Root root = null;
+        List<Predicate> clauses = null;
+        try{
+            util.setThreadContextForLogging(scim2Util);
+            LOGGER.info("Inside service function of get paginated last Asset imports for sdt." + convertToJSON(request));
+            criteriaBuilder = entityManager.getCriteriaBuilder();
+            query = criteriaBuilder.createQuery(Long.class);
+            root = query.from(AssetImport.class);
+            clauses = new ArrayList<>();
+            clauses.add(criteriaBuilder.equal(root.get("tenantUUID"),request.getTenantUUID()));
+
+
+            clauses = addInspectionFilters(criteriaBuilder,root,clauses,request.getFilters(),request.getSearchQuery());
+
+            response.getSdtData().put(TOTAL_ELEMENTS,(Long) entityManager.createQuery(query.select(criteriaBuilder.count(root)).where(clauses.toArray(new Predicate[]{}))).getSingleResult());
+
+            List<AssetImport> assetImports = (List<AssetImport>) entityManager.createQuery(query.select(root).where(clauses.toArray(new Predicate[]{}))
+                            .orderBy(criteriaBuilder.desc(root.get(request.getSortField()))))
+                    .setFirstResult(request.getLimit() * request.getOffset())
+                    .setMaxResults(request.getLimit())
+                    .getResultList();
+
+            response.getSdtData().put(CONTENT,new ArrayList<>());
+            for(AssetImport assetImport: assetImports){
+                ((ArrayList) response.getSdtData().get(CONTENT)).add(new HashMap<>());
+
+                ((HashMap) ((ArrayList) response.getSdtData().get(CONTENT)).get(((ArrayList) response.getSdtData().get(CONTENT)).size() - 1)).put("uuid", assetImport.getUuid());
+                ((HashMap) ((ArrayList) response.getSdtData().get(CONTENT)).get(((ArrayList) response.getSdtData().get(CONTENT)).size() - 1)).put("importName", assetImport.getImportName());
+                ((HashMap) ((ArrayList) response.getSdtData().get(CONTENT)).get(((ArrayList) response.getSdtData().get(CONTENT)).size() - 1)).put("importDate", assetImport.getImportDate());
+                ((HashMap) ((ArrayList) response.getSdtData().get(CONTENT)).get(((ArrayList) response.getSdtData().get(CONTENT)).size() - 1)).put("percentageComplete", assetImport.getPercentageComplete());
+                ((HashMap) ((ArrayList) response.getSdtData().get(CONTENT)).get(((ArrayList) response.getSdtData().get(CONTENT)).size() - 1)).put("message", assetImport.getMessage());
+                ((HashMap) ((ArrayList) response.getSdtData().get(CONTENT)).get(((ArrayList) response.getSdtData().get(CONTENT)).size() - 1)).put("status", assetImport.getStatus());
+                ((HashMap) ((ArrayList) response.getSdtData().get(CONTENT)).get(((ArrayList) response.getSdtData().get(CONTENT)).size() - 1)).put("userUUID", assetImport.getUserUUID());
+                ((HashMap) ((ArrayList) response.getSdtData().get(CONTENT)).get(((ArrayList) response.getSdtData().get(CONTENT)).size() - 1)).put("userName", assetImport.getUserName());
+                ((HashMap) ((ArrayList) response.getSdtData().get(CONTENT)).get(((ArrayList) response.getSdtData().get(CONTENT)).size() - 1)).put("tenantUUID", assetImport.getTenantUUID());
+            }
+
+            response.getSdtData().put(TOTAL_PAGES,((Long)response.getSdtData().get(TOTAL_ELEMENTS) / request.getLimit()) + 1);
+            if((Long)response.getSdtData().get(TOTAL_ELEMENTS) == request.getLimit())
+                response.getSdtData().replace(TOTAL_PAGES,(Long)response.getSdtData().get(TOTAL_PAGES) - 1);
+            response.setResponseIdentifier(SUCCESS);
+            LOGGER.info("Page of Last Asset Imports got successfully");
+        }catch (Exception e){
+            LOGGER.error("An Error Occurred while get paginated last Asset imports for sdt.",e);
+            throw new ApplicationException("An Error Occurred while get paginated last Asset imports for sdt.",e);
+        }finally {
+            LOGGER.info("Returning from controller of get paginated last Asset import for sdt.");
+            util.clearThreadContextForLogging();
+            util = null;
+        }
+        return response;
+    }
+
+    public GetFileResponse exportAssetDetailInBulk(ExportAssetInBulkRequest request) throws AccessDeniedException,ApplicationException{
+        if(!privilegeHandler.hasRead()){
+            LOGGER.error("Access is Denied");
+            throw new AccessDeniedException();
+        }
+        Util util = new Util();
+        GetFileResponse response = new GetFileResponse();
+        try{
+            util.setThreadContextForLogging(scim2Util);
+            LOGGER.info("Inside service function of export Asset detail in bulk. Detail: " +convertToJSON(request));
+            Set<Asset> assets = assetRepository.findAssetsByUuidIn(request.getAssetUUIDS());
+            List<Category> categories = categoryRepository.findByTenantUUID(request.getTenantUUID());
+            List<String> headers = new LinkedList<String>(ASSET_INFO.stream().map(s -> WordUtils.capitalize(s)).collect(Collectors.toList()));
+            headers.add(0,"Asset Number");
+            List<String> fieldIds = assetFieldRepository.findFieldIdByAssetUUIDIn(request.getAssetUUIDS());
+            List<Field> fields = fieldRepository.findFieldsByUuidIn(fieldIds);
+            for(Field field:fields){
+                if(!headers.contains(field.getLabel())){
+                    headers.add(field.getLabel());
+                }
+            }
+            try(final ByteArrayOutputStream stream = new ByteArrayOutputStream();
+                final CSVPrinter printer = new CSVPrinter(new PrintWriter(stream), CSVFormat.DEFAULT.withHeader(headers.toArray(new String[0])))){
+                for(Asset asset:assets){
+                    List<String> records = new ArrayList<>();
+                    Category category = categories.stream().filter(f -> f.getUuid().equals(asset.getCategoryUUID())).findFirst().orElse(null);
+                    records.add(asset.getAssetNumber() != null ? asset.getAssetNumber() : "");
+                    records.add(category != null ? category.getName() : "");
+                    records.add(asset.getName() != null ? asset.getName() : "");
+                    records.add(asset.getModelNumber() != null ? asset.getModelNumber() : "");
+                    records.add(asset.getManufacture() != null ? asset.getManufacture() : "");
+                    records.add(asset.getPurchaseDate() != null ? new SimpleDateFormat("yyyy/M/d").format(asset.getPurchaseDate()):"");
+                    records.add(asset.getStatus() != null ? asset.getStatus() : "");
+                    records.add("");
+                    records.add(asset.getWarranty() != null ? asset.getWarranty() : "");
+                    records.add(asset.getPrimaryUsageUnit() != null ? asset.getPrimaryUsageUnit() : "");
+                    records.add(asset.getSecondaryUsageUnit() != null ? asset.getSecondaryUsageUnit() : "");
+                    records.add(asset.getConsumptionUnit() != null ? asset.getConsumptionUnit() : "");
+                    records.add(asset.getDescription() != null ? asset.getDescription(): "");
+                    printer.printRecord(records);
+                }
+                printer.flush();
+                byte [] file = stream.toByteArray();
+                response.setResponseIdentifier(SUCCESS);
+                response.setFileName("Asset Export - " + new SimpleDateFormat("dd/MM/yyyy").format(new Date())+".csv");
+                response.setContent(file);
+                response.setContentLength(file.length);
+            }catch (Exception e){
+                LOGGER.error("An Error occurred while writing CSV.",e);
+                throw new RuntimeException("Csv writing error: " + e.getMessage());
+            }
+        }catch (Exception e){
+            LOGGER.error("An Error occurred while exporting Asset detail in bulk",e);
+            throw new ApplicationException("An Error occurred while exporting Asset detail in bulk",e);
+        }finally {
+            LOGGER.info("Returning to controller of export Asset detail in bulk.");
+            util.clearThreadContextForLogging();
+            util = null;
+        }
+        return response;
     }
     /*******************************************Import Template Functions*************************************/
 

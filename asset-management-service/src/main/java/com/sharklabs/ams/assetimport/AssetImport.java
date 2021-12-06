@@ -26,6 +26,12 @@ public class AssetImport {
     @Lob
     private byte[] columns;
 
+    private String userUUID;
+
+    private String userName;
+
+    private String tenantUUID;
+
     public Long getId() {
         return id;
     }
@@ -88,5 +94,29 @@ public class AssetImport {
 
     public void setColumns(byte[] columns) {
         this.columns = columns;
+    }
+
+    public String getUserUUID() {
+        return userUUID;
+    }
+
+    public void setUserUUID(String userUUID) {
+        this.userUUID = userUUID;
+    }
+
+    public String getUserName() {
+        return userName;
+    }
+
+    public void setUserName(String userName) {
+        this.userName = userName;
+    }
+
+    public String getTenantUUID() {
+        return tenantUUID;
+    }
+
+    public void setTenantUUID(String tenantUUID) {
+        this.tenantUUID = tenantUUID;
     }
 }

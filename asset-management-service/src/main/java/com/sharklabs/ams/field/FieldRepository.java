@@ -15,4 +15,6 @@ public interface FieldRepository extends JpaRepository<Field,Long> {
 
     @Transactional
     Long deleteByUuid(String uuid);
+
+    List<Field> findFieldsByUuidIn(List<String> fieldIds);
 }
