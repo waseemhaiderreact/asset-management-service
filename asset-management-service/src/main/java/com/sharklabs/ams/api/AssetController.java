@@ -1375,6 +1375,7 @@ public class AssetController {
         return responseEntity;
     }
 
+    //Edit consumption Images by qasim...
     @RequestMapping(method=RequestMethod.PUT, value="/consumption")
     public @ResponseBody
     ResponseEntity editConsumption(@RequestBody EditConsumptionRequest request) throws ApplicationException,IOException{
@@ -1390,6 +1391,25 @@ public class AssetController {
         util.clearThreadContextForLogging();
         util = null;
         request = null;
+        return responseEntity;
+    }
+
+    //Delete consumption Images by qasim...
+    @RequestMapping(method = RequestMethod.DELETE,value="/consumption/image",params={"id"})
+    public @ResponseBody
+    ResponseEntity deleteConsumptionImages(@RequestParam Long id) {
+        Util util = new Util();
+        LOGGER.info("Request received in controller to delete asset. UUID: "+id);
+        util.setThreadContextForLogging(scim2Util);
+        ResponseEntity responseEntity=null;
+        DefaultResponse response=assetService.deleteConsumptionImages(id);
+        if(response.getResponseCode().equals("200")){
+            responseEntity=new ResponseEntity<DefaultResponse>(response,HttpStatus.OK);
+        }
+        else if(response.getResponseCode().equals("500")){
+            responseEntity=new ResponseEntity<DefaultResponse>(response,HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+        util.clearThreadContextForLogging();
         return responseEntity;
     }
 

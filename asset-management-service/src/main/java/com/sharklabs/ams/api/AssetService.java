@@ -42,6 +42,7 @@ import com.sharklabs.ams.field.FieldRepository;
 import com.sharklabs.ams.fieldtemplate.FieldTemplate;
 import com.sharklabs.ams.fieldtemplate.FieldTemplateRepository;
 import com.sharklabs.ams.fieldtemplate.FieldTemplateResponse;
+import com.sharklabs.ams.imagevoice.ImageVoice;
 import com.sharklabs.ams.imagevoice.ImageVoiceRepository;
 import com.sharklabs.ams.inspectionitem.InspectionItem;
 import com.sharklabs.ams.inspectionitemcategory.InspectionItemCategory;
@@ -1102,13 +1103,9 @@ public class   AssetService {
         Asset asset = null;
         try {
             LOGGER.info("Inside Service function of deleting asset image of uuid: "+id);
-
             assetImages = assetImageRepository.findAllById(id);
-
             assetImageRepository.delete(id);
-
             LOGGER.info("Asset deleted Successfully");
-
             response = new DefaultResponse("Success", "Asset Image deleted Successfully", "200");
         } catch (Exception e) {
             LOGGER.error("Error while deleting asset of uuid"+id, e);
@@ -1119,9 +1116,7 @@ public class   AssetService {
             util.clearThreadContextForLogging();
             util = null;
         }
-
         return response;
-
     }
 
     //archive or delete asset by UUID.....
@@ -2963,7 +2958,9 @@ public class   AssetService {
 //
 //        return response;
 //    }
-//    @HasCreate
+
+
+//    @HasCreate get image work by qasim...
     DefaultResponse addConsumptionUnits(AddConsumptionUnitsRequest request) throws AccessDeniedException {
 
         if(!privilegeHandler.hasCreate())
@@ -2979,14 +2976,18 @@ public class   AssetService {
             util.setThreadContextForLogging(scim2Util);
             LOGGER.info("Inside service function of adding consumption units of asset. AssetUUID: " + request.getAssetUUID());
 
-            //find asset by uuid
+            //find asset by uuid qasim
             asset = assetRepository.findAssetByUuid(request.getAssetUUID());
             //add consumption unit in the array of consumptions of asset
             asset.addConsumption(request.getConsumption());
             request.getConsumption().setAssetUUID(request.getAssetUUID());
             request.getConsumption().setCreatedAt(new Date());
             request.getConsumption().setUuid(UUID.randomUUID().toString());
-
+            if(request.getImageVoices().size() > 0){
+                for(int i = 0; i < request.getImageVoices().size(); i++) {
+                    request.getImageVoices().get(i).setConsumptionUUID(request.getConsumption().getUuid());
+                }
+            }
             usage=new Usage();
             usage.setCreatedAt(new Date());
             usage.setAssetUUID(request.getAssetUUID());
@@ -3033,6 +3034,29 @@ public class   AssetService {
 
         return response;
     }
+
+    // delete single image from consumption by qasim...
+    public DefaultResponse deleteConsumptionImages(Long id){
+        Util util = new Util();
+        DefaultResponse response = null;
+        ImageVoice imageVoice = null;
+        try { LOGGER.info("Inside Service function of deleting consumption image of id: "+id);
+            imageVoice = imageVoiceRepository.findById(id);
+            imageVoiceRepository.delete(id);
+            LOGGER.info("Image deleted Successfully");
+            response = new DefaultResponse("Success", "Image deleted Successfully", "200");
+        } catch (Exception e) {
+            LOGGER.error("Error while deleting Image of uuid"+id, e);
+            response = new DefaultResponse("Failure", "Error in deleting Image: " + e.getMessage(), "500");
+            e = null;
+        }finally{
+            LOGGER.info("Returning to controller of delete Image");
+            util.clearThreadContextForLogging();
+            util = null;
+        }
+        return response;
+    }
+
     public void incorporateWalletInConsumption(AddConsumptionUnitsRequest request) throws ApplicationException{
         String userUUID=request.getUserUUID();
         Wallet wallet=new Wallet();
@@ -3420,12 +3444,25 @@ public class   AssetService {
 
         Util util = new Util();
         GetConsumptionByIdResponse response=new GetConsumptionByIdResponse();
+        List<ImageVoice> imageVoices = null;
+        GetFileResponse getFileResponse=null;
         try{
             util.setThreadContextForLogging(scim2Util);
             LOGGER.info("Inside service function of getting consumption by id. ID: "+id);
             //find consumption by id
 
             response.setConsumption(consumptionRepository.findOne(id));
+            imageVoices = imageVoiceRepository.findByConsumptionUUID(response.getConsumption().getUuid());
+            if(imageVoices!=null){
+                for(int i=0;i<imageVoices.size();i++){
+//                    if(imageVoices.get(i)){
+                        getFileResponse=getFile(imageVoices.get(i).getContentUrl());
+                        imageVoices.get(i).setContent(getFileResponse.getContent());
+//                    }
+                }
+            }
+            response.setImageVoices(imageVoices);
+
             response.setResponseIdentifier("Success");
             LOGGER.info("Successfully got usages");
         }catch(Exception e){
