@@ -16,6 +16,8 @@ public interface  UsageRepository extends JpaRepository<Usage,Long> {
     Set<Usage> findByAssetUUIDOrderByIdDesc(String uuid);
     Usage findFirstByAssetUUIDOrderByIdDesc(String uuid);
 
+    
+
     Page<Usage> findByAssetUUIDOrderByCreatedAtDesc(String assetUUID, Pageable pageable);
 
     @Query(value = "SELECT * FROM t_usages u "+
@@ -36,5 +38,8 @@ public interface  UsageRepository extends JpaRepository<Usage,Long> {
                              Pageable pageable);
 
     Page<Usage> findByAssetUUIDInOrderByIdDesc(List<String> assetUUIDS, Pageable pageable);
+
+    List<Usage> findUsagesByAssetUUIDInOrderByIdDesc(List<String> assetUUIDS);
+
     Page<Usage> findByAssetUUIDInAndCategoryOrderByIdDesc(List<String> assetUUIDS,String category, Pageable pageable);
 }

@@ -87,6 +87,9 @@ import org.apache.logging.log4j.Logger;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.stream.annotation.EnableBinding;
@@ -1150,9 +1153,9 @@ public class   AssetService {
                 List<String> headers = csvParser.getHeaderNames().stream()
                         .map(String::toLowerCase)
                         .collect(Collectors.toList());
-                if(!headers.contains("category name")){
-                    LOGGER.error("Required column Category Name missing.");
-                    response.setDescription("Required column Category Name missing.");
+                if(!headers.containsAll(ASSET_REQUIRED_FIELDS)){
+                    LOGGER.error("Required Fields missing.");
+                    response.setDescription("Required Fields missing.");
                     response.setResponseIdentifier(FAILURE);
                     return response;
                 }
@@ -1269,12 +1272,12 @@ public class   AssetService {
                                 }
                             }else{
                                 if(column.getKey().toLowerCase().trim().equals("status") && !column.getValue().isEmpty()){
-                                    asset.setStatus(column.getValue());
+                                    asset.setStatus(ASSET_STATUSES.contains(column.getValue().toLowerCase()) ? column.getValue() : null);
                                 } else if(column.getKey().toLowerCase().trim().equals("purchased date") && !column.getValue().isEmpty()){
                                     try{
                                         DateTimeFormatter dtf = new DateTimeFormatterBuilder()
                                                 .parseCaseInsensitive()
-                                                .appendPattern("u/M/d")
+                                                .appendPattern("dd/MM/yyyy")
                                                 .toFormatter(Locale.ENGLISH);
                                         LocalDate localDate = LocalDate.parse(column.getValue(), dtf);
                                         ZoneId defaultZoneId = ZoneId.systemDefault();
@@ -1526,7 +1529,7 @@ public class   AssetService {
                     records.add(asset.getName() != null ? asset.getName() : "");
                     records.add(asset.getModelNumber() != null ? asset.getModelNumber() : "");
                     records.add(asset.getManufacture() != null ? asset.getManufacture() : "");
-                    records.add(asset.getPurchaseDate() != null ? new SimpleDateFormat("yyyy/M/d").format(asset.getPurchaseDate()):"");
+                    records.add(asset.getPurchaseDate() != null ? new SimpleDateFormat("dd/MM/yyyy").format(asset.getPurchaseDate()):"");
                     records.add(asset.getStatus() != null ? asset.getStatus() : "");
                     records.add("");
                     records.add(asset.getWarranty() != null ? asset.getWarranty() : "");
@@ -1534,6 +1537,22 @@ public class   AssetService {
                     records.add(asset.getSecondaryUsageUnit() != null ? asset.getSecondaryUsageUnit() : "");
                     records.add(asset.getConsumptionUnit() != null ? asset.getConsumptionUnit() : "");
                     records.add(asset.getDescription() != null ? asset.getDescription(): "");
+                    int startIndex = records.size();
+                    for(AssetField assetField:asset.getAssetFields()){
+                        String fieldName = fields.stream().filter(f -> f.getUuid().equals(assetField.getFieldId())).map(Field::getLabel).findFirst().orElse(null);
+                        if(fieldName != null){
+                            int indexInHeaders = 0;
+                            indexInHeaders = headers.indexOf(fieldName);
+                            try{
+                                records.set(indexInHeaders,this.parseAssetFieldValue(assetField.getFieldValue()));
+                            }catch (IndexOutOfBoundsException ie){
+                                for(int i = records.size() - 1; i < indexInHeaders; i++){
+                                    records.add("");
+                                }
+                                records.set(indexInHeaders,this.parseAssetFieldValue(assetField.getFieldValue()));
+                            }
+                        }
+                    }
                     printer.printRecord(records);
                 }
                 printer.flush();
@@ -1555,6 +1574,21 @@ public class   AssetService {
             util = null;
         }
         return response;
+    }
+
+    private String parseAssetFieldValue(String assetValue) throws ApplicationException{
+        String value = null;
+        try{
+            LOGGER.info("Inside function of parse Asset field value. Detail: " + assetValue);
+            JSONParser jsonParser = new JSONParser();
+            JSONObject jsonObject = (JSONObject) jsonParser.parse(assetValue);
+            JSONArray jsonArray = (JSONArray) jsonObject.get("values");
+            value = jsonArray.get(0) != null ? jsonArray.get(0).toString() : null;
+        }catch (Exception e){
+            LOGGER.error("An Error occurred while parsing Asset field value",e);
+            throw new ApplicationException("An Error occurred while parsing Asset field value",e);
+        }
+        return value != null ? value : "";
     }
     /*******************************************Import Template Functions*************************************/
 
@@ -2417,12 +2451,16 @@ public class   AssetService {
             query1 = criteriaBuilder.createQuery(Long.class);
             asset = query1.from(Asset.class);
             response.getAssets().setTotalElements((Long)entityManager.createQuery(query1.select(criteriaBuilder.count(asset)).where(clauses.toArray( new Predicate[]{}))).getSingleResult());
+            response.getAssets().setTotalPages(((Long) response.getAssets().getTotalElements() / request.getLimit()) + 1);
+
+            if ((Long) response.getAssets().getTotalElements() == request.getLimit())
+                response.getAssets().setTotalPages((Long) response.getAssets().getTotalPages() - 1);
             response.setResponseIdentifier("Success");
             LOGGER.info("Received assets for SDT from database. Returning to controller");
 
         } catch (Exception e) {
             LOGGER.error("Error while getting page of assets for SDT,details: "+convertToJSON(request), e);
-            response.setResponseIdentifier("Failure");
+            response.setResponseIdentifier(SUCCESS);
             e = null;
         }finally{
             LOGGER.info("Returning to controller of Get Paginated Assets for SDT");
@@ -2515,26 +2553,35 @@ public class   AssetService {
             query = criteriaBuilder.createQuery(Asset.class);
             root = query.from(Asset.class);
 
-            List<Asset> assets = (List<Asset>) entityManager.createQuery(query.select(root).where(root.get("uuid").in(request.getUuids()))).getResultList();
-            for(Asset asset: assets){
-                GetNameAndTypeOfAssetResponse assetResponse = new GetNameAndTypeOfAssetResponse();
-                assetResponse.setName(asset.getName());
-                Category category = categoryRepository.findCategoryByUuid(asset.getCategoryUUID());
-                Usage usage = usageRepository.findFirstByAssetUUIDOrderByIdDesc(asset.getUuid());
-                assetResponse.setType(category.getName());
-                assetResponse.setCategoryUUID(asset.getCategoryUUID());
-                assetResponse.setUuid(asset.getUuid());
-                assetResponse.setModelNumber(asset.getModelNumber());
-                assetResponse.setConsumptionPoints(asset.getConsumptionPoints());
-                assetResponse.setConsumptionUnit(asset.getConsumptionUnit());
-                assetResponse.setPrimaryUsageUnit(asset.getPrimaryUsageUnit());
-                assetResponse.setSecondaryUsageUnit(asset.getSecondaryUsageUnit());
-                assetResponse.setLastUsage(usage);
-                assetResponse.setManufacture(asset.getManufacture());
-//                assetResponse.setImageUrl();
-                assetResponse.setAssetNumber(asset.getAssetNumber());
-                response.getAssets().put(asset.getUuid(),assetResponse);
+            List<GetNameAndTypeOfAssetResponse> responses = assetRepository.findAssetDetailByAssetUUIDS(request.getUuids());
+            List<Usage> usages = usageRepository.findUsagesByAssetUUIDInOrderByIdDesc(request.getUuids());
+            for(GetNameAndTypeOfAssetResponse response1 : responses){
+                Usage usage = usages.stream().filter(usage1 -> usage1.getAssetUUID().equals(response1.getUuid())).findFirst().orElse(null);
+                if(usage != null){
+                    response1.setLastUsage(usage);
+                }
             }
+//            List<Asset> assets = (List<Asset>) entityManager.createQuery(query.select(root).where(root.get("uuid").in(request.getUuids()))).getResultList();
+//            List<Usage> usages
+//            for(Asset asset: assets){
+//                GetNameAndTypeOfAssetResponse assetResponse = new GetNameAndTypeOfAssetResponse();
+//                assetResponse.setName(asset.getName());
+//                Category category = categoryRepository.findCategoryByUuid(asset.getCategoryUUID());
+//                Usage usage = usageRepository.findFirstByAssetUUIDOrderByIdDesc(asset.getUuid());
+//                assetResponse.setType(category.getName());
+//                assetResponse.setCategoryUUID(asset.getCategoryUUID());
+//                assetResponse.setUuid(asset.getUuid());
+//                assetResponse.setModelNumber(asset.getModelNumber());
+//                assetResponse.setConsumptionPoints(asset.getConsumptionPoints());
+//                assetResponse.setConsumptionUnit(asset.getConsumptionUnit());
+//                assetResponse.setPrimaryUsageUnit(asset.getPrimaryUsageUnit());
+//                assetResponse.setSecondaryUsageUnit(asset.getSecondaryUsageUnit());
+//                assetResponse.setLastUsage(usage);
+//                assetResponse.setManufacture(asset.getManufacture());
+////                assetResponse.setImageUrl();
+//                assetResponse.setAssetNumber(asset.getAssetNumber());
+//                response.getAssets().put(asset.getUuid(),assetResponse);
+//            }
 
 //            Asset_ = entityManager.getMetamodel().entity(Asset.class);
 //            EntityType<Category> Category_ = entityManager.getMetamodel().entity(Category.class);

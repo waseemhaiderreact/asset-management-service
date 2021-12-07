@@ -67,4 +67,7 @@ public class Constant {
 
     public static final String IMPORT_IN_COMPLETE = "Incomplete";
 
+    //Asset Statuses
+    public static final List<String> ASSET_STATUSES = Arrays.asList("active","inactive","outofservice","spare","expired/disposed","sold");
+
 }

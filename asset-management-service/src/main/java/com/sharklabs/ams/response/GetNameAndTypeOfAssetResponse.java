@@ -60,6 +60,19 @@ public class GetNameAndTypeOfAssetResponse {
         this.modelNumber = modelNumber;
     }
 
+    public GetNameAndTypeOfAssetResponse(String name, String categoryUUID, String assetNumber, String uuid, String primaryUsageUnit, String secondaryUsageUnit, String consumptionUnit, int consumptionPoints,String modelNumber, String categoryName) {
+        this.name = name;
+        this.categoryUUID = categoryUUID;
+        this.assetNumber = assetNumber;
+        this.uuid = uuid;
+        this.primaryUsageUnit = primaryUsageUnit;
+        this.secondaryUsageUnit = secondaryUsageUnit;
+        this.consumptionUnit = consumptionUnit;
+        this.consumptionPoints = consumptionPoints;
+        this.modelNumber = modelNumber;
+        this.type = categoryName;
+    }
+
     public GetNameAndTypeOfAssetResponse() {
     }
     public String getImageUrl() {

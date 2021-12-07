@@ -77,5 +77,7 @@ public interface AssetRepository extends JpaRepository<Asset,Long>, PagingAndSor
     @Query("SELECT c.name FROM t_asset a, t_category c WHERE a.uuid=?1 AND c.uuid=a.categoryUUID")
     String findCategoryNameByAssetUUID(@Param("uuid") String uuid);
 
+    @Query(value = "SELECT new com.sharklabs.ams.response.GetNameAndTypeOfAssetResponse(a.name,a.categoryUUID,a.assetNumber,a.uuid,a.primaryUsageUnit,a.secondaryUsageUnit,a.consumptionUnit,a.consumptionPoints,a.modelNumber,c.name) FROM t_asset a,t_category c, t_usages u WHERE a.uuid in (:uuids) AND c.uuid = a.categoryUUID")
+    List<GetNameAndTypeOfAssetResponse> findAssetDetailByAssetUUIDS(@Param("uuids") List<String> uuids);
 
 }
