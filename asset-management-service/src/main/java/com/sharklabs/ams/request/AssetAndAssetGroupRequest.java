@@ -7,6 +7,16 @@ public class AssetAndAssetGroupRequest {
     public Set<String> assetUUIDs;
     public Set<String> assetGroupUUIDs;
     String accessKey;
+    public String userUUIDs;
+    public String tenantUUIDs;
+
+    public String getTenantUUIDs() {
+        return tenantUUIDs;
+    }
+
+    public void setTenantUUIDs(String tenantUUIDs) {
+        this.tenantUUIDs = tenantUUIDs;
+    }
 
     public String getAccessKey() {
         return accessKey;

@@ -19,11 +19,11 @@ public interface  UsageRepository extends JpaRepository<Usage,Long> {
 //            " SELECT CAST(MAX (uu.primaryUsageValue) AS INT) from t_usages uu where uu.assetUUID=:assetUUID) ")
 //    Usage findUsageByAssetUUIDAndMaxPrimaryUsageValue(@Param("assetUUID") String assetUUID);
 //
-    @Query("SELECT u from t_usages u where cast(u.secondaryUsageValue as int)  = ( SELECT MAX(cast (uu.secondaryUsageValue as int)) from t_usages uu where uu.assetUUID=:assetUUID ) ")
-    Usage findUsageByAssetUUIDAndMaxSecondaryUsageValue(@Param("assetUUID") String assetUUID);
+    @Query("SELECT DISTINCT u from t_usages u where cast(u.secondaryUsageValue as int)  = ( SELECT MAX(cast (uu.secondaryUsageValue as int)) from t_usages uu where uu.assetUUID=:assetUUID )  ")
+    List<Usage> findUsageByAssetUUIDAndMaxSecondaryUsageValue(@Param("assetUUID") String assetUUID);
 
-    @Query("SELECT u from t_usages u where cast(u.primaryUsageValue as int)  = ( SELECT MAX(cast (uu.primaryUsageValue as int)) from t_usages uu where uu.assetUUID=:assetUUID ) ")
-    Usage findUsageByAssetUUIDAndMaxPrimaryUsageValue(@Param("assetUUID") String assetUUID);
+    @Query("SELECT distinct u from t_usages u where cast(u.primaryUsageValue as int)  = ( SELECT MAX(cast (uu.primaryUsageValue as int)) from t_usages uu where uu.assetUUID=:assetUUID )  " )
+    List<Usage> findUsageByAssetUUIDAndMaxPrimaryUsageValue(@Param("assetUUID") String assetUUID);
     //
     List <Usage> findUsageByAssetUUID(String assetUUID);
 //    @Query(value = "SELECT u from t_usages u where u.primaryUsageValue = (" +
