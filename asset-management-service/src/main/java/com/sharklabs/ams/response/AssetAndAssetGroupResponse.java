@@ -3,9 +3,10 @@ package com.sharklabs.ams.response;
 import com.sharklabs.ams.asset.AssetDTO;
 import com.sharklabs.ams.assetGroup.AssetGroupDTO;
 
+import java.io.Serializable;
 import java.util.List;
 
-public class AssetAndAssetGroupResponse {
+public class AssetAndAssetGroupResponse implements Serializable {
 
     private List<AssetGroupDTO> assetGroupDTOS;
     private String responseIdentifier;
