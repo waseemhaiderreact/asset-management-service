@@ -38,8 +38,6 @@ public interface  UsageRepository extends JpaRepository<Usage,Long> {
                              Pageable pageable);
 
     Page<Usage> findByAssetUUIDInOrderByIdDesc(List<String> assetUUIDS, Pageable pageable);
-
-    List<Usage> findUsagesByAssetUUIDInOrderByIdDesc(List<String> assetUUIDS);
-
+    
     Page<Usage> findByAssetUUIDInAndCategoryOrderByIdDesc(List<String> assetUUIDS,String category, Pageable pageable);
 }

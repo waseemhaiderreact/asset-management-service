@@ -122,6 +122,7 @@ import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeFormatterBuilder;
 import java.time.format.DateTimeParseException;
 import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
@@ -1122,24 +1123,38 @@ public class   AssetService {
         ImportBulkAssetResponse response = new ImportBulkAssetResponse();
         AssetImport assetImport = new AssetImport();
         List<Asset> assets = new ArrayList<>();
+        List<Asset> updateAssets = new ArrayList<>();
         List<ImportRecord> importRecords = new ArrayList<>();
         List<Category> categories = new ArrayList<>();
         try{
             util.setThreadContextForLogging(scim2Util);
-            LOGGER.info("Inside service function of import bulk Asset by CSV.");
+            LOGGER.info("Inside service function of import bulk Asset by CSV. Details: " + convertToJSON(request));
+            //checking if file is right type(csv)
             if(!file.getContentType().equals("text/csv")){
                 LOGGER.error("File Type is not compatible.");
                 response.setResponseIdentifier(FAILURE);
                 response.setDescription("Only CSV file Accepted.");
                 return response;
             }
-
+            //getting all category of an organinzation
+            categories = categoryRepository.findByTenantUUID(request.getTenantUUID());
+            //checking if organization have any categories
+            if(categories != null && categories.size() <=0){
+                LOGGER.error("No Category Exists for this organization.");
+                response.setDescription("No Category Exists for this organization.");
+                response.setResponseIdentifier(FAILURE);
+                return response;
+            }
+            //reading csv file
             try (BufferedReader fileReader = new BufferedReader(new InputStreamReader(file.getInputStream(), "UTF-8"));
                 CSVParser csvParser = new CSVParser(fileReader,
                         CSVFormat.DEFAULT.withFirstRecordAsHeader().withIgnoreHeaderCase().withTrim());) {
 
-                Iterable<CSVRecord> csvRecords = csvParser.getRecords();
-
+                List<CSVRecord> csvRecords = csvParser.getRecords(); // getting records from file
+                List<String> headers = csvParser.getHeaderNames().stream()
+                        .map(String::toLowerCase).map(String::trim)
+                        .collect(Collectors.toList()); // getting headers from file in lower case
+                //setting up import entity
                 assetImport.setImportName(file.getOriginalFilename() + " on " + new Date().toInstant()
                         .atZone(ZoneId.systemDefault())
                         .toLocalDate());
@@ -1150,185 +1165,266 @@ public class   AssetService {
                 assetImport.setUserName(request.getUserName());
                 assetImport.setUserUUID(request.getUserUUID());
                 assetImport.setStatus(IMPORT_SUCCESS);
-                List<String> headers = csvParser.getHeaderNames().stream()
-                        .map(String::toLowerCase)
-                        .collect(Collectors.toList());
-                if(!headers.containsAll(ASSET_REQUIRED_FIELDS)){
-                    LOGGER.error("Required Fields missing.");
-                    response.setDescription("Required Fields missing.");
-                    response.setResponseIdentifier(FAILURE);
-                    return response;
+                //checking if it's Add or update import
+                if(request.getImportType().equals("Add")){
+                    //checking if file contain all required fields
+                    if(!headers.containsAll(ASSET_REQUIRED_FIELDS)){
+                        LOGGER.error("Missing Required Fields Column.");
+                        response.setDescription("Missing Required Fields Column.");
+                        response.setResponseIdentifier(FAILURE);
+                        return response;
+                    }
+                }else if(request.getImportType().equals("Update")){
+                    //checking if file contain Asset Number for update/add when Asset Number is empty or not
+                    if(!headers.contains("Asset Number".toLowerCase()) && !headers.contains("Asset #".toLowerCase())){
+                        LOGGER.error("Missing Required Fields Asset Number/Asset #.");
+                        response.setDescription("Missing Required Fields Asset Number/ Asset #.");
+                        response.setResponseIdentifier(FAILURE);
+                        return response;
+                    }
+                    int index = headers.indexOf("Asset Number".toLowerCase()); // getting Asset Number index
+                    if(index == -1){
+                        index = headers.indexOf("Asset #".toLowerCase()); // checking if Asset Number column heading like (Asset #) and getting index
+                    }
+
+                    //creating asset Number list for fetching assets
+                    List<String> assetNumber = new ArrayList<>();
+                    for(CSVRecord record:csvRecords){
+                        assetNumber.add(record.get(index));
+                    }
+                    //fetching Assets
+                    if(assetNumber.size() > 0){
+                        updateAssets = assetRepository.findAssetsByAssetNumberIn(assetNumber);
+                    }
                 }
-                categories = categoryRepository.findByTenantUUID(request.getTenantUUID());
-                if(categories != null && categories.size() <=0){
-                    LOGGER.error("No Category Exists for this organization.");
-                    response.setDescription("No Category Exists for this organization.");
-                    response.setResponseIdentifier(FAILURE);
-                    return response;
-                }
-                List<String> assetUUIDS = new ArrayList<>();
+                List<String> assetUUIDS = new ArrayList<>(); // asset uuids list for getting assets after save so we can generate their Asset Number
+                //reading record one by one and generating Asset object and then adding in the Asset List initialize above
                 for(CSVRecord record: csvRecords){
-                    List<AssetField> assetFields = new ArrayList<>();
-                    Asset asset = new Asset();
-                    ImportRecord importRecord = new ImportRecord();
+                    List<AssetField> assetFields = new ArrayList<>(); // asset fields list for saving Asset Fields for Assets
+                    Asset asset = new Asset(); // Asset object for saving all fields and then will be added in the Asset list if all required condition are met
+                    ImportRecord importRecord = new ImportRecord();// Import record for saving per record
                     asset.setUuid(UUID.randomUUID().toString());
                     importRecord.setUuid(UUID.randomUUID().toString());
                     Boolean success = true;
                     Category assetCategory = null;
+                    //getting a record in Map so can read column by header name
                     for(Map.Entry<String,String> column: record.toMap().entrySet()){
-                        if(ASSET_INFO.contains(column.getKey().toLowerCase().trim())){
-                            if(ASSET_REQUIRED_FIELDS.contains(column.getKey().toLowerCase().trim())){
-                                if(column.getKey().toLowerCase().equals("category name") ){
-                                    if(!column.getValue().isEmpty()) {
-                                        LOGGER.info("Required Field category.");
-                                        Category category = categories.stream().filter(c -> c.getName().toLowerCase().trim().equals(column.getValue().toLowerCase().trim())).findFirst().orElse(null);
-                                        if (category == null) {
-                                            importRecord.setMessage("Invalid Category For Asset: " + column.getValue());
-                                            importRecord.setStatus(IMPORT_FAILURE);
-                                            success = false;
-                                            break;
-                                        } else {
-                                            asset.setCategoryUUID(category.getUuid());
-                                            assetCategory = category;
+                        //checking if column is Asset Number or not
+                        // if it is asset number then we will update the asset info of that asset number
+                        if((column.getKey().toLowerCase().trim().equals("asset Number") || column.getKey().toLowerCase().trim().equals("asset #") && !column.getValue().isEmpty())){
+                            Asset updateAsset = updateAssets.stream().filter(a -> a.getAssetNumber().toLowerCase().equals(column.getValue().toLowerCase().trim())).findFirst().orElse(null);
+                            if(updateAsset != null){
+                                int index = updateAssets.indexOf(updateAsset);
+                                if(ASSET_INFO.contains(column.getKey().toLowerCase().trim())){
+                                    if(column.getKey().toLowerCase().trim().equals("asset Name") && !column.getValue().isEmpty()){
+                                        updateAssets.get(index).setName(column.getValue());
+                                    }else if(column.getKey().toLowerCase().trim().equals("model #") && !column.getValue().isEmpty()){
+                                        updateAssets.get(index).setModelNumber(column.getValue());
+                                    }else if(column.getKey().toLowerCase().trim().equals("manufacturer name/id") && !column.getValue().isEmpty()){
+                                        updateAssets.get(index).setManufacture(column.getValue());
+                                    }else if(column.getKey().toLowerCase().trim().equals("purchased date") && !column.getValue().isEmpty()){
+                                        try {
+                                            DateTimeFormatter dtf = new DateTimeFormatterBuilder()
+                                                    .parseCaseInsensitive()
+                                                    .appendPattern("dd/MM/yyyy")
+                                                    .toFormatter(Locale.ENGLISH);
+                                            LocalDate localDate = LocalDate.parse(column.getValue(), dtf);
+                                            ZoneId defaultZoneId = ZoneId.systemDefault();
+                                            Date date = Date.from(localDate.atStartOfDay(defaultZoneId).toInstant());
+                                            updateAssets.get(index).setPurchaseDate(date);
+                                        } catch (DateTimeParseException dt) {
+                                            LOGGER.error("An Error Occurred while parsing date.",dt);
                                         }
-                                    }else{
-                                        importRecord.setMessage("Missing Asset Category.");
-                                        importRecord.setStatus(IMPORT_FAILURE);
-                                        success = false;
-                                        break;
+                                    }else if(column.getKey().toLowerCase().trim().equals("status") && !column.getValue().isEmpty()){
+                                        updateAssets.get(index).setStatus(column.getValue());
+                                    }else if(column.getKey().toLowerCase().trim().equals("warranty") && !column.getValue().isEmpty()){
+                                        updateAssets.get(index).setWarranty(column.getValue());
+                                    }else if(column.getKey().toLowerCase().trim().equals("primary usage unit") && !column.getValue().isEmpty()){
+                                        updateAssets.get(index).setPrimaryUsageUnit(column.getValue());
+                                    }else if(column.getKey().toLowerCase().trim().equals("secondary usage unit") && !column.getValue().isEmpty()){
+                                        updateAssets.get(index).setSecondaryUsageUnit(column.getValue());
+                                    }else if(column.getKey().toLowerCase().trim().equals("consumption unit") && !column.getValue().isEmpty()){
+                                        updateAssets.get(index).setConsumptionUnit(column.getValue());
+                                    }else if(column.getKey().toLowerCase().trim().equals("write asset description here") && !column.getValue().isEmpty()){
+                                        updateAssets.get(index).setDescription(column.getValue());
                                     }
-                                }else if(column.getKey().toLowerCase().trim().equals("asset name")){
-                                    if(!column.getValue().isEmpty()) {
-                                        LOGGER.info("Required field asset.");
-                                        asset.setName(column.getValue());
-                                        importRecord.setAssetName(column.getValue());
-                                        importRecord.setMessage("Successfully imported Asset: " + column.getValue());
-                                    }else{
-                                        importRecord.setMessage("Missing Asset Name.");
-                                        importRecord.setStatus(IMPORT_FAILURE);
-                                        success = false;
-                                        break;
-                                    }
-                                }else if(column.getKey().toLowerCase().trim().equals("model #")){
-                                    if(!column.getValue().isEmpty()) {
-                                        LOGGER.info("Required field model.");
-                                        asset.setModelNumber(column.getValue());
-                                    }else{
-                                        importRecord.setMessage("Missing Model Number");
-                                        importRecord.setStatus(IMPORT_FAILURE);
-                                        success = false;
-                                        break;
-                                    }
-                                }else if(column.getKey().toLowerCase().trim().equals("manufacturer name/id")){
-                                    if(!column.getValue().isEmpty()){
-                                        LOGGER.info("Required field manufacturer.");
-                                        asset.setManufacture(column.getValue());
-                                    }else{
-                                        importRecord.setMessage("Missing Manufacturer name/id");
-                                        importRecord.setStatus(IMPORT_FAILURE);
-                                        success = false;
-                                        break;
-                                    }
-                                }else if(column.getKey().toLowerCase().trim().equals("warranty")){
-                                    if(!column.getValue().isEmpty()){
-                                        LOGGER.info("Required field warranty.");
-                                        asset.setWarranty(column.getValue());
-                                    }else{
-                                        importRecord.setMessage("Missing Warranty.");
-                                        importRecord.setStatus(IMPORT_FAILURE);
-                                        success = false;
-                                        break;
-                                    }
-                                }else if(column.getKey().toLowerCase().trim().equals("primary usage unit") ){
-                                    if(!column.getValue().isEmpty()){
-                                        LOGGER.info("Required field primary.");
-                                        asset.setPrimaryUsageUnit(column.getValue());
-                                    }else{
-                                        importRecord.setMessage("Missing Primary Usage Unit.");
-                                        importRecord.setStatus(IMPORT_FAILURE);
-                                        success = false;
-                                        break;
-                                    }
-                                }else if(column.getKey().toLowerCase().trim().equals("secondary usage unit")){
-                                    if(!column.getValue().isEmpty()) {
-                                        LOGGER.info("Required field secondary.");
-                                        asset.setSecondaryUsageUnit(column.getKey());
-                                    }else{
-                                        importRecord.setMessage("Missing Secondary Usage Unit.");
-                                        importRecord.setStatus(IMPORT_FAILURE);
-                                        success = false;
-                                        break;
-                                    }
-                                }else if(column.getKey().toLowerCase().trim().equals("consumption unit")){
-                                    if(!column.getValue().isEmpty()) {
-                                        LOGGER.info("Required field consumption.");
-                                        asset.setConsumptionUnit(column.getValue());
-                                    }else{
-                                        importRecord.setMessage("Missing Consumption unit");
-                                        importRecord.setStatus(IMPORT_FAILURE);
-                                        success = false;
-                                        break;
+                                }else{
+                                    if(!ASSET_INFO.contains(column.getKey().toLowerCase().trim())){
+                                        if(headers.contains("category name")){
+                                            Category category = categories.stream().filter(c -> c.getName().toLowerCase().trim().equals(record.get("category name").toLowerCase().trim())).findFirst().orElse(null);
+                                            if(category != null){
+                                                Field field = category.getFieldTemplate().getFields().stream().filter(field1 -> field1.getLabel().toLowerCase().trim().equals(column.getKey().toLowerCase().trim())).findFirst().orElse(null);
+                                                List<AssetField> assetFieldSet = new ArrayList<AssetField>(updateAssets.get(index).getAssetFields());
+                                                AssetField assetField = assetFieldSet.stream().filter(a -> a.getFieldId().equals(field.getUuid())).findFirst().orElse(null);
+                                                if(assetField != null){
+                                                    int fieldIndex = assetFieldSet.indexOf(assetField);
+                                                     assetFieldSet.get(fieldIndex).setFieldValue("{\"values\":[\"" + column.getValue() + "\"]}");
+                                                }
+                                                updateAssets.get(index).setAssetFields(new HashSet<>(assetFieldSet));
+                                            }
+                                        }
                                     }
                                 }
                             }else{
-                                if(column.getKey().toLowerCase().trim().equals("status") && !column.getValue().isEmpty()){
-                                    asset.setStatus(ASSET_STATUSES.contains(column.getValue().toLowerCase()) ? column.getValue() : null);
-                                } else if(column.getKey().toLowerCase().trim().equals("purchased date") && !column.getValue().isEmpty()){
-                                    try{
-                                        DateTimeFormatter dtf = new DateTimeFormatterBuilder()
-                                                .parseCaseInsensitive()
-                                                .appendPattern("dd/MM/yyyy")
-                                                .toFormatter(Locale.ENGLISH);
-                                        LocalDate localDate = LocalDate.parse(column.getValue(), dtf);
-                                        ZoneId defaultZoneId = ZoneId.systemDefault();
-                                        Date date = Date.from(localDate.atStartOfDay(defaultZoneId).toInstant());
-                                        asset.setPurchaseDate(date);
-                                    }catch (DateTimeParseException dt){
-                                        asset.setPurchaseDate(null);
-                                    }
-                                }else if(column.getKey().toLowerCase().trim().contains("description") && !column.getValue().isEmpty()){
-                                    asset.setDescription(column.getValue());
-                                }
+                                importRecord.setMessage("Invalid Asset Number: " + column.getValue());
+                                importRecord.setStatus(IMPORT_FAILURE);
+                                break;
                             }
-                        }else {
-                            if (!ASSET_INFO.contains(column.getKey().toLowerCase().trim())) {
-                                AssetField assetField = new AssetField();
-                                Category category = categories.stream().filter(c -> c.getName().toLowerCase().trim().equals(record.get("category name").toLowerCase().trim())).findFirst().orElse(null);
-                                if (category != null) {
-                                    assetCategory = category;
-                                    Field field = category.getFieldTemplate().getFields().stream().filter(field1 -> field1.getLabel().toLowerCase().trim().equals(column.getKey().toLowerCase().trim())).findFirst().orElse(null);
-                                    if (field != null) {
-                                        if (field.isMandatory() && !column.getValue().isEmpty()) {
-                                            assetField.setAssetUUID(asset.getUuid());
-                                            assetField.setFieldId(field.getUuid());
-                                            assetField.setFieldTemplateId(field.getFieldTemplateUUID());
-                                            assetField.setUuid(UUID.randomUUID().toString());
-                                            assetField.setFieldValue("{\"values\":[\"" + column.getValue() + "\"]}");
-                                            assetFields.add(assetField);
-                                        } else if (!field.isMandatory()) {
-                                            assetField.setAssetUUID(asset.getUuid());
-                                            assetField.setFieldId(field.getUuid());
-                                            assetField.setFieldTemplateId(field.getFieldTemplateUUID());
-                                            assetField.setUuid(UUID.randomUUID().toString());
-                                            assetField.setFieldValue("{\"values\":[\"" + column.getValue() + "\"]}");
-                                            assetFields.add(assetField);
+                        }else { // adding asset
+                            if (ASSET_INFO.contains(column.getKey().toLowerCase().trim())) {
+                                if (ASSET_REQUIRED_FIELDS.contains(column.getKey().toLowerCase().trim())) {
+                                    if (column.getKey().toLowerCase().equals("category name")) {
+                                        LOGGER.info("Checking Category Field validation.");
+                                        if (!column.getValue().isEmpty()) {
+                                            Category category = categories.stream().filter(c -> c.getName().toLowerCase().trim().equals(column.getValue().toLowerCase().trim())).findFirst().orElse(null);
+                                            if (category == null) {
+                                                importRecord.setMessage("Invalid Category For Asset: " + column.getValue());
+                                                importRecord.setStatus(IMPORT_FAILURE);
+                                                success = false;
+                                                break;
+                                            } else {
+                                                asset.setCategoryUUID(category.getUuid());
+                                                assetCategory = category;
+                                            }
                                         } else {
-                                            importRecord.setMessage("Missing required Additional Field: " + column.getKey());
+                                            importRecord.setMessage("Required Field Category Name is Empty.");
+                                            importRecord.setStatus(IMPORT_FAILURE);
+                                            success = false;
+                                            break;
+                                        }
+                                    } else if (column.getKey().toLowerCase().trim().equals("asset name")) {
+                                        LOGGER.info("Checking Asset name Field validation.");
+                                        if (!column.getValue().isEmpty()) {
+                                            asset.setName(column.getValue());
+                                            importRecord.setAssetName(column.getValue());
+                                            importRecord.setMessage("Successfully imported Asset: " + column.getValue());
+                                        } else {
+                                            importRecord.setMessage("Required Field Asset Name is Empty.");
+                                            importRecord.setStatus(IMPORT_FAILURE);
+                                            success = false;
+                                            break;
+                                        }
+                                    } else if (column.getKey().toLowerCase().trim().equals("model #")) {
+                                        LOGGER.info("Checking Model Number Field Validation.");
+                                        if (!column.getValue().isEmpty()) {
+                                            asset.setModelNumber(column.getValue());
+                                        } else {
+                                            importRecord.setMessage("Required Field Model Number is Empty.");
+                                            importRecord.setStatus(IMPORT_FAILURE);
+                                            success = false;
+                                            break;
+                                        }
+                                    } else if (column.getKey().toLowerCase().trim().equals("manufacturer name/id")) {
+                                        LOGGER.info("Checking Manufacturer Field Validation.");
+                                        if (!column.getValue().isEmpty()) {
+                                            asset.setManufacture(column.getValue());
+                                        } else {
+                                            importRecord.setMessage("Required Field Manufacturer name/id is Empty.");
+                                            importRecord.setStatus(IMPORT_FAILURE);
+                                            success = false;
+                                            break;
+                                        }
+                                    } else if (column.getKey().toLowerCase().trim().equals("warranty")) {
+                                        LOGGER.info("Checking Warranty Field Validation.");
+                                        if (!column.getValue().isEmpty()) {
+                                            asset.setWarranty(column.getValue());
+                                        } else {
+                                            importRecord.setMessage("Required Field Warranty is Empty.");
+                                            importRecord.setStatus(IMPORT_FAILURE);
+                                            success = false;
+                                            break;
+                                        }
+                                    } else if (column.getKey().toLowerCase().trim().equals("primary usage unit")) {
+                                        LOGGER.info("Checking Primary Usage Unit Field Validation .");
+                                        if (!column.getValue().isEmpty()) {
+                                            asset.setPrimaryUsageUnit(column.getValue());
+                                        } else {
+                                            importRecord.setMessage("Required Field Primary Usage Unit is Empty.");
+                                            importRecord.setStatus(IMPORT_FAILURE);
+                                            success = false;
+                                            break;
+                                        }
+                                    } else if (column.getKey().toLowerCase().trim().equals("secondary usage unit")) {
+                                        LOGGER.info("Checking Secondary Usage Unit Field Validation.");
+                                        if (!column.getValue().isEmpty()) {
+                                            asset.setSecondaryUsageUnit(column.getKey());
+                                        } else {
+                                            importRecord.setMessage("Required Field Secondary Usage Unit is Empty.");
+                                            importRecord.setStatus(IMPORT_FAILURE);
+                                            success = false;
+                                            break;
+                                        }
+                                    } else if (column.getKey().toLowerCase().trim().equals("consumption unit")) {
+                                        LOGGER.info("Checking Consumption Unit Field Validation.");
+                                        if (!column.getValue().isEmpty()) {
+                                            asset.setConsumptionUnit(column.getValue());
+                                        } else {
+                                            importRecord.setMessage("Required Field Consumption Unit is Empty.");
                                             importRecord.setStatus(IMPORT_FAILURE);
                                             success = false;
                                             break;
                                         }
                                     }
                                 } else {
-                                    importRecord.setMessage("Invalid Category For Asset: " + column.getValue());
-                                    importRecord.setStatus(IMPORT_FAILURE);
-                                    success = false;
-                                    break;
+                                    if (column.getKey().toLowerCase().trim().equals("status") && !column.getValue().isEmpty()) {
+                                        asset.setStatus(ASSET_STATUSES.contains(column.getValue().toLowerCase()) ? column.getValue() : null);
+                                    } else if (column.getKey().toLowerCase().trim().equals("purchased date") && !column.getValue().isEmpty()) {
+                                        try {
+                                            DateTimeFormatter dtf = new DateTimeFormatterBuilder()
+                                                    .parseCaseInsensitive()
+                                                    .appendPattern("dd/MM/yyyy")
+                                                    .toFormatter(Locale.ENGLISH);
+                                            LocalDate localDate = LocalDate.parse(column.getValue(), dtf);
+                                            ZoneId defaultZoneId = ZoneId.systemDefault();
+                                            Date date = Date.from(localDate.atStartOfDay(defaultZoneId).toInstant());
+                                            asset.setPurchaseDate(date);
+                                        } catch (DateTimeParseException dt) {
+                                            asset.setPurchaseDate(null);
+                                        }
+                                    } else if (column.getKey().toLowerCase().trim().contains("description") && !column.getValue().isEmpty()) {
+                                        asset.setDescription(column.getValue());
+                                    }
+                                }
+                            } else {
+                                if (!ASSET_INFO.contains(column.getKey().toLowerCase().trim())) {
+                                    AssetField assetField = new AssetField();
+                                    Category category = categories.stream().filter(c -> c.getName().toLowerCase().trim().equals(record.get("category name").toLowerCase().trim())).findFirst().orElse(null);
+                                    if (category != null) {
+                                        assetCategory = category;
+                                        Field field = category.getFieldTemplate().getFields().stream().filter(field1 -> field1.getLabel().toLowerCase().trim().equals(column.getKey().toLowerCase().trim())).findFirst().orElse(null);
+                                        if (field != null) {
+                                            if (field.isMandatory() && !column.getValue().isEmpty()) {
+                                                assetField.setAssetUUID(asset.getUuid());
+                                                assetField.setFieldId(field.getUuid());
+                                                assetField.setFieldTemplateId(field.getFieldTemplateUUID());
+                                                assetField.setUuid(UUID.randomUUID().toString());
+                                                assetField.setFieldValue("{\"values\":[\"" + column.getValue() + "\"]}");
+                                                assetFields.add(assetField);
+                                            } else if (!field.isMandatory()) {
+                                                assetField.setAssetUUID(asset.getUuid());
+                                                assetField.setFieldId(field.getUuid());
+                                                assetField.setFieldTemplateId(field.getFieldTemplateUUID());
+                                                assetField.setUuid(UUID.randomUUID().toString());
+                                                assetField.setFieldValue("{\"values\":[\"" + column.getValue() + "\"]}");
+                                                assetFields.add(assetField);
+                                            } else {
+                                                importRecord.setMessage("Empty required Additional Field: " + column.getKey());
+                                                importRecord.setStatus(IMPORT_FAILURE);
+                                                success = false;
+                                                break;
+                                            }
+                                        }
+                                    } else {
+                                        importRecord.setMessage("Invalid Category For Asset: " + column.getValue());
+                                        importRecord.setStatus(IMPORT_FAILURE);
+                                        success = false;
+                                        break;
+                                    }
                                 }
                             }
                         }
                     }
-
+                    //checking if Asset required fields are fulfilled then will add in the asset list
                     if(success) {
                         asset.setTenantUUID(request.getTenantUUID());
                         asset.setAssetFields(Sets.newHashSet(assetFields));
@@ -1339,12 +1435,14 @@ public class   AssetService {
                             categories.get(categories.indexOf(assetCategory)).getAssets().add(asset);
                         }
                     }
+                    //setting import record remaining data
                     importRecord.setRowNumber((int) record.getRecordNumber());
                     importRecord.setImportUUID(assetImport.getUuid());
                     importRecord.setData(stringToByteCompress(StringUtils.join(record.iterator(),",")));
                     importRecord.setImportedDate(assetImport.getImportDate());
                     importRecords.add(importRecord);
                 }
+                //cheking if there is any import record then will compute them for Saving per import info
                 if(importRecords.size() > 0){
                     float totalRecords = importRecords.size() ;
                     float successRecords = assets.size();
@@ -1361,6 +1459,7 @@ public class   AssetService {
                     assetImport.setPercentageComplete("0%");
                     assetImport.setMessage("0 of 0 records imported Successfully.");
                 }
+                //saving assets if any in the list
                 if(assets != null && assets.size() > 0){
                     categoryRepository.save(categories);
                     Set<Asset> savedAssets = assetRepository.findAssetsByUuidIn(assetUUIDS);
@@ -2492,114 +2591,17 @@ public class   AssetService {
         GetNameAndTypeOfAssetsByUUIDSResponse response = new GetNameAndTypeOfAssetsByUUIDSResponse();
         response.setAssets(new HashMap<>());
 
-        CriteriaBuilder criteriaBuilder = null;
-        CriteriaQuery query = null;
-        Root root = null;
-//        CriteriaQuery<GetNameAndTypeOfAssetResponse> query = null;
-//        Root<Category> category = null;
-//        EntityType<Asset> Asset_ = null;
-//        JdbcTemplate jt = null;
-//        HashMap<String, GetNameAndTypeOfAssetResponse> assetsHashmap = null;
-//        Set<Usage> usages = null;
         try {
             util.setThreadContextForLogging(scim2Util);
 
             LOGGER.info("Inside service function of get get name and type of assets by uuids, request: "+convertToJSON(request));
-//            jt = new JdbcTemplate(this.dataSource());
-//            assetsHashmap = new HashMap<>();
-//            for (String uuid : request.getUuids()) {
-//                String sql = "select a.id as id,a.name as asset_name,a.primary_usage_unit as primary_usage_unit,a.secondary_usage_unit as secondary_usage_unit,a.consumption_unit as consumption_unit,a.consumption_points as consumption_points,c.name as category_name,a.asset_number,a.uuid " +
-//                        "from t_asset a inner join t_category c on a.category_id=c.id " +
-//                        "where a.uuid=?";
-//                Map<String, Object> assetResponse = jt.queryForMap(sql, uuid);
-//                sql = "select i.image_url as image " +
-//                        "from t_asset_images i " +
-//                        "where i.asset_id=? " +
-//                        "limit 1";
-//                GetNameAndTypeOfAssetResponse asset = new GetNameAndTypeOfAssetResponse();
-//                Map<String, Object> imageResponse = null;
-//                try {
-//                    imageResponse = jt.queryForMap(sql, Long.valueOf(String.valueOf(assetResponse.get("id"))));
-//                    asset.setImageUrl(String.valueOf(imageResponse.get("image")));
-//                } catch (org.springframework.dao.EmptyResultDataAccessException e) {
-//                    LOGGER.debug("There are no images of this asset.Asset UUID: " + uuid);
-//                }
-//
-//                asset.setName(String.valueOf(assetResponse.get("asset_name")));
-//                asset.setType(String.valueOf(assetResponse.get("category_name")));
-//                asset.setAssetNumber(String.valueOf(assetResponse.get("asset_number")));
-//                asset.setConsumptionUnit(String.valueOf(assetResponse.get("consumption_unit")));
-//                asset.setPrimaryUsageUnit(String.valueOf(assetResponse.get("primary_usage_unit")));
-//                asset.setSecondaryUsageUnit(String.valueOf(assetResponse.get("secondary_usage_unit")));
-//                asset.setConsumptionPoints((int) assetResponse.get("consumption_points"));
-//                usages = usageRepository.findByAssetUUIDOrderByIdDesc(String.valueOf(assetResponse.get("uuid")));
-//                if(usages.size() != 0){
-//                    for(Usage usage : usages){
-//                        asset.setLastUsage(usage);
-//                        break;
-//                    }
-//                    usages = null;
-//                }else{
-//                    LOGGER.warn("No Usages found for Asset uuid: "+ assetResponse.get("uuid"));
-//                }
-//
-//                assetsHashmap.put(String.valueOf(assetResponse.get("uuid")), asset);
-//
-//                assetResponse = null;
-//                asset = null;
-//                imageResponse = null;
-//            }
-            criteriaBuilder = entityManager.getCriteriaBuilder();
-            query = criteriaBuilder.createQuery(Asset.class);
-            root = query.from(Asset.class);
 
-            List<GetNameAndTypeOfAssetResponse> responses = assetRepository.findAssetDetailByAssetUUIDS(request.getUuids());
-            List<Usage> usages = usageRepository.findUsagesByAssetUUIDInOrderByIdDesc(request.getUuids());
-            for(GetNameAndTypeOfAssetResponse response1 : responses){
-                Usage usage = usages.stream().filter(usage1 -> usage1.getAssetUUID().equals(response1.getUuid())).findFirst().orElse(null);
-                if(usage != null){
-                    response1.setLastUsage(usage);
-                }
+            if(request.getUuids().isEmpty()){
+                LOGGER.warn("Asset uuids is Empty");
+            }else{
+                List<GetNameAndTypeOfAssetResponse> responses = assetRepository.findAssetDetailByAssetUUIDS(request.getUuids());
+                response.setAssets((HashMap<String, GetNameAndTypeOfAssetResponse>) responses.stream().collect(Collectors.toMap(GetNameAndTypeOfAssetResponse::getUuid, Function.identity())));
             }
-//            List<Asset> assets = (List<Asset>) entityManager.createQuery(query.select(root).where(root.get("uuid").in(request.getUuids()))).getResultList();
-//            List<Usage> usages
-//            for(Asset asset: assets){
-//                GetNameAndTypeOfAssetResponse assetResponse = new GetNameAndTypeOfAssetResponse();
-//                assetResponse.setName(asset.getName());
-//                Category category = categoryRepository.findCategoryByUuid(asset.getCategoryUUID());
-//                Usage usage = usageRepository.findFirstByAssetUUIDOrderByIdDesc(asset.getUuid());
-//                assetResponse.setType(category.getName());
-//                assetResponse.setCategoryUUID(asset.getCategoryUUID());
-//                assetResponse.setUuid(asset.getUuid());
-//                assetResponse.setModelNumber(asset.getModelNumber());
-//                assetResponse.setConsumptionPoints(asset.getConsumptionPoints());
-//                assetResponse.setConsumptionUnit(asset.getConsumptionUnit());
-//                assetResponse.setPrimaryUsageUnit(asset.getPrimaryUsageUnit());
-//                assetResponse.setSecondaryUsageUnit(asset.getSecondaryUsageUnit());
-//                assetResponse.setLastUsage(usage);
-//                assetResponse.setManufacture(asset.getManufacture());
-////                assetResponse.setImageUrl();
-//                assetResponse.setAssetNumber(asset.getAssetNumber());
-//                response.getAssets().put(asset.getUuid(),assetResponse);
-//            }
-
-//            Asset_ = entityManager.getMetamodel().entity(Asset.class);
-//            EntityType<Category> Category_ = entityManager.getMetamodel().entity(Category.class);
-//            SetJoin<Category,Asset> asset = category.join(Category_.getSet("assets",Asset.class),JoinType.INNER);
-//            SetJoin<Asset,AssetImage> assetImage = asset.join(Asset_.getSet("assetImages",AssetImage.class),JoinType.LEFT);
-//
-//
-//
-//          if(request.getUuids().isEmpty()){
-//              LOGGER.warn("Asset uuids is Emply");
-//            }else{
-//              entityManager.createQuery(query.select(criteriaBuilder.construct(GetNameAndTypeOfAssetResponse.class,asset.get("name"),category.get("name"),asset.get("assetNumber"),asset.get("uuid"),assetImage.get("imageUrl"),asset.get("primaryUsageUnit"),asset.get("secondaryUsageUnit"),asset.get("consumptionUnit"),asset.get("consumptionPoints"))).where(asset.get("uuid").in(request.getUuids()),criteriaBuilder.isNull(asset.get("removeFromCategoryUUID"))).distinct(true))
-//                      .getResultList().forEach( (assetNameAndType) -> {
-//                  assetNameAndType.setLastUsage(usageRepository.findFirstByAssetUUIDOrderByIdDesc(assetNameAndType.getUuid()));
-//                  response.getAssets().put(assetNameAndType.getUuid(),assetNameAndType);
-//              });
-//          }
-
 
             response.setResponseIdentifier("Success");
             LOGGER.info("Received assets from database. Returning to controller");
@@ -2610,9 +2612,6 @@ public class   AssetService {
         }finally{
             util.clearThreadContextForLogging();
             util = null;
-            criteriaBuilder = null;
-            query = null;
-            root = null;
         }
 
 
@@ -5659,66 +5658,23 @@ public class   AssetService {
 
         //HTTP client from inspections
         public AssetBasicDetailModelResponse fetchAssetNameAndType(String tenantUUID){
+
             AssetBasicDetailModelResponse response = new AssetBasicDetailModelResponse();
-            CriteriaBuilder criteriaBuilder = null;
-            CriteriaQuery query = null;
-            Root root = null;
-            List<Asset> assets =null;
-            List<Category> categories = null;
+
             try{
                 LOGGER.info("In method to fetch List of Asset Name and Type");
-
-                criteriaBuilder = entityManager.getCriteriaBuilder();
-                query = criteriaBuilder.createQuery(Asset.class);
-                root = query.from(Asset.class);
-                AssetBasicDetailModel assetBasicDetailModel = null;
                 // getting assets data for inspection reports,service requests
-                assets = (List<Asset>) entityManager.createQuery(query.select(root).where(criteriaBuilder.equal(root.get("tenantUUID"),tenantUUID))).getResultList();
-                for(Asset asset: assets){
-                    assetBasicDetailModel = new AssetBasicDetailModel();
-                    assetBasicDetailModel.setAssetName(asset.getName());
-                    assetBasicDetailModel.setAssetNumber(asset.getAssetNumber());
-                    assetBasicDetailModel.setAssetUUID(asset.getUuid());
-                    assetBasicDetailModel.setManufacture(asset.getManufacture());
-                    Category category = categoryRepository.findCategoryByUuid(asset.getCategoryUUID());
-                    assetBasicDetailModel.setCategoryUUID(category.getUuid());
-                    assetBasicDetailModel.setAssetType(category.getName());
-
-                    response.getAssets().add(assetBasicDetailModel);
-                }
-                //getting categories data for inspection templates
-                categories = categoryRepository.findByTenantUUID(tenantUUID);
-                for(Category category: categories){
-                    assetBasicDetailModel = new AssetBasicDetailModel();
-                    assetBasicDetailModel.setAssetType(category.getName());
-                    assetBasicDetailModel.setCategoryUUID(category.getUuid());
-                    response.getAssets().add(assetBasicDetailModel);
-
-                }
-//                category = query.from(Category.class);
-//
-//                Asset = entityManager.getMetamodel().entity(Asset.class);
-//                EntityType<Category> Category_ = entityManager.getMetamodel().entity(Category.class);
-//                SetJoin<Category,Asset> asset = category.join(Category_.getSet("assets",Asset.class),JoinType.INNER);
-//
-//
-//                response.setAssets(entityManager.createQuery(query.select(criteriaBuilder.construct(AssetBasicDetailModel.class,asset.get("uuid"),asset.get("name"),category.get("name"),asset.get("assetNumber"),category.get("uuid"))).where(criteriaBuilder.equal(asset.get("tenantUUID"),tenantUUID)).distinct(true))
-//                        .getResultList());
-
-                LOGGER.info("Fetched List of Asset Name and Type");
-//                kafkaAsyncService.sendBasicDetail(response);
+                List<AssetBasicDetailModel> assetBasicDetailModels = assetRepository.findAssetBasicDetailByTenantUUID(tenantUUID);
+                response.setAssets(assetBasicDetailModels);
+                LOGGER.info("Fetched List of Asset Name and Type.");
             }catch(Exception e){
                 LOGGER.error("Error while fetching List of Asset Name and Type",e);
                 e = null;
-            }finally{
-                query = null;
-                criteriaBuilder = null;
-                root = null;
-                assets = null;
             }
 
             return response;
         }
+
         /*****************************************************End Inventory Asset Function********************************************/
         /* Wriiten By Kumail Khan*/
 

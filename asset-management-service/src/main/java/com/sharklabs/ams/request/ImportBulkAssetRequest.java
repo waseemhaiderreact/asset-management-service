@@ -1,5 +1,7 @@
 package com.sharklabs.ams.request;
 
+import org.springframework.web.multipart.MultipartFile;
+
 public class ImportBulkAssetRequest {
 
     private String tenantUUID;
@@ -8,13 +10,18 @@ public class ImportBulkAssetRequest {
 
     private String userName;
 
+    private String importType;
+
+    private MultipartFile file;
+
     public ImportBulkAssetRequest() {
     }
 
-    public ImportBulkAssetRequest(String tenantUUID, String userUUID, String userName) {
+    public ImportBulkAssetRequest(String tenantUUID, String userUUID, String userName, String importType) {
         this.tenantUUID = tenantUUID;
         this.userUUID = userUUID;
         this.userName = userName;
+        this.importType = importType;
     }
 
     public String getTenantUUID() {
@@ -39,5 +46,21 @@ public class ImportBulkAssetRequest {
 
     public void setUserName(String userName) {
         this.userName = userName;
+    }
+
+    public String getImportType() {
+        return importType;
+    }
+
+    public void setImportType(String importType) {
+        this.importType = importType;
+    }
+
+    public MultipartFile getFile() {
+        return file;
+    }
+
+    public void setFile(MultipartFile file) {
+        this.file = file;
     }
 }

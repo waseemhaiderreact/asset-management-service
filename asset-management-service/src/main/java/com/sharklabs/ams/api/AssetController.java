@@ -525,13 +525,17 @@ public class AssetController {
 
     @PostMapping("/import/csv")
     public @ResponseBody
-    ResponseEntity importBulkAssetsByCSV(@RequestParam("file") MultipartFile file,@RequestParam("tenantUUID") String tenantUUID, @RequestParam("userUUID") String userUUID, @RequestParam("userName") String userName) {
+    ResponseEntity importBulkAssetsByCSV(@RequestParam("file") MultipartFile file,
+                                         @RequestParam("tenantUUID") String tenantUUID,
+                                         @RequestParam("userUUID") String userUUID,
+                                         @RequestParam("userName") String userName,
+                                         @RequestParam("importType") String importType) {
         Util util = new Util();
         ResponseEntity responseEntity = null;
         try{
             util.setThreadContextForLogging(scim2Util);
             LOGGER.info("Request received in controller of import bulk Asset by csv.");
-            ImportBulkAssetRequest request = new ImportBulkAssetRequest(tenantUUID,userUUID,userName);
+            ImportBulkAssetRequest request = new ImportBulkAssetRequest(tenantUUID,userUUID,userName,importType);
             responseEntity = new ResponseEntity<ImportBulkAssetResponse>(assetService.importBulkAssetsByCSV(file,request),HttpStatus.OK);
         }catch (AccessDeniedException ade){
             responseEntity = new ResponseEntity<String>(ade.getMessage(),HttpStatus.FORBIDDEN);

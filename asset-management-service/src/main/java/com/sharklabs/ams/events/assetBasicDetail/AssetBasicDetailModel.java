@@ -16,6 +16,15 @@ public class AssetBasicDetailModel {
         this.categoryUUID = categoryUUID;
     }
 
+    public AssetBasicDetailModel(String assetUUID, String assetName, String assetType, String assetNumber, String categoryUUID, String manufacture) {
+        this.assetUUID = assetUUID;
+        this.assetName = assetName;
+        this.assetType = assetType;
+        this.assetNumber = assetNumber;
+        this.categoryUUID = categoryUUID;
+        this.manufacture = manufacture;
+    }
+
     public AssetBasicDetailModel() {
     }
 
