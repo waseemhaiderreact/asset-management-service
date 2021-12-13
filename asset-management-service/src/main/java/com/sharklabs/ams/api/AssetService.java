@@ -1468,7 +1468,7 @@ public class   AssetService {
                     }else{
                         assetImport.setStatus(IMPORT_IN_COMPLETE);
                     }
-                    String percentageComplete = (calculatePercentage) +"%";
+                    String percentageComplete = (Math.round(calculatePercentage)) +"%";
                     assetImport.setPercentageComplete(percentageComplete);
                     assetImport.setMessage((int)successRecords + " of " + (int)totalRecords + " records imported Successfully.");
                 }else{
