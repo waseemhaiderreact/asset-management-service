@@ -1227,13 +1227,13 @@ public class   AssetService {
                                 int index = updateAssets.indexOf(updateAsset);
                                 importRecord.setMessage("Successfully updated Asset: " + record.get(accessAssetNumber));
                                 if(ASSET_INFO.contains(column.getKey().toLowerCase().trim())){
-                                    if(column.getKey().toLowerCase().trim().equals("asset Name") && !column.getValue().isEmpty()){
+                                    if(column.getKey().toLowerCase().trim().equals("asset name".toLowerCase().trim()) && !column.getValue().isEmpty()){
                                         updateAssets.get(index).setName(column.getValue());
-                                    }else if(column.getKey().toLowerCase().trim().equals("model #") && !column.getValue().isEmpty()){
+                                    }else if(column.getKey().toLowerCase().trim().equals("model #".toLowerCase().trim()) && !column.getValue().isEmpty()){
                                         updateAssets.get(index).setModelNumber(column.getValue());
-                                    }else if(column.getKey().toLowerCase().trim().equals("manufacturer name/id") && !column.getValue().isEmpty()){
+                                    }else if(column.getKey().toLowerCase().trim().equals("manufacturer name/id".toLowerCase().trim()) && !column.getValue().isEmpty()){
                                         updateAssets.get(index).setManufacture(column.getValue());
-                                    }else if(column.getKey().toLowerCase().trim().equals("purchased date") && !column.getValue().isEmpty()){
+                                    }else if(column.getKey().toLowerCase().trim().equals("purchased date".toLowerCase().trim()) && !column.getValue().isEmpty()){
                                         try {
                                             DateTimeFormatter dtf = new DateTimeFormatterBuilder()
                                                     .parseCaseInsensitive()
@@ -1246,17 +1246,17 @@ public class   AssetService {
                                         } catch (DateTimeParseException dt) {
                                             LOGGER.error("An Error Occurred while parsing date.",dt);
                                         }
-                                    }else if(column.getKey().toLowerCase().trim().equals("status") && !column.getValue().isEmpty()){
+                                    }else if(column.getKey().toLowerCase().trim().equals("status".toLowerCase().trim()) && !column.getValue().isEmpty()){
                                         updateAssets.get(index).setStatus(column.getValue());
-                                    }else if(column.getKey().toLowerCase().trim().equals("warranty") && !column.getValue().isEmpty()){
+                                    }else if(column.getKey().toLowerCase().trim().equals("warranty".toLowerCase().trim()) && !column.getValue().isEmpty()){
                                         updateAssets.get(index).setWarranty(column.getValue());
-                                    }else if(column.getKey().toLowerCase().trim().equals("primary usage unit") && !column.getValue().isEmpty()){
+                                    }else if(column.getKey().toLowerCase().trim().equals("primary usage unit".toLowerCase().trim()) && !column.getValue().isEmpty()){
                                         updateAssets.get(index).setPrimaryUsageUnit(column.getValue());
-                                    }else if(column.getKey().toLowerCase().trim().equals("secondary usage unit") && !column.getValue().isEmpty()){
+                                    }else if(column.getKey().toLowerCase().trim().equals("secondary usage unit".toLowerCase().trim()) && !column.getValue().isEmpty()){
                                         updateAssets.get(index).setSecondaryUsageUnit(column.getValue());
-                                    }else if(column.getKey().toLowerCase().trim().equals("consumption unit") && !column.getValue().isEmpty()){
+                                    }else if(column.getKey().toLowerCase().trim().equals("consumption unit".toLowerCase().trim()) && !column.getValue().isEmpty()){
                                         updateAssets.get(index).setConsumptionUnit(column.getValue());
-                                    }else if(column.getKey().toLowerCase().trim().equals("write asset description here") && !column.getValue().isEmpty()){
+                                    }else if(column.getKey().toLowerCase().trim().equals("write asset description here".toLowerCase().trim()) && !column.getValue().isEmpty()){
                                         updateAssets.get(index).setDescription(column.getValue());
                                     }
                                 }else{
@@ -1280,7 +1280,7 @@ public class   AssetService {
                                 }
                                 importRecord.setStatus(IMPORT_SUCCESS);
                             }else{
-                                importRecord.setMessage("Invalid Asset Number: " + column.getValue());
+                                importRecord.setMessage("Invalid Asset Number: " + record.get(accessAssetNumber));
                                 importRecord.setStatus(IMPORT_FAILURE);
                                 break;
                             }
@@ -1626,7 +1626,7 @@ public class   AssetService {
         try{
             util.setThreadContextForLogging(scim2Util);
             LOGGER.info("Inside service function of export Asset detail in bulk. Detail: " +convertToJSON(request));
-            Set<Asset> assets = assetRepository.findAssetsByUuidIn(request.getAssetUUIDS());
+            Set<Asset> assets = assetRepository.findAssetsByUuidInOrderByIdDesc(request.getAssetUUIDS());
             List<Category> categories = categoryRepository.findByTenantUUID(request.getTenantUUID());
             List<String> headers = new LinkedList<String>(ASSET_INFO.stream().map(s -> WordUtils.capitalize(s)).collect(Collectors.toList()));
             headers.add(0,"Asset Number");
@@ -1708,6 +1708,7 @@ public class   AssetService {
         }
         return value != null ? value : "";
     }
+
     /*******************************************Import Template Functions*************************************/
 
     /******************************************* Asset Functions ************************************************/

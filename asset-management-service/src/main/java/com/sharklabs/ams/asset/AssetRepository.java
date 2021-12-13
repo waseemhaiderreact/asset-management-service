@@ -21,6 +21,8 @@ public interface AssetRepository extends JpaRepository<Asset,Long>, PagingAndSor
 
     Set<Asset> findAssetsByUuidIn(List<String> assetUuids);
 
+    Set<Asset> findAssetsByUuidInOrderByIdDesc(List<String> assetUuids);
+
     @Query("SELECT a FROM t_asset a WHERE a.uuid = ?1")
     Asset findAssetByUuid(String uuid);
 
