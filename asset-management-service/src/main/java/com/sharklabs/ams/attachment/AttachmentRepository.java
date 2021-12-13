@@ -7,4 +7,7 @@ import java.util.Set;
 
 public interface AttachmentRepository extends JpaRepository<Attachment,Long> {
     Set<Attachment> findAllByAssetUUID(String uuid);
+
+    Attachment findById(Long id);
+
 }

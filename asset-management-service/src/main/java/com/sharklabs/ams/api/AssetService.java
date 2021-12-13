@@ -2,7 +2,6 @@ package com.sharklabs.ams.api;
 
 import com.amazonaws.auth.AWSCredentials;
 import com.amazonaws.auth.BasicAWSCredentials;
-import com.amazonaws.services.dynamodbv2.xspec.NULL;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.model.*;
@@ -50,7 +49,6 @@ import com.sharklabs.ams.inspectiontemplate.InspectionTemplate;
 import com.sharklabs.ams.inspectiontemplate.InspectionTemplateRepository;
 import com.sharklabs.ams.message.Message;
 import com.sharklabs.ams.message.MessageRepository;
-import com.sharklabs.ams.minimalinfo.MinimalInfo;
 import com.sharklabs.ams.model.assignment.Assignment;
 import com.sharklabs.ams.model.assignment.AssignmentHistory;
 import com.sharklabs.ams.model.issue.Issue;
@@ -70,7 +68,6 @@ import com.sharklabs.ams.util.Constant;
 import com.sharklabs.ams.util.Util;
 import com.sharklabs.ams.wallet.*;
 import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang.ObjectUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.poi.ss.usermodel.*;
@@ -1119,6 +1116,30 @@ public class   AssetService {
         return response;
     }
 
+    // delete Attachments from assets.....qasim
+    public DefaultResponse deleteAssetAttachment(Long id){
+        Util util = new Util();
+        DefaultResponse response = null;
+        Attachment attachment = null;
+        Asset asset = null;
+        try {
+            LOGGER.info("Inside Service function of deleting asset image of uuid: "+id);
+            attachment = attachmentRepository.findById(id);
+            attachmentRepository.delete(id);
+            LOGGER.info("Asset Attachment deleted Successfully");
+            response = new DefaultResponse("Success", "Asset Attachment deleted Successfully", "200");
+        } catch (Exception e) {
+            LOGGER.error("Error while deleting asset of uuid"+id, e);
+            response = new DefaultResponse("Failure", "Error in deleting asset Attachment: " + e.getMessage(), "500");
+            e = null;
+        }finally{
+            LOGGER.info("Returning to controller of delete Asset Attachment");
+            util.clearThreadContextForLogging();
+            util = null;
+        }
+        return response;
+    }
+
     //archive or delete asset by UUID.....
     public DefaultResponse archiveOrDeleteAssetByUuid(String uuid, String type) throws ApplicationException{
         Util util = new Util();
@@ -1277,6 +1298,8 @@ public class   AssetService {
             throw new AccessDeniedException();
 
         Util util = new Util();
+        Attachment attachment = null;
+        GetFileResponse getFileResponse = null;
         GetAssetDetailResponse response = new GetAssetDetailResponse();
         response.setAssetDetail(new AssetDetailResponse());
 

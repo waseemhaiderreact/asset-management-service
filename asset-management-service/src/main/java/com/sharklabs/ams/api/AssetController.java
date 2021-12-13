@@ -3006,6 +3006,24 @@ public class AssetController {
 
         return response;
     }
+    //Delete Asset Attachment by qasim...
+    @RequestMapping(method = RequestMethod.DELETE,value="/attachment",params={"id"})
+    public @ResponseBody
+    ResponseEntity deleteAssetAttachment(@RequestParam Long id) {
+        Util util = new Util();
+        LOGGER.info("Request received in controller to delete asset Attachment. UUID: "+id);
+        util.setThreadContextForLogging(scim2Util);
+        ResponseEntity responseEntity=null;
+        DefaultResponse response=assetService.deleteAssetAttachment(id);
+        if(response.getResponseCode().equals("200")){
+            responseEntity=new ResponseEntity<DefaultResponse>(response,HttpStatus.OK);
+        }
+        else if(response.getResponseCode().equals("500")){
+            responseEntity=new ResponseEntity<DefaultResponse>(response,HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+        util.clearThreadContextForLogging();
+        return responseEntity;
+    }
     public String convertToJSON (Object obj) throws IOException {
         ObjectMapper objectMapper = new ObjectMapper();
         return objectMapper.writeValueAsString(obj);
