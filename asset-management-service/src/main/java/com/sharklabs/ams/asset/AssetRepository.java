@@ -1,5 +1,7 @@
 package com.sharklabs.ams.asset;
 
+import com.sharklabs.ams.assetfield.AssetField;
+import com.sharklabs.ams.events.assetBasicDetail.AssetBasicDetailModel;
 import com.sharklabs.ams.minimalinfo.MinimalInfo;
 import com.sharklabs.ams.response.GetNameAndTypeOfAssetResponse;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -18,6 +20,8 @@ import java.util.Set;
 public interface AssetRepository extends JpaRepository<Asset,Long>, PagingAndSortingRepository<Asset,Long> {
 
     Set<Asset> findAssetsByUuidIn(List<String> assetUuids);
+
+    Set<Asset> findAssetsByUuidInOrderByIdDesc(List<String> assetUuids);
 
     @Query("SELECT a FROM t_asset a WHERE a.uuid = ?1")
     Asset findAssetByUuid(String uuid);
@@ -75,6 +79,15 @@ public interface AssetRepository extends JpaRepository<Asset,Long>, PagingAndSor
 
     @Query("SELECT c.name FROM t_asset a, t_category c WHERE a.uuid=?1 AND c.uuid=a.categoryUUID")
     String findCategoryNameByAssetUUID(@Param("uuid") String uuid);
+
+    @Query(value = "SELECT new com.sharklabs.ams.response.GetNameAndTypeOfAssetResponse(a.name,a.categoryUUID,a.assetNumber,a.uuid,a.primaryUsageUnit,a.secondaryUsageUnit,a.consumptionUnit,a.consumptionPoints,a.modelNumber,c.name) FROM t_asset a,t_category c WHERE a.uuid in (:uuids) AND c.uuid = a.categoryUUID")
+    List<GetNameAndTypeOfAssetResponse> findAssetDetailByAssetUUIDS(@Param("uuids") List<String> uuids);
+
+    @Query("SELECT  new com.sharklabs.ams.events.assetBasicDetail.AssetBasicDetailModel(a.uuid,a.name,c.name,a.assetNumber,a.categoryUUID,a.manufacture) FROM t_asset a, t_category c WHERE a.tenantUUID=?1 AND c.uuid=a.categoryUUID AND a.removeFromCategoryUUID IS NULL ")
+    List<AssetBasicDetailModel> findAssetBasicDetailByTenantUUID(@Param("tenantUUID") String tenantUUID);
+
+    @Query("SELECT a FROM t_asset a WHERE a.assetNumber IN (:assetNumber)")
+    List<Asset> findAssetsByAssetNumberIn(@Param("assetNumber") List<String> assetNumber);
 
     @Query("SELECT new com.sharklabs.ams.asset.AssetDTO(a.uuid,a.name) FROM t_asset a WHERE a.uuid in :uuid AND a.removeFromCategoryUUID " +
             "is NULL ")

@@ -1,6 +1,5 @@
 package com.sharklabs.ams.category;
 
-import com.sharklabs.ams.fieldtemplate.FieldTemplate;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -22,6 +21,9 @@ public interface CategoryRepository extends JpaRepository<Category,Long> {
 
     @Query("SELECT new com.sharklabs.ams.category.CategoryDTO(c.uuid,c.name) FROM t_category c WHERE c.tenantUUID=?1")
     List<CategoryDTO> findCategoriesListByTenantUUID(@Param("uuid") String uuid);
+
+    @Query("SELECT new com.sharklabs.ams.category.CategoryFieldDTO(c.name,c.uuid,f) FROM t_category c, t_field_template f WHERE c.tenantUUID=?1 AND c.id = f.category.id")
+    List<CategoryFieldDTO> findCategoriesFieldsByTenantUUID(@Param("uuid") String uuid);
 
     Category findByTenantUUIDAndName(String tenantUUID, String name);
 

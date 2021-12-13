@@ -47,6 +47,7 @@ public class AssetController {
     SCIM2Util scim2Util;
 
     /*******************************************Category Functions*******************************************/
+
     //add a category AMS_UC_01
     @RequestMapping(method = RequestMethod.POST,value="/categories")
     @Caching(evict = {
@@ -282,9 +283,30 @@ public class AssetController {
         }
         return response;
     }
+
+    @GetMapping("/categories/fields")
+    public @ResponseBody
+    ResponseEntity getCategoriesFieldsListByUUID(@RequestParam("uuid") String uuid){
+        Util util = new Util();
+        ResponseEntity responseEntity = null;
+        try{
+            util.setThreadContextForLogging(scim2Util);
+            LOGGER.info("Request received in get categories fields list by tenant uuid: " + uuid);
+            responseEntity = new ResponseEntity<CategoriesFieldsListResponse>(assetService.getCategoriesFieldsListByTenantUUID(uuid),HttpStatus.OK);
+        }catch (AccessDeniedException ae){
+            responseEntity = new ResponseEntity<String>(ae.getMessage(),HttpStatus.FORBIDDEN);
+        }catch (Exception e){
+            responseEntity = new ResponseEntity<String>(e.getMessage(),HttpStatus.OK);
+        }finally {
+            LOGGER.info("Returning from controller of get categories fields list by tenant uuid.");
+        }
+        return responseEntity;
+    }
+
     /*******************************************END Category Functions*******************************************/
 
     /*******************************************Field Template Functions*****************************************/
+
     //add a field template AMS_UC_06
     @RequestMapping(method = RequestMethod.POST,value="/fieldtemplate")
     public @ResponseBody
@@ -415,6 +437,185 @@ public class AssetController {
     }
 
     /*******************************************END Field Template Functions*****************************************/
+
+    /*******************************************Import Template Functions*****************************************/
+
+    @PostMapping("/import/template")
+    public @ResponseBody
+    ResponseEntity addAssetImportTemplate(@RequestBody ImportTemplateRequest request) {
+        Util util = new Util();
+        ResponseEntity response = null;
+        try{
+            util.setThreadContextForLogging(scim2Util);
+            LOGGER.info("Request receive in add Asset import template controller.");
+            response = new ResponseEntity<DefaultResponse>(assetService.addAssetImportTemplate(request),HttpStatus.OK);
+        }catch (AccessDeniedException ade){
+            response = new ResponseEntity<String>(ade.getMessage(),HttpStatus.FORBIDDEN);
+        }catch (Exception e){
+            response = new ResponseEntity<String>(e.getMessage(),HttpStatus.INTERNAL_SERVER_ERROR);
+        }finally {
+            LOGGER.info("Returning from controller of add Asset import template.");
+            util.clearThreadContextForLogging();
+            util = null;
+        }
+        return response;
+    }
+
+    @PostMapping("/import/templates")
+    public @ResponseBody
+    ResponseEntity getPaginatedAssetImportTemplatesForSDT(@RequestBody GetPaginatedDataForSDTRequest request){
+        Util util = new Util();
+        ResponseEntity responseEntity = null;
+        try{
+            util.setThreadContextForLogging(scim2Util);
+            LOGGER.info("Request received in get paginated Asset import templates for Sdt.");
+            responseEntity = new ResponseEntity<GetPaginatedDataForSDTResponse>(assetService.getPaginatedAssetImportTemplatesForSDT(request),HttpStatus.OK);
+        }catch (AccessDeniedException ade){
+            responseEntity = new ResponseEntity<String>(ade.getMessage(),HttpStatus.FORBIDDEN);
+        }catch (Exception e){
+            responseEntity = new ResponseEntity<String>(e.getMessage(),HttpStatus.INTERNAL_SERVER_ERROR);
+        }finally {
+            LOGGER.info("Returning from controller of get paginated Asset import templates for sdt.");
+            util.clearThreadContextForLogging();
+            util = null;
+        }
+        return responseEntity;
+    }
+
+    @GetMapping("/import/templates")
+    public @ResponseBody
+    ResponseEntity getListOfImportTemplateByUserUUIDAndTenantUUID(@RequestParam String userUUID, @RequestParam String tenantUUID){
+        Util util = new Util();
+        ResponseEntity responseEntity = null;
+        try{
+            util.setThreadContextForLogging(scim2Util);
+            LOGGER.info("Request received in get list of import template by user uuid: " + userUUID + " and tenant uuid: " + tenantUUID);
+            responseEntity = new ResponseEntity<ImportTemplateListResponse>(assetService.getListOfImportTemplateByUserUUIDAndTenantUUID(userUUID,tenantUUID),HttpStatus.OK);
+        } catch (AccessDeniedException ade){
+            responseEntity = new ResponseEntity<String>(ade.getMessage(),HttpStatus.FORBIDDEN);
+        } catch (Exception e){
+            responseEntity = new ResponseEntity<String>(e.getMessage(),HttpStatus.INTERNAL_SERVER_ERROR);
+        }finally {
+            LOGGER.info("Returning from controller of get list of import template by user uuid and tenant uuid.");
+            util.clearThreadContextForLogging();
+            util = null;
+        }
+        return responseEntity;
+    }
+
+    @PostMapping("/download/template")
+    public @ResponseBody
+    ResponseEntity downloadAssetImportTemplate(@RequestBody DownloadCSVTemplateRequest request) {
+        Util util = new Util();
+        ResponseEntity response = null;
+        try{
+            util.setThreadContextForLogging(scim2Util);
+            LOGGER.info("Request receive in download Asset import template controller.");
+            response = new ResponseEntity<GetFileResponse>(assetService.downloadAssetImportTemplate(request),HttpStatus.OK);
+        }catch (AccessDeniedException ade){
+            response = new ResponseEntity<String>(ade.getMessage(),HttpStatus.FORBIDDEN);
+        }catch (Exception e){
+            response = new ResponseEntity<String>(e.getMessage(),HttpStatus.INTERNAL_SERVER_ERROR);
+        }finally {
+            LOGGER.info("Returning from controller of download Asset import template.");
+            util.clearThreadContextForLogging();
+            util = null;
+        }
+        return response;
+    }
+
+    @PostMapping("/import/csv")
+    public @ResponseBody
+    ResponseEntity importBulkAssetsByCSV(@RequestParam("file") MultipartFile file,
+                                         @RequestParam("tenantUUID") String tenantUUID,
+                                         @RequestParam("userUUID") String userUUID,
+                                         @RequestParam("userName") String userName,
+                                         @RequestParam("importType") String importType) {
+        Util util = new Util();
+        ResponseEntity responseEntity = null;
+        try{
+            util.setThreadContextForLogging(scim2Util);
+            LOGGER.info("Request received in controller of import bulk Asset by csv.");
+            ImportBulkAssetRequest request = new ImportBulkAssetRequest(tenantUUID,userUUID,userName,importType);
+            responseEntity = new ResponseEntity<ImportBulkAssetResponse>(assetService.importBulkAssetsByCSV(file,request),HttpStatus.OK);
+        }catch (AccessDeniedException ade){
+            responseEntity = new ResponseEntity<String>(ade.getMessage(),HttpStatus.FORBIDDEN);
+            ade = null;
+        }catch (Exception e){
+            responseEntity = new ResponseEntity<String>(e.getMessage(),HttpStatus.INTERNAL_SERVER_ERROR);
+            e = null;
+        }finally {
+            LOGGER.info("Returning from controller of import bulk Asset by csv.");
+            util.clearThreadContextForLogging();
+            util = null;
+        }
+        return responseEntity;
+    }
+
+    @GetMapping("/download/failures")
+    public @ResponseBody
+    ResponseEntity downloadFailureImports(@RequestParam("importUUID") String importUUID) {
+        Util util = new Util();
+        ResponseEntity response = null;
+        try{
+            util.setThreadContextForLogging(scim2Util);
+            LOGGER.info("Request receive in download failure import controller.");
+            response = new ResponseEntity<GetFileResponse>(assetService.downloadFailureImports(importUUID),HttpStatus.OK);
+        }catch (AccessDeniedException ade){
+            response = new ResponseEntity<String>(ade.getMessage(),HttpStatus.FORBIDDEN);
+        }catch (Exception e){
+            response = new ResponseEntity<String>(e.getMessage(),HttpStatus.INTERNAL_SERVER_ERROR);
+        }finally {
+            LOGGER.info("Returning from controller of download failure import template.");
+            util.clearThreadContextForLogging();
+            util = null;
+        }
+        return response;
+    }
+
+    @PostMapping("/import/last")
+    public @ResponseBody
+    ResponseEntity getPaginatedLastAssetImports(@RequestBody GetPaginatedDataForSDTRequest request){
+        Util util = new Util();
+        ResponseEntity responseEntity = null;
+        try{
+            util.setThreadContextForLogging(scim2Util);
+            LOGGER.info("Request received in get paginated last Asset imports for Sdt.");
+            responseEntity = new ResponseEntity<GetPaginatedDataForSDTResponse>(assetService.getPaginatedLastImports(request),HttpStatus.OK);
+        }catch (AccessDeniedException ade){
+            responseEntity = new ResponseEntity<String>(ade.getMessage(),HttpStatus.FORBIDDEN);
+        }catch (Exception e){
+            responseEntity = new ResponseEntity<String>(e.getMessage(),HttpStatus.INTERNAL_SERVER_ERROR);
+        }finally {
+            LOGGER.info("Returning from controller of get paginated last Asset imports for Sdt.");
+            util.clearThreadContextForLogging();
+            util = null;
+        }
+        return responseEntity;
+    }
+
+    @PostMapping("/export/detail")
+    public @ResponseBody
+    ResponseEntity exportAssetDetailInBulk(@RequestBody ExportAssetInBulkRequest request){
+        Util util = new Util();
+        ResponseEntity responseEntity = null;
+        try{
+            util.setThreadContextForLogging(scim2Util);
+            LOGGER.info("Request received in export Asset detail in bulk.");
+            responseEntity = new ResponseEntity<GetFileResponse>(assetService.exportAssetDetailInBulk(request),HttpStatus.OK);
+        }catch (AccessDeniedException ade){
+            responseEntity = new ResponseEntity<String>(ade.getMessage(),HttpStatus.FORBIDDEN);
+        }catch (Exception e){
+            responseEntity = new ResponseEntity<String>(e.getMessage(),HttpStatus.INTERNAL_SERVER_ERROR);
+        }finally {
+            LOGGER.info("Returning from controller of export Asset detail in bulk.");
+            util.clearThreadContextForLogging();
+            util = null;
+        }
+        return responseEntity;
+    }
+
+    /*******************************************Import Template Functions*****************************************/
 
     /*******************************************Asset Functions**********************************************/
     //add asset AMS_UC_10

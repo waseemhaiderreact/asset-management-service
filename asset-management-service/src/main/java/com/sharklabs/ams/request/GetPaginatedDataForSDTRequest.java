@@ -11,6 +11,7 @@ public class GetPaginatedDataForSDTRequest {
     private int offset;
     private int limit;
     private String tenantUUID;
+    private String userUUID;
 
     public List<HashMap<String, Object>> getFilters() {
         return filters;
@@ -66,5 +67,13 @@ public class GetPaginatedDataForSDTRequest {
 
     public void setSearchQuery(String searchQuery) {
         this.searchQuery = searchQuery;
+    }
+
+    public String getUserUUID() {
+        return userUUID;
+    }
+
+    public void setUserUUID(String userUUID) {
+        this.userUUID = userUUID;
     }
 }
