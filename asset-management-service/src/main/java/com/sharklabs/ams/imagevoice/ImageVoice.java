@@ -15,6 +15,8 @@ public class ImageVoice {
 
     private String contentUrl;
 
+    private byte[] content;
+
     private String consumptionUUID; // consumption it is attached with if this imagevoice is of a consumption.
 
     public Long getId() {
@@ -32,6 +34,10 @@ public class ImageVoice {
     public void setContentUrl(String contentUrl) {
         this.contentUrl = contentUrl;
     }
+
+    public byte[] getContent() {    return content;   }
+
+    public void setContent(byte[] content) {    this.content = content;   }
 
     public String getConsumptionUUID() {
         return consumptionUUID;

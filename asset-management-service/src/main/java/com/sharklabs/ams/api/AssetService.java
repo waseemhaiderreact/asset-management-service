@@ -45,6 +45,7 @@ import com.sharklabs.ams.field.FieldRepository;
 import com.sharklabs.ams.fieldtemplate.FieldTemplate;
 import com.sharklabs.ams.fieldtemplate.FieldTemplateRepository;
 import com.sharklabs.ams.fieldtemplate.FieldTemplateResponse;
+import com.sharklabs.ams.imagevoice.ImageVoice;
 import com.sharklabs.ams.imagevoice.ImageVoiceRepository;
 import com.sharklabs.ams.importrecord.ImportRecord;
 import com.sharklabs.ams.importrecord.ImportRecordRepository;
@@ -1969,13 +1970,9 @@ public class   AssetService {
         Asset asset = null;
         try {
             LOGGER.info("Inside Service function of deleting asset image of uuid: "+id);
-
             assetImages = assetImageRepository.findAllById(id);
-
             assetImageRepository.delete(id);
-
             LOGGER.info("Asset deleted Successfully");
-
             response = new DefaultResponse("Success", "Asset Image deleted Successfully", "200");
         } catch (Exception e) {
             LOGGER.error("Error while deleting asset of uuid"+id, e);
@@ -1986,12 +1983,34 @@ public class   AssetService {
             util.clearThreadContextForLogging();
             util = null;
         }
-
         return response;
-
     }
 
-    //function to archive and delete assets
+    // delete Attachments from assets.....qasim
+    public DefaultResponse deleteAssetAttachment(Long id){
+        Util util = new Util();
+        DefaultResponse response = null;
+        Attachment attachment = null;
+        Asset asset = null;
+        try {
+            LOGGER.info("Inside Service function of deleting asset image of uuid: "+id);
+            attachment = attachmentRepository.findById(id);
+            attachmentRepository.delete(id);
+            LOGGER.info("Asset Attachment deleted Successfully");
+            response = new DefaultResponse("Success", "Asset Attachment deleted Successfully", "200");
+        } catch (Exception e) {
+            LOGGER.error("Error while deleting asset of uuid"+id, e);
+            response = new DefaultResponse("Failure", "Error in deleting asset Attachment: " + e.getMessage(), "500");
+            e = null;
+        }finally{
+            LOGGER.info("Returning to controller of delete Asset Attachment");
+            util.clearThreadContextForLogging();
+            util = null;
+        }
+        return response;
+    }
+
+    //archive or delete asset by UUID.....
     public DefaultResponse archiveOrDeleteAssetByUuid(String uuid, String type) throws ApplicationException{
         Util util = new Util();
         DefaultResponse response = null;
@@ -2153,6 +2172,8 @@ public class   AssetService {
             throw new AccessDeniedException();
 
         Util util = new Util();
+        Attachment attachment = null;
+        GetFileResponse getFileResponse = null;
         GetAssetDetailResponse response = new GetAssetDetailResponse();
         response.setAssetDetail(new AssetDetailResponse());
 
@@ -3804,7 +3825,9 @@ public class   AssetService {
 //
 //        return response;
 //    }
-//    @HasCreate
+
+
+//    @HasCreate get image work by qasim...
     DefaultResponse addConsumptionUnits(AddConsumptionUnitsRequest request) throws AccessDeniedException {
 
         if(!privilegeHandler.hasCreate())
@@ -3820,14 +3843,18 @@ public class   AssetService {
             util.setThreadContextForLogging(scim2Util);
             LOGGER.info("Inside service function of adding consumption units of asset. AssetUUID: " + request.getAssetUUID());
 
-            //find asset by uuid
+            //find asset by uuid qasim
             asset = assetRepository.findAssetByUuid(request.getAssetUUID());
             //add consumption unit in the array of consumptions of asset
             asset.addConsumption(request.getConsumption());
             request.getConsumption().setAssetUUID(request.getAssetUUID());
             request.getConsumption().setCreatedAt(new Date());
             request.getConsumption().setUuid(UUID.randomUUID().toString());
-
+            if(request.getImageVoices().size() > 0){
+                for(int i = 0; i < request.getImageVoices().size(); i++) {
+                    request.getImageVoices().get(i).setConsumptionUUID(request.getConsumption().getUuid());
+                }
+            }
             usage=new Usage();
             usage.setCreatedAt(new Date());
             usage.setAssetUUID(request.getAssetUUID());
@@ -3874,6 +3901,29 @@ public class   AssetService {
 
         return response;
     }
+
+    // delete single image from consumption by qasim...
+    public DefaultResponse deleteConsumptionImages(Long id){
+        Util util = new Util();
+        DefaultResponse response = null;
+        ImageVoice imageVoice = null;
+        try { LOGGER.info("Inside Service function of deleting consumption image of id: "+id);
+            imageVoice = imageVoiceRepository.findById(id);
+            imageVoiceRepository.delete(id);
+            LOGGER.info("Image deleted Successfully");
+            response = new DefaultResponse("Success", "Image deleted Successfully", "200");
+        } catch (Exception e) {
+            LOGGER.error("Error while deleting Image of uuid"+id, e);
+            response = new DefaultResponse("Failure", "Error in deleting Image: " + e.getMessage(), "500");
+            e = null;
+        }finally{
+            LOGGER.info("Returning to controller of delete Image");
+            util.clearThreadContextForLogging();
+            util = null;
+        }
+        return response;
+    }
+
     public void incorporateWalletInConsumption(AddConsumptionUnitsRequest request) throws ApplicationException{
         String userUUID=request.getUserUUID();
         Wallet wallet=new Wallet();
@@ -4261,12 +4311,25 @@ public class   AssetService {
 
         Util util = new Util();
         GetConsumptionByIdResponse response=new GetConsumptionByIdResponse();
+        List<ImageVoice> imageVoices = null;
+        GetFileResponse getFileResponse=null;
         try{
             util.setThreadContextForLogging(scim2Util);
             LOGGER.info("Inside service function of getting consumption by id. ID: "+id);
             //find consumption by id
 
             response.setConsumption(consumptionRepository.findOne(id));
+            imageVoices = imageVoiceRepository.findByConsumptionUUID(response.getConsumption().getUuid());
+            if(imageVoices!=null){
+                for(int i=0;i<imageVoices.size();i++){
+//                    if(imageVoices.get(i)){
+                        getFileResponse=getFile(imageVoices.get(i).getContentUrl());
+                        imageVoices.get(i).setContent(getFileResponse.getContent());
+//                    }
+                }
+            }
+            response.setImageVoices(imageVoices);
+
             response.setResponseIdentifier("Success");
             LOGGER.info("Successfully got usages");
         }catch(Exception e){
@@ -4327,6 +4390,10 @@ public class   AssetService {
             List<Asset> assets=entityManager.createQuery(query.select(root).where(clauses.toArray( new Predicate[]{}))).getResultList();
             clauses.clear();
 
+            root=null;
+            query=null;
+            query = criteriaBuilder.createQuery(Long.class);
+            root = query.from(Category.class);
             // Construct Rows List
             response.getSdtData().put(CONTENT,new ArrayList<>());
 
@@ -4336,12 +4403,19 @@ public class   AssetService {
                     if (asset.getUuid().equals(consumption.getAssetUUID())) {
                         ((HashMap) ((ArrayList) response.getSdtData().get(CONTENT)).get(((ArrayList) response.getSdtData().get(CONTENT)).size() - 1)).put("createdAt", consumption.getCreatedAt());
                         ((HashMap) ((ArrayList) response.getSdtData().get(CONTENT)).get(((ArrayList) response.getSdtData().get(CONTENT)).size() - 1)).put("assetName", asset.getName());
+                        ((HashMap) ((ArrayList) response.getSdtData().get(CONTENT)).get(((ArrayList) response.getSdtData().get(CONTENT)).size() - 1)).put("assetNumber", asset.getAssetNumber());
+                        ((HashMap) ((ArrayList) response.getSdtData().get(CONTENT)).get(((ArrayList) response.getSdtData().get(CONTENT)).size() - 1)).put("meterType", consumption.getMeterType());
                         ((HashMap) ((ArrayList) response.getSdtData().get(CONTENT)).get(((ArrayList) response.getSdtData().get(CONTENT)).size() - 1)).put("consumptionValue", consumption.getConsumptionValue());
                         ((HashMap) ((ArrayList) response.getSdtData().get(CONTENT)).get(((ArrayList) response.getSdtData().get(CONTENT)).size() - 1)).put("id", consumption.getId());
                         ((HashMap) ((ArrayList) response.getSdtData().get(CONTENT)).get(((ArrayList) response.getSdtData().get(CONTENT)).size() - 1)).put("consumptionUnit", asset.getConsumptionUnit());
                         ((HashMap) ((ArrayList) response.getSdtData().get(CONTENT)).get(((ArrayList) response.getSdtData().get(CONTENT)).size() - 1)).put("price", consumption.getPrice());
                         ((HashMap) ((ArrayList) response.getSdtData().get(CONTENT)).get(((ArrayList) response.getSdtData().get(CONTENT)).size() - 1)).put("currency", consumption.getCurrency());
                         ((HashMap) ((ArrayList) response.getSdtData().get(CONTENT)).get(((ArrayList) response.getSdtData().get(CONTENT)).size() - 1)).put("consumptionLevel", consumption.getUpdatedConsumptionPoints()+"/8");
+                        clauses.add(criteriaBuilder.equal(root.get("uuid"),asset.getCategoryUUID()));
+
+                        ((HashMap) ((ArrayList) response.getSdtData().get(CONTENT)).get(((ArrayList) response.getSdtData().get(CONTENT)).size() - 1)).put("assetCategory", (String)entityManager.createQuery(query.select(root.get("name")).where(clauses.toArray( new Predicate[]{}))).getSingleResult());
+                        clauses.clear();
+
                         break;
                     }
                 }
@@ -4641,8 +4715,10 @@ public class   AssetService {
                         ((HashMap) ((ArrayList) response.getSdtData().get(CONTENT)).get(((ArrayList) response.getSdtData().get(CONTENT)).size() - 1)).put("createdAt", usage.getCreatedAt());
                         ((HashMap) ((ArrayList) response.getSdtData().get(CONTENT)).get(((ArrayList) response.getSdtData().get(CONTENT)).size() - 1)).put("primaryUsageValue", usage.getPrimaryUsageValue());
                         ((HashMap) ((ArrayList) response.getSdtData().get(CONTENT)).get(((ArrayList) response.getSdtData().get(CONTENT)).size() - 1)).put("secondaryUsageValue", usage.getSecondaryUsageValue());
+                        ((HashMap) ((ArrayList) response.getSdtData().get(CONTENT)).get(((ArrayList) response.getSdtData().get(CONTENT)).size() - 1)).put("category", usage.getCategory());
                         ((HashMap) ((ArrayList) response.getSdtData().get(CONTENT)).get(((ArrayList) response.getSdtData().get(CONTENT)).size() - 1)).put("id", usage.getId());
                         ((HashMap) ((ArrayList) response.getSdtData().get(CONTENT)).get(((ArrayList) response.getSdtData().get(CONTENT)).size() - 1)).put("assetName", asset.getName());
+                        ((HashMap) ((ArrayList) response.getSdtData().get(CONTENT)).get(((ArrayList) response.getSdtData().get(CONTENT)).size() - 1)).put("assetNumber", asset.getAssetNumber());
                         clauses.add(criteriaBuilder.equal(root.get("uuid"),asset.getCategoryUUID()));
 
 
@@ -6088,7 +6164,7 @@ public class   AssetService {
                             response=new DefaultResponse("Failure","Threshold value cannot be greater than or equal to capacity","F500");
                         }
                     }else{
-                        response=new DefaultResponse("Success","Wallet Exist in this Type","F200");
+                        response=new DefaultResponse("Failure","Wallet Exist in this Type","F500");
                     }
                 }catch(Exception e){
                     return new DefaultResponse("Failure", "Wallet Not Added Successfully ", "F500");
@@ -6147,6 +6223,47 @@ public class   AssetService {
                 util=null;
                 wallet=null;
                 previouswallet=null;
+            }
+            return response;
+        }
+
+    //archive or delete wallet by UUID qasim.....
+        public  DefaultResponse  archiveOrDeleteWalletByUUID(String uuid, String type) throws ApplicationException,AccessDeniedException{
+
+            if(!privilegeHandler.hasDelete())
+                throw new AccessDeniedException();
+
+            Util util = new Util();
+            util.setThreadContextForLogging(scim2Util);
+
+            DefaultResponse response=null;
+
+            try {
+                LOGGER.info("Inside service function of deleting inspection template with templateUUID: " + uuid );
+                //find by uuid
+               Wallet wallet  = walletRespository.findByWalletUUID(uuid);
+                if(type.equals("archive")){
+                    wallet.setArchived(true);
+                    walletRespository.save(wallet);
+                    LOGGER.info("Wallet archived Successfully");
+                    response = new DefaultResponse("Success", "Wallet Archived Successfully", "200");
+                }
+                else if(type.equals("delete")){
+                    wallet.setDeletedWalletUUID(wallet.getWalletUUID());
+                    wallet.setWalletUUID(null);
+                    walletRespository.save(wallet);
+                    LOGGER.info("Wallet deleted Successfully");
+                    response = new DefaultResponse("Success", "Wallet deleted Successfully", "200");
+                }
+
+            } catch (Exception e) {
+                e.printStackTrace();
+                LOGGER.error("Error while deleting Wallet", e);
+                response = new DefaultResponse("Failure", e.getMessage(), "500");
+            }finally {
+                LOGGER.info("Returning to Controller");
+                util.clearThreadContextForLogging();
+                util = null;
             }
             return response;
         }
@@ -7320,9 +7437,9 @@ public class   AssetService {
 
                 clauses = new ArrayList<>();
                 clauses.add(criteriaBuilder.equal(root.get("orgUUID"),request.getTenantUUID()));
-
                 // Add filters
                 clauses = addFilters(criteriaBuilder,root,clauses,request.getFilters(),request.getSearchQuery());
+                clauses.add(criteriaBuilder.isNull(root.get("archived")));
 
                 response.getSdtData().put(TOTAL_ELEMENTS,(Long)entityManager.createQuery(query.select(criteriaBuilder.count(root)).where(clauses.toArray(new Predicate[]{}))).getSingleResult());
 
