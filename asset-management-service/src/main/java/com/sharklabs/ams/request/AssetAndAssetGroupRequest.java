@@ -1,12 +1,25 @@
 package com.sharklabs.ams.request;
 
+import org.apache.log4j.xml.SAXErrorHandler;
+
+import java.io.Serializable;
 import java.util.Set;
 
-public class AssetAndAssetGroupRequest {
+public class AssetAndAssetGroupRequest implements Serializable {
 
     public Set<String> assetUUIDs;
     public Set<String> assetGroupUUIDs;
     String accessKey;
+    public String userUUIDs;
+    public String tenantUUIDs;
+
+    public String getTenantUUIDs() {
+        return tenantUUIDs;
+    }
+
+    public void setTenantUUIDs(String tenantUUIDs) {
+        this.tenantUUIDs = tenantUUIDs;
+    }
 
     public String getAccessKey() {
         return accessKey;

@@ -1,9 +1,10 @@
 package com.sharklabs.ams.request;
 
+import java.io.Serializable;
 import java.util.List;
 import java.util.Set;
 
-public class AssetGroupByAssetUUIDsRequest {
+public class AssetGroupByAssetUUIDsRequest implements Serializable {
 
     public Set<String> assetUUIDs;
 

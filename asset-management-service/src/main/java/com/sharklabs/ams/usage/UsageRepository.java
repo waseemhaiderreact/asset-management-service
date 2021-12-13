@@ -15,8 +15,30 @@ public interface  UsageRepository extends JpaRepository<Usage,Long> {
     Set<Usage> findByAssetUUID(String uuid);
     Set<Usage> findByAssetUUIDOrderByIdDesc(String uuid);
     Usage findFirstByAssetUUIDOrderByIdDesc(String uuid);
+//    @Query(value = "SELECT u from t_usages u where (u.primaryUsageValue)  = (" +
+//            " SELECT CAST(MAX (uu.primaryUsageValue) AS INT) from t_usages uu where uu.assetUUID=:assetUUID) ")
+//    Usage findUsageByAssetUUIDAndMaxPrimaryUsageValue(@Param("assetUUID") String assetUUID);
+//
+    @Query("SELECT DISTINCT u from t_usages u where cast(u.secondaryUsageValue as int)  = ( SELECT MAX(cast (uu.secondaryUsageValue as int)) from t_usages uu where uu.assetUUID=:assetUUID )  ")
+    List<Usage> findUsageByAssetUUIDAndMaxSecondaryUsageValue(@Param("assetUUID") String assetUUID);
 
-    
+    @Query("SELECT distinct u from t_usages u where cast(u.primaryUsageValue as int)  = ( SELECT MAX(cast (uu.primaryUsageValue as int)) from t_usages uu where uu.assetUUID=:assetUUID )  " )
+    List<Usage> findUsageByAssetUUIDAndMaxPrimaryUsageValue(@Param("assetUUID") String assetUUID);
+    //
+    List <Usage> findUsageByAssetUUID(String assetUUID);
+//    @Query(value = "SELECT u from t_usages u where u.primaryUsageValue = (" +
+//            " SELECT MAX (uu.primaryUsageValue) from t_usages uu where u.assetUUID=:assetUUID) ")
+//    List<Usage> findUsageByAssetUUIDAndMaxPrimaryUsageValue(@Param("assetUUID") String assetUUID);
+//    @Query(value = "SELECT u from t_usages u where u.secondaryUsageValue = (" +
+//            " SELECT MAX (uu.secondaryUsageValue) from t_usages uu where u.assetUUID=:assetUUID) ")
+//    List<Usage> findUsageByAssetUUIDAndMaxSecondaryUsageValue(@Param("assetUUID") String assetUUID);
+//
+
+//    @Query(value =  " SELECT MAX (uu.primaryUsageValue) from t_usages uu where uu.assetUUID=:assetUUID ")
+//    List<Usage> findUsageByAssetUUIDAndPrimaryUsageValue(@Param("assetUUID") String assetUUID);
+//    @Query(value =
+//            " SELECT MAX (uu.secondaryUsageValue) from t_usages uu where uu.assetUUID=:assetUUID ")
+//    List<Usage> findUsageByAssetUUIDAndSecondaryUsageValue(@Param("assetUUID") String assetUUID);
 
     Page<Usage> findByAssetUUIDOrderByCreatedAtDesc(String assetUUID, Pageable pageable);
 
@@ -38,6 +60,7 @@ public interface  UsageRepository extends JpaRepository<Usage,Long> {
                              Pageable pageable);
 
     Page<Usage> findByAssetUUIDInOrderByIdDesc(List<String> assetUUIDS, Pageable pageable);
-    
-    Page<Usage> findByAssetUUIDInAndCategoryOrderByIdDesc(List<String> assetUUIDS,String category, Pageable pageable);
+    @Query(value = "SELECT * FROM t_usages  u WHERE u.assetuuid IN :assetUUIDS AND u.category=:category Order BY u.created_at desc \n#pageable\n",
+            countQuery = "SELECT count(*) FROM t_usages u WHERE u.assetuuid in :assetUUIDS AND u.category=:category Order BY u.created_at desc \n#pageable\n",nativeQuery = true)
+    Page<Usage> findByAssetUUIDInAndCategory(@Param("assetUUIDS") List<String> assetUUIDS,@Param("category") String category, Pageable pageable);
 }

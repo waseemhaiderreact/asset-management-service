@@ -621,7 +621,11 @@ public class AssetController {
     //add asset AMS_UC_10
     @RequestMapping(method = RequestMethod.POST,value="")
     @Caching(evict = {
-            @CacheEvict(value= "assetAndAssetGroup",allEntries= true)
+            @CacheEvict(value= "assetAndAssetGroup",allEntries= true),
+            @CacheEvict(value= "assetGroupByAsset",allEntries= true),
+            @CacheEvict(value= "assetAndAssetGroupByUUID",allEntries= true)
+
+
     })
     public @ResponseBody
     ResponseEntity addAsset(@RequestBody AddAssetRequest addAssetRequest/*, OAuth2Authentication oAuth2Authentication*/) throws IOException {
@@ -656,7 +660,9 @@ public class AssetController {
     //edit asset AMS_UC_11
     @RequestMapping(method = RequestMethod.PUT,value="")
     @Caching(evict = {
-            @CacheEvict(value= "assetAndAssetGroup",allEntries= true)
+            @CacheEvict(value= "assetAndAssetGroup",allEntries= true),
+            @CacheEvict(value= "assetGroupByAsset",allEntries= true),
+            @CacheEvict(value= "assetAndAssetGroupByUUID",allEntries= true)
     })
     public @ResponseBody
     ResponseEntity editAsset(@RequestBody EditAssetRequest editAssetRequest) throws IOException{
@@ -691,7 +697,9 @@ public class AssetController {
     //delete asset AMS_UC_12
     @RequestMapping(method = RequestMethod.DELETE,value="",params={"id"})
     @Caching(evict = {
-            @CacheEvict(value= "assetAndAssetGroup",allEntries= true)
+            @CacheEvict(value= "assetAndAssetGroup",allEntries= true),
+            @CacheEvict(value= "assetGroupByAsset",allEntries= true),
+            @CacheEvict(value= "assetAndAssetGroupByUUID",allEntries= true)
     })
     public @ResponseBody
     ResponseEntity deleteAsset(@RequestParam String id) {
@@ -744,7 +752,9 @@ public class AssetController {
 
     @DeleteMapping("/archive-delete")
     @Caching(evict = {
-            @CacheEvict(value= "assetAndAssetGroup",allEntries= true)
+            @CacheEvict(value= "assetAndAssetGroup",allEntries= true),
+            @CacheEvict(value= "assetGroupByAsset",allEntries= true),
+            @CacheEvict(value= "assetAndAssetGroupByUUID",allEntries= true)
     })
     public @ResponseBody
     ResponseEntity archiveOrDeleteAssetByUuid(@RequestParam String uuid, @RequestParam String type){
@@ -875,6 +885,7 @@ public class AssetController {
 
     /* Written By Kumail Ahmed Khan */
     @PostMapping ("/asset-groups")
+    @Cacheable(value = "assetGroupByAsset")
     public @ResponseBody
     AssetGroupByAssetResponse getAssetGroupsByAssets(@RequestBody AssetGroupByAssetUUIDsRequest request){
         try{
@@ -886,8 +897,9 @@ public class AssetController {
             return new AssetGroupByAssetResponse();
         }
     }
-
+    //get Asset Name and AssetgroupName  by
     @PostMapping ("/asset/asset-group/uuid")
+    @Cacheable(value = "assetAndAssetGroupByUUID")
     public @ResponseBody
     AssetAndAssetGroupResponse getAssetAndAssetGroup(@RequestBody AssetAndAssetGroupRequest request){
         try{
@@ -900,6 +912,30 @@ public class AssetController {
         }
     }
 
+    @PostMapping ("/asset/asset-group/useruuid")
+    public @ResponseBody
+    AssetAndAssetGroupResponse getAssetAndAssetGroupUseruuid(@RequestBody AssetAndAssetGroupRequest request){
+        try{
+            LOGGER.info("Request received in Controller to get Asset Group And Asset By UserUUIDs: "+convertToJSON(request));
+            return assetService.getAssetAndAssetGroupUseruuid(request);
+        }catch (AccessDeniedException ae){
+            return new AssetAndAssetGroupResponse();
+        }catch (Exception e){
+            return new AssetAndAssetGroupResponse();
+        }
+    }
+    @PostMapping ("/asset/asset-group/tenantuuid")
+    public @ResponseBody
+    AssetAndAssetGroupResponse getAssetAndAssetGroupTenantuuid(@RequestBody AssetAndAssetGroupRequest request){
+        try{
+            LOGGER.info("Request received in Controller to get Asset Group And Asset By TenantUUIDs: "+convertToJSON(request));
+            return assetService.getAssetAndAssetGroupTenantuuid(request);
+        }catch (AccessDeniedException ae){
+            return new AssetAndAssetGroupResponse();
+        }catch (Exception e){
+            return new AssetAndAssetGroupResponse();
+        }
+    }
 
     //get asset basic detail by tenant AMS_UC_31
     @RequestMapping(method = RequestMethod.GET,value="/basicinfo",params = {"tenantuuid"})
@@ -2508,7 +2544,9 @@ public class AssetController {
 
     @RequestMapping(method = RequestMethod.POST,value="/assets/group")
     @Caching(evict = {
-            @CacheEvict(value= "assetAndAssetGroup",allEntries= true)
+            @CacheEvict(value= "assetAndAssetGroup",allEntries= true),
+            @CacheEvict(value= "assetGroupByAsset",allEntries= true),
+            @CacheEvict(value= "assetAndAssetGroupByUUID",allEntries= true)
     })
     public @ResponseBody
     ResponseEntity addAssetGroup(@RequestBody AddAssetGroupRequest request)  throws EmptyEntityTableException,IOException {
@@ -2539,7 +2577,9 @@ public class AssetController {
 
     @PutMapping("/assets/group")
     @Caching(evict = {
-            @CacheEvict(value= "assetAndAssetGroup",allEntries= true)
+            @CacheEvict(value= "assetAndAssetGroup",allEntries= true),
+            @CacheEvict(value= "assetGroupByAsset",allEntries= true),
+            @CacheEvict(value= "assetAndAssetGroupByUUID",allEntries= true)
     })
     public @ResponseBody
     ResponseEntity editAssetGroup(@RequestBody EditGroupAssetsRequest request) throws IOException {
@@ -2600,7 +2640,9 @@ public class AssetController {
     // archive/delete asset groups
     @RequestMapping(method = RequestMethod.DELETE,value="/assets/group",params = {"id","type"})
     @Caching(evict = {
-            @CacheEvict(value= "assetAndAssetGroup",allEntries= true)
+            @CacheEvict(value= "assetAndAssetGroup",allEntries= true),
+            @CacheEvict(value= "assetGroupByAsset",allEntries= true),
+            @CacheEvict(value= "assetAndAssetGroupByUUID",allEntries= true)
     })
     public @ResponseBody
     ResponseEntity deleteAssetGroup(@RequestParam String id,@RequestParam String type)  throws EmptyEntityTableException {
