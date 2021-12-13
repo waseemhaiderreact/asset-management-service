@@ -1126,6 +1126,7 @@ public class   AssetService {
         List<Asset> updateAssets = new ArrayList<>();
         List<ImportRecord> importRecords = new ArrayList<>();
         List<Category> categories = new ArrayList<>();
+        String accessAssetNumber = "";
         try{
             util.setThreadContextForLogging(scim2Util);
             LOGGER.info("Inside service function of import bulk Asset by CSV. Details: " + convertToJSON(request));
@@ -1182,9 +1183,16 @@ public class   AssetService {
                         response.setResponseIdentifier(FAILURE);
                         return response;
                     }
-                    int index = headers.indexOf("Asset Number".toLowerCase()); // getting Asset Number index
+                }
+                boolean updateCheck = false;
+                //checking if Asset Number in headers then extract and fetch Assets for update scenario
+                if(headers.contains("Asset Number".toLowerCase()) || headers.contains("Asset #".toLowerCase())){
+                    int index = headers.indexOf("Asset #".toLowerCase()); // getting Asset Number index
                     if(index == -1){
-                        index = headers.indexOf("Asset #".toLowerCase()); // checking if Asset Number column heading like (Asset #) and getting index
+                        index = headers.indexOf("Asset Number".toLowerCase()); // checking if Asset Number column heading like (Asset #) and getting index
+                        accessAssetNumber = "Asset Number";
+                    }else{
+                        accessAssetNumber = "Asset #";
                     }
 
                     //creating asset Number list for fetching assets
@@ -1195,6 +1203,7 @@ public class   AssetService {
                     //fetching Assets
                     if(assetNumber.size() > 0){
                         updateAssets = assetRepository.findAssetsByAssetNumberIn(assetNumber);
+                        updateCheck = true;
                     }
                 }
                 List<String> assetUUIDS = new ArrayList<>(); // asset uuids list for getting assets after save so we can generate their Asset Number
@@ -1211,10 +1220,12 @@ public class   AssetService {
                     for(Map.Entry<String,String> column: record.toMap().entrySet()){
                         //checking if column is Asset Number or not
                         // if it is asset number then we will update the asset info of that asset number
-                        if((column.getKey().toLowerCase().trim().equals("asset Number") || column.getKey().toLowerCase().trim().equals("asset #") && !column.getValue().isEmpty())){
-                            Asset updateAsset = updateAssets.stream().filter(a -> a.getAssetNumber().toLowerCase().equals(column.getValue().toLowerCase().trim())).findFirst().orElse(null);
+                        if(updateCheck && !record.get(accessAssetNumber).isEmpty()){
+                            String finalAccessAssetNumber = accessAssetNumber;
+                            Asset updateAsset = updateAssets.stream().filter(a -> a.getAssetNumber().toLowerCase().equals(record.get(finalAccessAssetNumber).toLowerCase().trim())).findFirst().orElse(null);
                             if(updateAsset != null){
                                 int index = updateAssets.indexOf(updateAsset);
+                                importRecord.setMessage("Successfully updated Asset: " + record.get(accessAssetNumber));
                                 if(ASSET_INFO.contains(column.getKey().toLowerCase().trim())){
                                     if(column.getKey().toLowerCase().trim().equals("asset Name") && !column.getValue().isEmpty()){
                                         updateAssets.get(index).setName(column.getValue());
@@ -1255,16 +1266,19 @@ public class   AssetService {
                                             if(category != null){
                                                 Field field = category.getFieldTemplate().getFields().stream().filter(field1 -> field1.getLabel().toLowerCase().trim().equals(column.getKey().toLowerCase().trim())).findFirst().orElse(null);
                                                 List<AssetField> assetFieldSet = new ArrayList<AssetField>(updateAssets.get(index).getAssetFields());
-                                                AssetField assetField = assetFieldSet.stream().filter(a -> a.getFieldId().equals(field.getUuid())).findFirst().orElse(null);
-                                                if(assetField != null){
-                                                    int fieldIndex = assetFieldSet.indexOf(assetField);
-                                                     assetFieldSet.get(fieldIndex).setFieldValue("{\"values\":[\"" + column.getValue() + "\"]}");
+                                                if(field != null) {
+                                                    AssetField assetField = assetFieldSet.stream().filter(a -> a.getFieldId().equals(field.getUuid())).findFirst().orElse(null);
+                                                    if (assetField != null) {
+                                                        int fieldIndex = assetFieldSet.indexOf(assetField);
+                                                        assetFieldSet.get(fieldIndex).setFieldValue("{\"values\":[\"" + column.getValue() + "\"]}");
+                                                    }
+                                                    updateAssets.get(index).setAssetFields(new HashSet<>(assetFieldSet));
                                                 }
-                                                updateAssets.get(index).setAssetFields(new HashSet<>(assetFieldSet));
                                             }
                                         }
                                     }
                                 }
+                                importRecord.setStatus(IMPORT_SUCCESS);
                             }else{
                                 importRecord.setMessage("Invalid Asset Number: " + column.getValue());
                                 importRecord.setStatus(IMPORT_FAILURE);
@@ -1386,7 +1400,7 @@ public class   AssetService {
                                     }
                                 }
                             } else {
-                                if (!ASSET_INFO.contains(column.getKey().toLowerCase().trim())) {
+                                if (!ASSET_INFO.contains(column.getKey().toLowerCase().trim())  && request.getImportType().equals("Add")) {
                                     AssetField assetField = new AssetField();
                                     Category category = categories.stream().filter(c -> c.getName().toLowerCase().trim().equals(record.get("category name").toLowerCase().trim())).findFirst().orElse(null);
                                     if (category != null) {
@@ -1425,7 +1439,7 @@ public class   AssetService {
                         }
                     }
                     //checking if Asset required fields are fulfilled then will add in the asset list
-                    if(success) {
+                    if(success && assetCategory != null) {
                         asset.setTenantUUID(request.getTenantUUID());
                         asset.setAssetFields(Sets.newHashSet(assetFields));
                         assets.add(asset);
@@ -1445,7 +1459,7 @@ public class   AssetService {
                 //cheking if there is any import record then will compute them for Saving per import info
                 if(importRecords.size() > 0){
                     float totalRecords = importRecords.size() ;
-                    float successRecords = assets.size();
+                    float successRecords = assets.size() + updateAssets.size();
                     float calculatePercentage = (float) ((successRecords/totalRecords) * 100);
                     if(calculatePercentage == 100.00){
                         assetImport.setStatus(IMPORT_COMPLETE);
@@ -1467,6 +1481,11 @@ public class   AssetService {
                         asset.setAssetNumber(this.genrateAssetNumber(asset.getId()));
                     }
                     assetRepository.save(savedAssets);
+                }
+
+                //saving updated Asset
+                if(updateAssets != null && updateAssets.size() > 0){
+                    assetRepository.save(updateAssets);
                 }
                 assetImportRepository.save(assetImport);
                 if(importRecords != null && importRecords.size() > 0) {
