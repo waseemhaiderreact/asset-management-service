@@ -12,6 +12,15 @@ public class AssetAndAssetGroupRequest implements Serializable {
     String accessKey;
     public String userUUIDs;
     public String tenantUUIDs;
+    public String Query;
+
+    public String getQuery() {
+        return Query;
+    }
+
+    public void setQuery(String query) {
+        Query = query;
+    }
 
     public String getTenantUUIDs() {
         return tenantUUIDs;
