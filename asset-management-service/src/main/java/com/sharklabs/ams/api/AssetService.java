@@ -2121,14 +2121,14 @@ public class   AssetService {
             }
              usageObj = usageRepository.findUsageByAssetUUIDAndMaxPrimaryUsageValue(response.getAsset().getUuid());
             LOGGER.info("Primary Meter Usage Value"+convertToJSON(usageObj));
-            if(usageObj != null){
+            if(usageObj != null && usageObj.size() > 0){
                 int count = usageObj.size();
                 response.setPrimaryUsageValue(usageObj.get(count-1));
                 usagecombined.setPrimaryUsageValue(usageObj.get(count-1).getPrimaryUsageValue());
             }
             usageObj = usageRepository.findUsageByAssetUUIDAndMaxSecondaryUsageValue(response.getAsset().getUuid());
             LOGGER.info("Secondary Meter Usage Value"+convertToJSON(usageObj));
-            if(usageObj != null){
+            if(usageObj != null && usageObj.size() > 0){
                 int count = usageObj.size();
                 response.setSecondaryUsageValue(usageObj.get(count-1));
                 usagecombined.setSecondaryUsageValue(usageObj.get(count-1).getSecondaryUsageValue());
