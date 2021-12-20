@@ -5862,7 +5862,9 @@ public class   AssetService {
                 LOGGER.info("In method to fetch List of Asset Name and Type");
                 // getting assets data for inspection reports,service requests
                 List<AssetBasicDetailModel> assetBasicDetailModels = assetRepository.findAssetBasicDetailByTenantUUID(tenantUUID);
+                List<AssetBasicDetailModel> categories = categoryRepository.findCategoriesByTenantUUID(tenantUUID);
                 response.setAssets(assetBasicDetailModels);
+                response.getAssets().addAll(categories);
                 LOGGER.info("Fetched List of Asset Name and Type.");
             }catch(Exception e){
                 LOGGER.error("Error while fetching List of Asset Name and Type",e);
