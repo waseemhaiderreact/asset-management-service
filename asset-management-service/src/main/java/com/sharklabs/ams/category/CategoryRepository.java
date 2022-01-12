@@ -1,5 +1,6 @@
 package com.sharklabs.ams.category;
 
+import com.sharklabs.ams.events.assetBasicDetail.AssetBasicDetailModel;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -26,6 +27,9 @@ public interface CategoryRepository extends JpaRepository<Category,Long> {
     List<CategoryFieldDTO> findCategoriesFieldsByTenantUUID(@Param("uuid") String uuid);
 
     Category findByTenantUUIDAndName(String tenantUUID, String name);
+
+    @Query("SELECT new com.sharklabs.ams.events.assetBasicDetail.AssetBasicDetailModel(c.name,c.uuid) FROM t_category c WHERE c.tenantUUID=?1")
+    List<AssetBasicDetailModel> findCategoriesByTenantUUID(@Param("uuid") String uuid);
 
     @Modifying
     @Transactional

@@ -83,7 +83,7 @@ public interface AssetRepository extends JpaRepository<Asset,Long>, PagingAndSor
     @Query(value = "SELECT new com.sharklabs.ams.response.GetNameAndTypeOfAssetResponse(a.name,a.categoryUUID,a.assetNumber,a.uuid,a.primaryUsageUnit,a.secondaryUsageUnit,a.consumptionUnit,a.consumptionPoints,a.modelNumber,c.name) FROM t_asset a,t_category c WHERE a.uuid in (:uuids) AND c.uuid = a.categoryUUID")
     List<GetNameAndTypeOfAssetResponse> findAssetDetailByAssetUUIDS(@Param("uuids") List<String> uuids);
 
-    @Query("SELECT  new com.sharklabs.ams.events.assetBasicDetail.AssetBasicDetailModel(a.uuid,a.name,c.name,a.assetNumber,a.categoryUUID,a.manufacture) FROM t_asset a, t_category c WHERE a.tenantUUID=?1 AND c.uuid=a.categoryUUID AND a.removeFromCategoryUUID IS NULL ")
+    @Query("SELECT  new com.sharklabs.ams.events.assetBasicDetail.AssetBasicDetailModel(a.uuid,a.name,c.name,a.assetNumber,c.uuid) FROM t_asset a, t_category c WHERE a.tenantUUID=?1 AND c.uuid=a.categoryUUID")
     List<AssetBasicDetailModel> findAssetBasicDetailByTenantUUID(@Param("tenantUUID") String tenantUUID);
 
     @Query("SELECT a FROM t_asset a WHERE a.assetNumber IN (:assetNumber)")
