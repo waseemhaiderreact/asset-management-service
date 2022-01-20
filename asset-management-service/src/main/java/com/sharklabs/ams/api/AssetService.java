@@ -200,6 +200,9 @@ public class   AssetService {
     @Autowired
     ImportTemplateRepository importTemplateRepository;
 
+    @Autowired
+    AssetMapperRepository assetMapperRepository;
+
     private WalletRequestModel walletRequestModel=null;
     @PersistenceContext
     EntityManager entityManager;
@@ -3755,6 +3758,41 @@ public class   AssetService {
     }
 
     /******************************************* END Asset Functions ************************************************/
+
+    /*******************************************Asset Mapper Functions ************************************************/
+
+    public DefaultResponse mapAssetsBasicInfoToAssetCookedTable(String orgId) throws ApplicationException, AccessDeniedException {
+        if(!privilegeHandler.hasRead()){
+            LOGGER.info("Access is Denied to read Assets");
+            throw new AccessDeniedException();
+        }
+        Util util = new Util();
+        DefaultResponse response = new DefaultResponse();
+        try{
+            util.setThreadContextForLogging(scim2Util);
+            LOGGER.info("Inside service function of map Assets to Cooked Table.");
+            List<String> mappedUUIDs = assetMapperRepository.findByTenantUUID(orgId);
+            if(mappedUUIDs != null && mappedUUIDs.isEmpty()){
+                List<AssetMapper> assetMappers = assetRepository.findAssetsInfoByTenantUUID(orgId);
+                assetMapperRepository.save(assetMappers);
+                response = new DefaultResponse(SUCCESS,"Successfully Mapped Assets Data.","F200");
+            }else{
+                List<AssetMapper> assetMappers = assetRepository.findAssetsByUuidNotIn(mappedUUIDs,orgId);
+                assetMapperRepository.save(assetMappers);
+                response = new DefaultResponse(SUCCESS,"Successfully Mapped un-mapped Assets Data.","F200");
+            }
+        }catch (Exception e){
+            response = new DefaultResponse(FAILURE,"Error While Mapping Assets.","F500");
+            throw new ApplicationException("An Error Occurred while mapping data to Cooked Table.",e);
+        }finally {
+            LOGGER.info("Returning to controller");
+            util.clearThreadContextForLogging();
+            util = null;
+        }
+        return response;
+    }
+
+    /******************************************* END Asset Mapper Functions ************************************************/
 
     /******************************************* Consumption Functions **********************************************/
     //this functions adds a consumption unit of an asset e.g fuel entries of vehicles AMS_UC_25

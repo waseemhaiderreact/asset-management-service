@@ -92,4 +92,10 @@ public interface AssetRepository extends JpaRepository<Asset,Long>, PagingAndSor
     @Query("SELECT new com.sharklabs.ams.asset.AssetDTO(a.uuid,a.name) FROM t_asset a WHERE a.uuid in :uuid AND a.removeFromCategoryUUID " +
             "is NULL ")
     List<AssetDTO> findAssetByUuidAndRemoveFromCategoryUUIDIsNull(@Param("uuid") Set<String> uuid);
+
+    @Query("SELECT new com.sharklabs.ams.asset.AssetMapper(a.uuid,a.assetNumber,a.name,c.name,a.status,a.archive,a.removeFromCategoryUUID,a.tenantUUID) FROM t_asset a, t_category c WHERE a.tenantUUID=?1 AND c.uuid=a.categoryUUID")
+    List<AssetMapper> findAssetsInfoByTenantUUID(@Param("tenantUUID") String tenantUUID);
+
+    @Query("SELECT new com.sharklabs.ams.asset.AssetMapper(a.uuid,a.assetNumber,a.name,c.name,a.status,a.archive,a.removeFromCategoryUUID,a.tenantUUID) FROM t_asset a, t_category c WHERE a.uuid NOT in :uuids AND a.tenantUUID=:tenantUUID AND c.uuid= a.categoryUUID")
+    List<AssetMapper> findAssetsByUuidNotIn(@Param("uuids") List<String> uuids, @Param("tenantUUID") String tenantUUID);
 }

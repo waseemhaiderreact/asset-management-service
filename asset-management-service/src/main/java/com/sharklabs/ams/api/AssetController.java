@@ -1395,6 +1395,33 @@ public class AssetController {
 
     /*******************************************END Asset Functions**********************************************/
 
+    /*******************************************Asset Mapper Functions**********************************************/
+
+    //purpose of this function is map Assets Data to plain Table for SDT functionality
+    // its one time function to map data of an organization
+    @PutMapping("/map")
+    public @ResponseBody
+    ResponseEntity mapAssetsBasicInfoToAssetCookedTable(@RequestParam String organizationId){
+        Util util = new Util();
+        ResponseEntity responseEntity = null;
+        try{
+            util.setThreadContextForLogging(scim2Util);
+            LOGGER.info("Request received in controller to map Assets Basic info to Asset Cooked Table.");
+            responseEntity = new ResponseEntity<DefaultResponse>(assetService.mapAssetsBasicInfoToAssetCookedTable(organizationId),HttpStatus.OK);
+        }catch (AccessDeniedException ade){
+            responseEntity = new ResponseEntity<String>(ade.getMessage(),HttpStatus.FORBIDDEN);
+        }catch (Exception e){
+            responseEntity = new ResponseEntity<String>(e.getMessage(),HttpStatus.INTERNAL_SERVER_ERROR);
+        }finally {
+            LOGGER.info("Returning from controller of mapping Assets Data to Cooked Table.");
+            util.clearThreadContextForLogging();
+            util = null;
+        }
+        return responseEntity;
+    }
+
+    /*******************************************END Asset Mapper Functions**********************************************/
+
     /******************************************* Consumption Functions *******************************************/
 
     //post consumption units of asset AMS_UC_25
