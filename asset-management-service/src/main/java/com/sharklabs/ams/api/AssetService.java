@@ -1797,8 +1797,10 @@ public class   AssetService {
             savedAsset.setAssetNumber(this.genrateAssetNumber(savedAsset.getId()));
             assetRepository.save(savedAsset);
             activityWallRepository.save(activityWall);
-
-
+            //saving Asset info in Asset Cooked Table for SDT.
+            AssetMapper assetMapper = new AssetMapper(savedAsset.getUuid(),savedAsset.getAssetNumber(),savedAsset.getName(),
+                    category.getName(),savedAsset.getStatus(),0,null,savedAsset.getTenantUUID());
+            assetMapperRepository.save(assetMapper);
 
             LOGGER.info("Asset Added Successfully");
             response = new DefaultResponse("Success", "Asset Added Successfully", "200", addAssetRequest.getAsset().getUuid());
@@ -1841,16 +1843,19 @@ public class   AssetService {
         Category category = null;
         EditAssetResponse response = null;
         Asset asset = null;
+        AssetMapper assetMapper = null;
         Long countDiff;
         try {
             util.setThreadContextForLogging(scim2Util);
             LOGGER.info("Inside Service function of edit asset, details: request: "+convertToJSON(editAssetRequest));
 
             asset = assetRepository.findByUuid(editAssetRequest.getAsset().getUuid());
+            assetMapper = assetMapperRepository.findByUuid(editAssetRequest.getAsset().getUuid());
             if(editAssetRequest.getAsset().getName() != null)
-                if(!editAssetRequest.getAsset().getName().isEmpty())
+                if(!editAssetRequest.getAsset().getName().isEmpty()) {
                     asset.setName(editAssetRequest.getAsset().getName());
-
+                    assetMapper.setName(editAssetRequest.getAsset().getName());
+                }
             if(editAssetRequest.getAsset().getModelNumber() != null)
                 if(!editAssetRequest.getAsset().getModelNumber().isEmpty())
                     asset.setModelNumber(editAssetRequest.getAsset().getModelNumber());
@@ -1890,8 +1895,10 @@ public class   AssetService {
                     asset.setAssetImages(editAssetRequest.getAsset().getAssetImages());
 
             if(editAssetRequest.getAsset().getStatus() != null)
-                if(!editAssetRequest.getAsset().getStatus().isEmpty())
+                if(!editAssetRequest.getAsset().getStatus().isEmpty()){
                     asset.setStatus(editAssetRequest.getAsset().getStatus());
+                    assetMapper.setStatus(editAssetRequest.getAsset().getStatus());
+                }
 
             if(editAssetRequest.getAsset().getAssetFields() != null && editAssetRequest.getAsset().getAssetFields().size() > 0){
                 asset.setAssetFields(editAssetRequest.getAsset().getAssetFields());
@@ -1899,6 +1906,7 @@ public class   AssetService {
 
             //saving in db
             assetRepository.save(asset);
+            assetMapperRepository.save(assetMapper);
             response = new EditAssetResponse();
             response.setResponseIdentifier("Success");
             response.setAsset(editAssetRequest.getAsset());
@@ -2021,6 +2029,7 @@ public class   AssetService {
         CriteriaBuilder criteriaBuilder = null;
         CriteriaQuery query = null;
         Root root = null;
+        AssetMapper assetMapper = null;
         try{
             util.setThreadContextForLogging(scim2Util);
             LOGGER.info("Inside service function of archive or delete Asset by uuid: " + uuid);
@@ -2029,6 +2038,7 @@ public class   AssetService {
             root = query.from(Asset.class);
 
             asset = (Asset) entityManager.createQuery(query.select(root).where(criteriaBuilder.equal(root.get("uuid"),uuid))).getSingleResult();
+            assetMapper = assetMapperRepository.findByUuid(uuid);
             // getting category to remove asset from it
             Category category = categoryRepository.findCategoryByUuid(asset.getCategoryUUID());
             Asset finalAsset = asset;
@@ -2055,13 +2065,15 @@ public class   AssetService {
             }
             if(type.equals("archive")){
                 asset.setArchive(1);
+                assetMapper.setArchive(true);
             }
             asset.setRemoveFromCategoryUUID(category.getUuid()); // setting remove category uuid unarchive
             asset.setRemoveFromGroupUUID(groupUUIDs);// setting remove groups uuid's for unarchive
+            assetMapper.setRemoveFromCategoryUUID(category.getUuid());
             categoryRepository.save(category);
             assetGroupRepository.save(assetGroups);
             assetRepository.save(asset);
-
+            assetMapperRepository.save(assetMapper);
             category = null;
             assets = null;
             assetGroups = null;
@@ -2140,7 +2152,7 @@ public class   AssetService {
                 response.getAsset().setLastUsage(usagecombined);
             }
             category = categoryRepository.findByAssetsUuid(response.getAsset().getUuid());
-            response.setCategoryId(category.getUuid());
+            response.setCategoryId(response.getAsset().getCategoryUUID());
             //set field template of asset
             response.setFieldTemplate(new FieldTemplateResponse());
             if (category.getFieldTemplate() != null) {
