@@ -1401,13 +1401,13 @@ public class AssetController {
     // its one time function to map data of an organization
     @PutMapping("/map")
     public @ResponseBody
-    ResponseEntity mapAssetsBasicInfoToAssetCookedTable(@RequestParam String organizationId){
+    ResponseEntity mapAssetsDataToCookedTableByType(@RequestParam String organizationId, @RequestParam String type){
         Util util = new Util();
         ResponseEntity responseEntity = null;
         try{
             util.setThreadContextForLogging(scim2Util);
-            LOGGER.info("Request received in controller to map Assets Basic info to Asset Cooked Table.");
-            responseEntity = new ResponseEntity<DefaultResponse>(assetService.mapAssetsBasicInfoToAssetCookedTable(organizationId),HttpStatus.OK);
+            LOGGER.info("Request received in controller to map Assets data to Cooked Table by type: " + type);
+            responseEntity = new ResponseEntity<DefaultResponse>(assetService.mapAssetsDataToCookedTableByType(organizationId,type),HttpStatus.OK);
         }catch (AccessDeniedException ade){
             responseEntity = new ResponseEntity<String>(ade.getMessage(),HttpStatus.FORBIDDEN);
         }catch (Exception e){

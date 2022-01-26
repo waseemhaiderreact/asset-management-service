@@ -11,4 +11,6 @@ public interface AssetMapperRepository extends JpaRepository<AssetMapper, Long> 
     List<String> findByTenantUUID(String tenantUUID);
 
     AssetMapper findByUuid(String uuid);
+
+    List<AssetMapper> findAllByTenantUUID(String tenantUUID);
 }

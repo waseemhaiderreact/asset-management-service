@@ -3773,7 +3773,7 @@ public class   AssetService {
 
     /*******************************************Asset Mapper Functions ************************************************/
 
-    public DefaultResponse mapAssetsBasicInfoToAssetCookedTable(String orgId) throws ApplicationException, AccessDeniedException {
+    public DefaultResponse mapAssetsDataToCookedTableByType(String orgId, String type) throws ApplicationException, AccessDeniedException {
         if(!privilegeHandler.hasRead()){
             LOGGER.info("Access is Denied to read Assets");
             throw new AccessDeniedException();
@@ -3783,19 +3783,36 @@ public class   AssetService {
         try{
             util.setThreadContextForLogging(scim2Util);
             LOGGER.info("Inside service function of map Assets to Cooked Table.");
-            List<String> mappedUUIDs = assetMapperRepository.findByTenantUUID(orgId);
-            if(mappedUUIDs != null && mappedUUIDs.isEmpty()){
-                List<AssetMapper> assetMappers = assetRepository.findAssetsInfoByTenantUUID(orgId);
+            if(type.equalsIgnoreCase("basic")){
+                List<String> mappedUUIDs = assetMapperRepository.findByTenantUUID(orgId);
+                if(mappedUUIDs != null && mappedUUIDs.isEmpty()){
+                    List<AssetMapper> assetMappers = assetRepository.findAssetsInfoByTenantUUID(orgId);
+                    assetMapperRepository.save(assetMappers);
+                    response = new DefaultResponse(SUCCESS,"Successfully Mapped Assets Data.","F200");
+                    LOGGER.info("Successfully Mapped Assets Data.");
+                }else{
+                    List<AssetMapper> assetMappers = assetRepository.findAssetsByUuidNotIn(mappedUUIDs,orgId);
+                    assetMapperRepository.save(assetMappers);
+                    response = new DefaultResponse(SUCCESS,"Successfully Mapped un-mapped Assets Data.","F200");
+                    LOGGER.info("Successfully Mapped un-mapped Assets Data.");
+                }
+                mappedUUIDs.clear();
+                mappedUUIDs = null;
+            }else if(type.equalsIgnoreCase("assignee")){
+                List<String> assetIds = assetRepository.findAssetsUuidsByTenantUUID(orgId);
+                HashMap<String,String> users = apsServiceProxy.getAssignees(assetIds);
+                List<AssetMapper> assetMappers = assetMapperRepository.findAllByTenantUUID(orgId);
+                assetMappers.stream().forEach(assetMapper -> {
+                    assetMapper.setAssignedTo(users.get(assetMapper.getUuid()));
+                });
                 assetMapperRepository.save(assetMappers);
-                response = new DefaultResponse(SUCCESS,"Successfully Mapped Assets Data.","F200");
-            }else{
-                List<AssetMapper> assetMappers = assetRepository.findAssetsByUuidNotIn(mappedUUIDs,orgId);
-                assetMapperRepository.save(assetMappers);
-                response = new DefaultResponse(SUCCESS,"Successfully Mapped un-mapped Assets Data.","F200");
+                response = new DefaultResponse(SUCCESS,"Successfully added assignees of Assets","F200");
+                LOGGER.info("Successfully added assignees of Assets.");
             }
+
         }catch (Exception e){
-            response = new DefaultResponse(FAILURE,"Error While Mapping Assets.","F500");
-            throw new ApplicationException("An Error Occurred while mapping data to Cooked Table.",e);
+            response = new DefaultResponse(FAILURE,"Error While Mapping Assets Data by type: " + type,"F500");
+            throw new ApplicationException("An Error Occurred while mapping data to Cooked Table by type: " + type,e);
         }finally {
             LOGGER.info("Returning to controller");
             util.clearThreadContextForLogging();
