@@ -39,6 +39,7 @@ import com.sharklabs.ams.fact.Fact;
 import com.sharklabs.ams.fact.FactRepository;
 import com.sharklabs.ams.feign.ApsServiceProxy;
 import com.sharklabs.ams.feign.AuthServiceProxy;
+import com.sharklabs.ams.feign.InsServiceProxy;
 import com.sharklabs.ams.field.Field;
 import com.sharklabs.ams.field.FieldDTO;
 import com.sharklabs.ams.field.FieldRepository;
@@ -203,7 +204,11 @@ public class   AssetService {
     @Autowired
     AssetMapperRepository assetMapperRepository;
 
+    @Autowired
+    InsServiceProxy insServiceProxy;
+
     private WalletRequestModel walletRequestModel=null;
+
     @PersistenceContext
     EntityManager entityManager;
     @Value("${cloud.aws.credentials.accessKey}")
@@ -3808,6 +3813,20 @@ public class   AssetService {
                 assetMapperRepository.save(assetMappers);
                 response = new DefaultResponse(SUCCESS,"Successfully added assignees of Assets","F200");
                 LOGGER.info("Successfully added assignees of Assets.");
+                assetIds.clear();
+                assetIds = null;
+            }else if(type.equalsIgnoreCase("openIssues")){
+                List<String> assetIds = assetRepository.findAssetsUuidsByTenantUUID(orgId);
+                HashMap<String,String> issues = insServiceProxy.getIssues(assetIds,"open");
+                List<AssetMapper> assetMappers = assetMapperRepository.findAllByTenantUUID(orgId);
+                assetMappers.stream().forEach(assetMapper -> {
+                    assetMapper.setOpenIssues(issues.get(assetMapper.getUuid()));
+                });
+                assetMapperRepository.save(assetMappers);
+                response = new DefaultResponse(SUCCESS,"Successfully added open issues of Assets.","F200");
+                LOGGER.info("Successfully added open issues of Assets.");
+                assetIds.clear();
+                assetIds = null;
             }
 
         }catch (Exception e){

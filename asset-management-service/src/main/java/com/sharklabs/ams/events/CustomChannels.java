@@ -33,4 +33,7 @@ public interface CustomChannels {
 
     @Input("inBoundAssetAssignee")
     SubscribableChannel updateAssetAssignee();
+
+    @Input("inBoundAssetIssues")
+    SubscribableChannel assetIssues();
 }
