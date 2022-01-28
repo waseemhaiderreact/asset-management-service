@@ -3827,6 +3827,18 @@ public class   AssetService {
                 LOGGER.info("Successfully added open issues of Assets.");
                 assetIds.clear();
                 assetIds = null;
+            }else if(type.equalsIgnoreCase("assignedIssues")){
+                List<String> assetIds = assetRepository.findAssetsUuidsByTenantUUID(orgId);
+                HashMap<String,String> issues = insServiceProxy.getIssues(assetIds,"assigned");
+                List<AssetMapper> assetMappers = assetMapperRepository.findAllByTenantUUID(orgId);
+                assetMappers.stream().forEach(assetMapper -> {
+                    assetMapper.setAssignedIssues(issues.get(assetMapper.getUuid()));
+                });
+                assetMapperRepository.save(assetMappers);
+                response = new DefaultResponse(SUCCESS,"Successfully added assigned issues of Assets.","F200");
+                LOGGER.info("Successfully added assigned issues of Assets.");
+                assetIds.clear();
+                assetIds = null;
             }
 
         }catch (Exception e){
