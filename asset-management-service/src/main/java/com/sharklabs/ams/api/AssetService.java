@@ -40,6 +40,7 @@ import com.sharklabs.ams.fact.FactRepository;
 import com.sharklabs.ams.feign.ApsServiceProxy;
 import com.sharklabs.ams.feign.AuthServiceProxy;
 import com.sharklabs.ams.feign.InsServiceProxy;
+import com.sharklabs.ams.feign.WosServiceProxy;
 import com.sharklabs.ams.field.Field;
 import com.sharklabs.ams.field.FieldDTO;
 import com.sharklabs.ams.field.FieldRepository;
@@ -206,6 +207,9 @@ public class   AssetService {
 
     @Autowired
     InsServiceProxy insServiceProxy;
+
+    @Autowired
+    WosServiceProxy wosServiceProxy;
 
     private WalletRequestModel walletRequestModel=null;
 
@@ -3837,6 +3841,30 @@ public class   AssetService {
                 assetMapperRepository.save(assetMappers);
                 response = new DefaultResponse(SUCCESS,"Successfully added assigned issues of Assets.","F200");
                 LOGGER.info("Successfully added assigned issues of Assets.");
+                assetIds.clear();
+                assetIds = null;
+            }else if (type.equalsIgnoreCase("openWorkOrders")){
+                List<String> assetIds = assetRepository.findAssetsUuidsByTenantUUID(orgId);
+                HashMap<String,String> workorders = wosServiceProxy.getWorkOrders(assetIds,"open");
+                List<AssetMapper> assetMappers = assetMapperRepository.findAllByTenantUUID(orgId);
+                assetMappers.stream().forEach(assetMapper -> {
+                    assetMapper.setWorkorders(workorders.get(assetMapper.getUuid()));
+                });
+                assetMapperRepository.save(assetMappers);
+                response = new DefaultResponse(SUCCESS,"Successfully added open work orders","F200");
+                LOGGER.info("Successfully added open work orders");
+                assetIds.clear();
+                assetIds = null;
+            }else if(type.equalsIgnoreCase("repairs")){
+                List<String> assetIds = assetRepository.findAssetsUuidsByTenantUUID(orgId);
+                HashMap<String,String> workorders = wosServiceProxy.getWorkOrders(assetIds,"In Progress");
+                List<AssetMapper> assetMappers = assetMapperRepository.findAllByTenantUUID(orgId);
+                assetMappers.stream().forEach(assetMapper -> {
+                    assetMapper.setRepairs(workorders.get(assetMapper.getUuid()));
+                });
+                assetMapperRepository.save(assetMappers);
+                response = new DefaultResponse(SUCCESS,"Successfully added repairs","F200");
+                LOGGER.info("Successfully added repairs");
                 assetIds.clear();
                 assetIds = null;
             }

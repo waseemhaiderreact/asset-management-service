@@ -36,4 +36,7 @@ public interface CustomChannels {
 
     @Input("inBoundAssetIssues")
     SubscribableChannel assetIssues();
+
+    @Input("inBoundAssetWorkOrder")
+    SubscribableChannel receiveAssetWorkOrderUpdate();
 }
