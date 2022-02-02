@@ -2217,7 +2217,8 @@ public class   AssetService {
                     response.getAssetDetail().getActivityWall().setUuid(UUID.randomUUID().toString());
                     response.getAssetDetail().getActivityWall().setAssetUuid(uuid);
                     activityWallRepository.save(response.getAssetDetail().getActivityWall());
-                }     }
+                }
+            }
 
 
             if (assetDetailRequest.isAssetFields())
@@ -2244,7 +2245,7 @@ public class   AssetService {
                 response.getAssetDetail().setUsage(usageRepository.findByAssetUUIDOrderByIdDesc(uuid));
 
             if (assetDetailRequest.isCategory())
-                response.getAssetDetail().setCategory(categoryRepository.findByAssetsUuid(uuid));
+                response.getAssetDetail().setCategory(categoryRepository.findCategoryByUuid(response.getAssetDetail().getAssetDetail().getCategoryId()));
 
             // set last usage required for meter reading, to get last usage
             if(assetDetailRequest.isUsages()){
@@ -3865,6 +3866,18 @@ public class   AssetService {
                 assetMapperRepository.save(assetMappers);
                 response = new DefaultResponse(SUCCESS,"Successfully added repairs","F200");
                 LOGGER.info("Successfully added repairs");
+                assetIds.clear();
+                assetIds = null;
+            }else if(type.equalsIgnoreCase("cost")){
+                List<String> assetIds = assetRepository.findAssetsUuidsByTenantUUID(orgId);
+                HashMap<String,String> costs = wosServiceProxy.getAssetMaintenanceCost(assetIds);
+                List<AssetMapper> assetMappers = assetMapperRepository.findAllByTenantUUID(orgId);
+                assetMappers.stream().forEach(assetMapper -> {
+                    assetMapper.setMaintenanceCost(costs.get(assetMapper.getUuid()));
+                });
+                assetMapperRepository.save(assetMappers);
+                response = new DefaultResponse(SUCCESS,"Successfully added costs","F200");
+                LOGGER.info("Successfully added costs");
                 assetIds.clear();
                 assetIds = null;
             }

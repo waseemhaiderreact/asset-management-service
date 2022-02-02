@@ -51,6 +51,24 @@ public class AssetWorkOrderHandler {
                             }
                             assetMapperRepository.save(assetMapper);
                             break;
+                        case "PART_COST":
+                            LOGGER.info("Adding Maintenance cost of Asset.");
+                            Integer cost = Double.valueOf(assetMapper.getMaintenanceCost()).intValue();
+                            assetMapper.setMaintenanceCost(String.valueOf(cost >= 0 ? cost + Double.valueOf(assetWorkOrder.getCost()).intValue() : 0));
+                            assetMapperRepository.save(assetMapper);
+                            break;
+                        case "UPDATE_COST":
+                            LOGGER.info("Updating Maintenance cost of Asset.");
+                            cost = Double.valueOf(assetMapper.getMaintenanceCost()).intValue();
+                            if(assetWorkOrder.getBeforeCost() != null && !assetWorkOrder.getBeforeCost().isEmpty()){
+                                assetMapper.setMaintenanceCost(String.valueOf(cost >= 0 ? cost - Double.valueOf(assetWorkOrder.getBeforeCost()).intValue() : 0));
+                            }
+                            cost = Double.valueOf(assetMapper.getMaintenanceCost()).intValue();
+                            if(assetWorkOrder.getCost() != null && !assetWorkOrder.getCost().isEmpty()){
+                                assetMapper.setMaintenanceCost(String.valueOf(cost >= 0 ? cost + Double.valueOf(assetWorkOrder.getCost()).intValue() : 0));
+                            }
+                            assetMapperRepository.save(assetMapper);
+                            break;
                     }
                 }
             }

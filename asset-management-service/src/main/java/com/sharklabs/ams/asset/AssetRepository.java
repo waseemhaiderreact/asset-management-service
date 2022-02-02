@@ -50,7 +50,7 @@ public interface AssetRepository extends JpaRepository<Asset,Long>, PagingAndSor
     boolean existsByModelNumber(String modelNumber);
 
     // Basic Asset Detail i.e w/o Collections and ActivityWall
-    @Query("SELECT new com.sharklabs.ams.asset.AssetDetail(a.id, a.assetNumber, a.uuid, a.name, a.modelNumber, a.manufacture, a.purchaseDate, a.expiryDate, a.warranty, a.description, a.tenantUUID, a.primaryUsageUnit, a.secondaryUsageUnit, a.consumptionUnit, a.consumptionPoints, a.status) FROM t_asset a WHERE a.uuid = ?1")
+    @Query("SELECT new com.sharklabs.ams.asset.AssetDetail(a.id, a.assetNumber, a.uuid, a.name, a.modelNumber, a.manufacture, a.purchaseDate, a.expiryDate, a.warranty, a.description, a.tenantUUID, a.primaryUsageUnit, a.secondaryUsageUnit, a.consumptionUnit, a.consumptionPoints, a.status,a.categoryUUID) FROM t_asset a WHERE a.uuid = ?1")
     AssetDetail getBasicAssetDetailByUuid(String uuid);
 
 

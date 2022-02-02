@@ -10,6 +10,10 @@ public class AssetWorkOrder {
 
     private String assetUUID;
 
+    private String cost;
+
+    private String beforeCost;
+
     public AssetWorkOrder() {
     }
 
@@ -50,5 +54,21 @@ public class AssetWorkOrder {
 
     public void setAssetUUID(String assetUUID) {
         this.assetUUID = assetUUID;
+    }
+
+    public String getCost() {
+        return cost;
+    }
+
+    public void setCost(String cost) {
+        this.cost = cost;
+    }
+
+    public String getBeforeCost() {
+        return beforeCost;
+    }
+
+    public void setBeforeCost(String beforeCost) {
+        this.beforeCost = beforeCost;
     }
 }

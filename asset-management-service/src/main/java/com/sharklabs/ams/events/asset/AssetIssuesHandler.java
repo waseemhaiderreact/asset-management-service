@@ -45,9 +45,9 @@ public class AssetIssuesHandler {
                             counts.put(s,(occurrence == null) ? 1 : occurrence + 1);
                         }
                         assetMappers.forEach(assetMapper1 -> {
-                            Integer assignedIssues = Integer.valueOf(assetMapper1.getAssignedIssues()) + 1;
+                            Integer assignedIssues = Integer.valueOf(assetMapper1.getAssignedIssues()) + counts.get(assetMapper1.getUuid());
                             assetMapper1.setAssignedIssues(assignedIssues.toString());
-                            Integer openIssues = Integer.valueOf(assetMapper1.getOpenIssues()) > 0 ? Integer.valueOf(assetMapper1.getOpenIssues()) - 1 : 0;
+                            Integer openIssues = Integer.valueOf(assetMapper1.getOpenIssues()) > 0 ? Integer.valueOf(assetMapper1.getOpenIssues()) - counts.get(assetMapper1.getUuid()) : 0;
                             assetMapper1.setOpenIssues(openIssues.toString());
                         });
                         assetMapperRepository.save(assetMappers);

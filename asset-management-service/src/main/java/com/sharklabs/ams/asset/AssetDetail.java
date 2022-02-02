@@ -37,7 +37,12 @@ public class AssetDetail {
 
     private String status;
 
-    public AssetDetail(Long id, String assetNumber, String uuid, String name, String modelNumber, String manufacture, Date purchaseDate, Date expiryDate, String warranty, String description, String tenantUUID, String primaryUsageUnit, String secondaryUsageUnit, String consumptionUnit, int consumptionPoints, String status) {
+    private String categoryId;
+
+    public AssetDetail(Long id, String assetNumber, String uuid, String name, String modelNumber, String manufacture,
+                       Date purchaseDate, Date expiryDate, String warranty, String description, String tenantUUID,
+                       String primaryUsageUnit, String secondaryUsageUnit, String consumptionUnit, int consumptionPoints,
+                       String status, String categoryId) {
         this.id = id;
         this.assetNumber = assetNumber;
         this.uuid = uuid;
@@ -53,8 +58,8 @@ public class AssetDetail {
         this.secondaryUsageUnit = secondaryUsageUnit;
         this.consumptionUnit = consumptionUnit;
         this.consumptionPoints = consumptionPoints;
-       this.status = status;
-        //this.category = category;
+        this.status = status;
+        this.categoryId = categoryId;
 
     }
 
@@ -182,6 +187,13 @@ public class AssetDetail {
 
     public void setStatus(String status) {   this.status = status;   }
 
+    public String getCategoryId() {
+        return categoryId;
+    }
+
+    public void setCategoryId(String categoryId) {
+        this.categoryId = categoryId;
+    }
     /*public Category getCategory() {
         return category;
     }

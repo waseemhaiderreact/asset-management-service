@@ -15,4 +15,8 @@ public interface WosServiceProxy {
     @GetMapping("/get/workorders")
     @ResponseBody
     HashMap<String,String > getWorkOrders(@RequestParam("uuids") List<String> uuids, @RequestParam("type") String type);
+
+    @GetMapping("/get/costs")
+    @ResponseBody
+    HashMap<String,String> getAssetMaintenanceCost(@RequestParam("uuids") List<String> uuids);
 }
