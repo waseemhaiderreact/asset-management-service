@@ -2666,84 +2666,56 @@ public class   AssetService {
         return response;
     }
 
-    //get page of assets for SDT
-//    @HasRead
-    GetPaginatedAssetsResponse getPaginatedAssetsForSDT(GetPaginatedDataForSDTRequest request) throws IOException,AccessDeniedException {
-
-        if(!privilegeHandler.hasRead())
+    PaginatedAssetSdtResponse getPaginatedAssetsForSdt(GetPaginatedDataForSDTRequest request) throws IOException, AccessDeniedException,ApplicationException{
+        if(!privilegeHandler.hasRead()){
+            LOGGER.error("Access is denied.");
             throw new AccessDeniedException();
-
+        }
         Util util = new Util();
+        PaginatedAssetSdtResponse response = new PaginatedAssetSdtResponse();
         CriteriaBuilder criteriaBuilder = null;
-        CriteriaQuery<AssetModelForTableView> query = null;
-        Root<Asset> asset = null;
-        GetPaginatedAssetsResponse response = new GetPaginatedAssetsResponse();
-        response.setAssets(new AssetPage());
-        CriteriaQuery query1 = null;
-        List<Predicate> clauses = null;
-        List<AssetModelForTableView> assetModelForTableViews = null;
-        try {
+        CriteriaQuery query = null;
+        Root root = null;
+        List<Predicate> clauses = new ArrayList<>();
+        try{
             util.setThreadContextForLogging(scim2Util);
-            LOGGER.info("Inside service function of get page of assets for SDT,details: "+convertToJSON(request));
-
+            LOGGER.info("Inside service function of get paginated Assets for sdt. Details: " + convertToJSON(request));
             criteriaBuilder = entityManager.getCriteriaBuilder();
-            query = criteriaBuilder.createQuery(AssetModelForTableView.class);
-            asset = query.from(Asset.class);
+            query = criteriaBuilder.createQuery(Long.class);
+            root = query.from(AssetMapper.class);
 
-            clauses = new ArrayList<>();
-            clauses.add(criteriaBuilder.equal(asset.get("tenantUUID"),request.getTenantUUID()));
-            clauses.add(criteriaBuilder.isNull(asset.get("removeFromCategoryUUID")));
+            clauses.add(criteriaBuilder.equal(root.get("tenantUUID"),request.getTenantUUID()));
+            clauses.add(criteriaBuilder.isNull(root.get("removeFromCategoryUUID")));
 
             // Add filters
-            clauses = addFilters(criteriaBuilder,asset,clauses,request.getFilters(),request.getSearchQuery());
-
-            assetModelForTableViews = (List<AssetModelForTableView>) entityManager.createQuery(query.select(criteriaBuilder.construct(AssetModelForTableView.class,asset.get("id"),asset.get("assetNumber"),asset.get("uuid"),asset.get("name"),asset.get("modelNumber"),asset.get("manufacture"),asset.get("purchaseDate"),asset.get("expiryDate"),asset.get("warranty"),asset.get("description"),asset.get("tenantUUID"),asset.get("primaryUsageUnit"),asset.get("secondaryUsageUnit"),asset.get("consumptionUnit"),asset.get("status"))).where(clauses.toArray( new Predicate[]{})).orderBy(
+            clauses = addFilters(criteriaBuilder,root,clauses,request.getFilters(),request.getSearchQuery());
+            response.setTotalElements((Long) entityManager.createQuery(query.select(criteriaBuilder.count(root)).where(clauses.toArray(new Predicate[]{}))).getSingleResult());
+            response.setAssetMappers((List<AssetMapper>) entityManager.createQuery(query.select(root).where(clauses.toArray(new Predicate[]{}))
+                    .orderBy(
                     (javax.persistence.criteria.Order) CriteriaBuilder.class.getDeclaredMethod(request.getSortDirection(), Expression.class)
-                            .invoke(criteriaBuilder,asset.get(request.getSortField()))))
+                            .invoke(criteriaBuilder,root.get(request.getSortField()))))
                     .setFirstResult(request.getLimit() * request.getOffset())
                     .setMaxResults(request.getLimit())
-                    .getResultList();
-            List<String> assetIds = new ArrayList<>();
-            for(AssetModelForTableView view : assetModelForTableViews){
-                assetIds.add(view.getUuid());
-            }
-            GetAssetUsersResponse usersResponse = getAssetUsersByAssetIds(assetIds);
-            for(AssetModelForTableView view: assetModelForTableViews){
-                if(usersResponse.getUsers().containsKey(view.getUuid())){
-                    view.setAssignees(usersResponse.getUsers().get(view.getUuid()).toString());
-                }else{
-                    view.setAssignees("");
-                }
-            }
-            response.getAssets().setContent(assetModelForTableViews);
-            query1 = criteriaBuilder.createQuery(Long.class);
-            asset = query1.from(Asset.class);
-            response.getAssets().setTotalElements((Long)entityManager.createQuery(query1.select(criteriaBuilder.count(asset)).where(clauses.toArray( new Predicate[]{}))).getSingleResult());
-            response.getAssets().setTotalPages(((Long) response.getAssets().getTotalElements() / request.getLimit()) + 1);
+                    .getResultList());
 
-            if ((Long) response.getAssets().getTotalElements() == request.getLimit())
-                response.getAssets().setTotalPages((Long) response.getAssets().getTotalPages() - 1);
+            response.setTotalPages(((Long) response.getTotalElements() / request.getLimit()) + 1);
+
+            if ((Long) response.getTotalElements() == request.getLimit())
+                response.setTotalPages((Long) response.getTotalPages() - 1);
             response.setResponseIdentifier("Success");
-            LOGGER.info("Received assets for SDT from database. Returning to controller");
-
-        } catch (Exception e) {
-            LOGGER.error("Error while getting page of assets for SDT,details: "+convertToJSON(request), e);
-            response.setResponseIdentifier(SUCCESS);
-            e = null;
-        }finally{
-            LOGGER.info("Returning to controller of Get Paginated Assets for SDT");
+            LOGGER.info("Successfully got paginated Assets.");
+        }catch (Exception e){
+            LOGGER.error("An Error Occurred while get paginated Assets for sdt. Details: " + convertToJSON(request),e);
+            throw new ApplicationException("An Error Occurred while get paginated Assets for sdt.",e);
+        }finally {
+            LOGGER.info("Returning to controller.");
             util.clearThreadContextForLogging();
             util = null;
-            query = null;
-            criteriaBuilder = null;
-            asset = null;
-            clauses.clear();
-            clauses = null;
+
         }
 
         return response;
     }
-
     //get name and type of assets AMS_UC_23
     /*
      * This will be used by Inspection Table View FE Screen

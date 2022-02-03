@@ -25,14 +25,18 @@ public class AssetAssigneeHandler {
                 case "ADD":
                     LOGGER.info("Adding the Asset Assignee");
                     assetMapper = assetMapperRepository.findByUuid(assigneeModel.getAssetUUID());
-                    assetMapper.setAssignedTo(assetMapper.getAssignedTo().isEmpty() ? assigneeModel.getAssigneeName()
-                            : assetMapper.getAssignedTo() + " " + assigneeModel.getAssigneeName());
+                    if(assetMapper.getAssignedTo() != null) {
+                        assetMapper.setAssignedTo(assetMapper.getAssignedTo().isEmpty() ? assigneeModel.getAssigneeName()
+                                : assetMapper.getAssignedTo() + " " + assigneeModel.getAssigneeName());
+                    }else{
+                        assetMapper.setAssignedTo(assigneeModel.getAssigneeName());
+                    }
                     assetMapperRepository.save(assetMapper);
                     break;
                 case "UPDATE":
                     LOGGER.info("Updating Asset Assignee");
                     assetMapper = assetMapperRepository.findByUuid(assigneeModel.getAssetUUID());
-                    if(!assetMapper.getAssignedTo().isEmpty()){
+                    if(assetMapper.getAssignedTo() != null && !assetMapper.getAssignedTo().isEmpty()){
                         assetMapper.setAssignedTo(assetMapper.getAssignedTo().replaceAll(assigneeModel.getPreviousName(),"").trim());
                         assetMapper.setAssignedTo(assetMapper.getAssignedTo().isEmpty() ? assigneeModel.getAssigneeName()
                                 : assetMapper.getAssignedTo() + " " + assigneeModel.getAssigneeName());
@@ -42,7 +46,7 @@ public class AssetAssigneeHandler {
                 case "REMOVE":
                     LOGGER.info("Removing Assignee from Asset");
                     assetMapper = assetMapperRepository.findByUuid(assigneeModel.getAssetUUID());
-                    if(!assetMapper.getAssignedTo().isEmpty()){
+                    if(assetMapper.getAssignedTo() != null && !assetMapper.getAssignedTo().isEmpty()){
                         assetMapper.setAssignedTo(assetMapper.getAssignedTo().replaceAll(assigneeModel.getPreviousName(),"").trim());
                         assetMapperRepository.save(assetMapper);
                     }
