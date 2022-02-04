@@ -2345,17 +2345,19 @@ public class   AssetService {
         AssetAndAssetGroupResponse response =new AssetAndAssetGroupResponse();
         try{
             LOGGER.info("Inside service function of get Asset and Asset Group.");
-            if(request.getAssetUUIDs().size()>0){
-
+            if(request.getQuery() != null && request.getQuery() != ""){
+                response.setAssetDTOS(assetRepository.findAssetByNameAndRemoveFromCategoryUUIDIsNull(request.getQuery()));
+                response.setAssetGroupDTOS(assetGroupRepository.findAssetGroupByNameAndDeletefromGroupUUIDIsNull(request.getQuery()));
+                response.setResponseIdentifier(SUCCESS);
+            }
+            if(request.getAssetUUIDs() != null && request.getAssetUUIDs().size()>0){
                 response.setAssetDTOS(assetRepository.findAssetByUuidAndRemoveFromCategoryUUIDIsNull(request.getAssetUUIDs()));
                 response.setResponseIdentifier(SUCCESS);
-                LOGGER.info("Successfully got Assets and Asset groups name and uuid."+convertToJSON(response));
+
             }
-            if(request.getAssetGroupUUIDs().size()>0){
+            if(request.getAssetGroupUUIDs() != null && request.getAssetGroupUUIDs().size()>0){
                 response.setAssetGroupDTOS(assetGroupRepository.findAssetGroupByUuidInAndDeletefromGroupUUIDIsNull(request.getAssetGroupUUIDs()));
                 response.setResponseIdentifier(SUCCESS);
-                LOGGER.info("Successfully got Assets and Asset groups name and uuid."+convertToJSON(response));
-
             }
         }catch(Exception e){
             LOGGER.error("An Error occurred while getting Asset and Asset groups name and uuid by Assets.",e);
