@@ -17,4 +17,7 @@ public interface AssetMapperRepository extends JpaRepository<AssetMapper, Long> 
     List<AssetMapper> findAllByUuid(@Param("uuids") List<String> uuids);
 
     List<AssetMapper> findAllByTenantUUID(String tenantUUID);
+
+    @Query("SELECT a FROM AssetMapper a WHERE a.assetNumber IN (:assetNumber)")
+    List<AssetMapper> findAssetsByAssetNumberIn(@Param("assetNumber") List<String> assetNumber);
 }

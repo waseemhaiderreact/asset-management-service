@@ -1138,6 +1138,7 @@ public class   AssetService {
         AssetImport assetImport = new AssetImport();
         List<Asset> assets = new ArrayList<>();
         List<Asset> updateAssets = new ArrayList<>();
+        List<AssetMapper> updateAssetMappers = new ArrayList<>();
         List<ImportRecord> importRecords = new ArrayList<>();
         List<Category> categories = new ArrayList<>();
         String accessAssetNumber = "";
@@ -1217,6 +1218,7 @@ public class   AssetService {
                     //fetching Assets
                     if(assetNumber.size() > 0){
                         updateAssets = assetRepository.findAssetsByAssetNumberIn(assetNumber);
+                        updateAssetMappers = assetMapperRepository.findAssetsByAssetNumberIn(assetNumber);
                         updateCheck = true;
                     }
                 }
@@ -1495,11 +1497,29 @@ public class   AssetService {
                         asset.setAssetNumber(this.genrateAssetNumber(asset.getId()));
                     }
                     assetRepository.save(savedAssets);
+                    List<AssetMapper> assetMappers = new ArrayList<>();
+                    List<Category> finalCategories = categories;
+                    assetMappers = savedAssets.stream().map(savedAsset -> {
+                        AssetMapper assetMapper = new AssetMapper(savedAsset.getUuid(),savedAsset.getAssetNumber(),
+                                savedAsset.getName(), extractCategoryNameToMap(savedAsset.getCategoryUUID(),finalCategories), savedAsset.getStatus(),savedAsset.getArchive(),
+                                savedAsset.getRemoveFromCategoryUUID(), savedAsset.getTenantUUID());
+                        return assetMapper;
+                    }).collect(Collectors.toList());
+                    assetMapperRepository.save(assetMappers);
                 }
 
                 //saving updated Asset
                 if(updateAssets != null && updateAssets.size() > 0){
                     assetRepository.save(updateAssets);
+                    List<Asset> finalUpdateAssets = updateAssets;
+                    updateAssetMappers.forEach(assetMapper -> {
+                        Asset asset = finalUpdateAssets.stream().filter(u -> u.getAssetNumber().equalsIgnoreCase(assetMapper.getAssetNumber())).findFirst().orElse(null);
+                        if(asset != null){
+                            assetMapper.setName(asset.getName());
+                            assetMapper.setStatus(asset.getStatus());
+                        }
+                    });
+                    assetMapperRepository.save(updateAssetMappers);
                 }
                 assetImportRepository.save(assetImport);
                 if(importRecords != null && importRecords.size() > 0) {
@@ -1523,6 +1543,20 @@ public class   AssetService {
             util = null;
         }
         return response;
+    }
+
+    public String extractCategoryNameToMap(String uuid, List<Category> categories){
+        String categoryName = null;
+        try{
+            LOGGER.info("Inside function to extract category name.");
+            Category category = categories.stream().filter(c -> c.getUuid().equalsIgnoreCase(uuid)).findFirst().orElse(null);
+            if(category != null){
+                categoryName = category.getName();
+            }
+        }catch (Exception e){
+            LOGGER.error("An Error Occurred while extracting category name.",e);
+        }
+        return categoryName;
     }
 
     public GetFileResponse downloadFailureImports(String importUUID) throws ApplicationException,AccessDeniedException{
