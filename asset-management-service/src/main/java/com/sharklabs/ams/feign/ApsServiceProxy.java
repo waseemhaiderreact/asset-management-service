@@ -7,6 +7,7 @@ import org.springframework.cloud.netflix.feign.FeignClient;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.List;
 
 @FeignClient(name="asset-personnel",url="${aps.service.fetch.url}")
@@ -23,4 +24,8 @@ public interface ApsServiceProxy {
     @PostMapping("/user/detail/wallet")
     @ResponseBody
     GetUserDetailForWallet getUserDetail(@RequestBody WalletRequestModel request);
+
+    @GetMapping("/get/assignees")
+    @ResponseBody
+    HashMap<String,String > getAssignees(@RequestParam("uuids") List<String> uuids);
 }

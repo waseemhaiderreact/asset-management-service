@@ -901,7 +901,7 @@ public class AssetController {
     }
     //get Asset Name and AssetgroupName  by
     @PostMapping ("/asset/asset-group/uuid")
-    @Cacheable(value = "assetAndAssetGroupByUUID")
+   // @Cacheable(value = "assetAndAssetGroupByUUID")
     public @ResponseBody
     AssetAndAssetGroupResponse getAssetAndAssetGroup(@RequestBody AssetAndAssetGroupRequest request){
         try{
@@ -1003,39 +1003,27 @@ public class AssetController {
         return responseEntity;
     }
 
-    //get paginated assets for SDT
+    //get Paginated Asset Data from Asset Cooked Table for Asset SDT
     @PostMapping("/sdt")
     public @ResponseBody
-    ResponseEntity getPaginatedAssetsForSDT(@RequestBody GetPaginatedDataForSDTRequest request) throws IOException {
+    ResponseEntity getPaginatedAssetsForSdt(@RequestBody GetPaginatedDataForSDTRequest request) throws IOException{
         Util util = new Util();
-        ResponseEntity responseEntity=null;
+        ResponseEntity responseEntity = null;
         try{
-
             util.setThreadContextForLogging(scim2Util);
-            LOGGER.info("Request received in controller to get page of assets for SDT.");
-            GetPaginatedAssetsResponse response=assetService.getPaginatedAssetsForSDT(request);
-            if(response.getResponseIdentifier().equals("Success")){
-                responseEntity=new ResponseEntity<GetPaginatedAssetsResponse>(response,HttpStatus.OK);
-            }
-            else if(response.getResponseIdentifier().equals("Failure")){
-                responseEntity=new ResponseEntity<GetPaginatedAssetsResponse>(response,HttpStatus.INTERNAL_SERVER_ERROR);
-            }
-        }catch(AccessDeniedException ade){
-            LOGGER.error("Access is Denied for getting paginated Assets for sDT, details: "+new ObjectMapper().writeValueAsString(request),ade);
-            responseEntity = new ResponseEntity<String>(ade.getMessage(),HttpStatus.UNAUTHORIZED);
-            ade = null;
-        }catch(Exception e){
-            LOGGER.error("An unknown Error occurred for getting paginated Assets for sDT, details: "+new ObjectMapper().writeValueAsString(request),e);
+            LOGGER.info("Request received in get paginated Assets for sdt. Details: " + assetService.convertToJSON(request));
+            responseEntity = new ResponseEntity<PaginatedAssetSdtResponse>(assetService.getPaginatedAssetsForSdt(request),HttpStatus.OK);
+        }catch (AccessDeniedException ade){
+            responseEntity = new ResponseEntity<String>(ade.getMessage(),HttpStatus.FORBIDDEN);
+        }catch (Exception e){
             responseEntity = new ResponseEntity<String>(e.getMessage(),HttpStatus.INTERNAL_SERVER_ERROR);
-            e = null;
-        }finally{
+        }finally {
+            LOGGER.info("Returning from controller of get paginated Assets for sdt.");
             util.clearThreadContextForLogging();
             util = null;
-            request = null;
         }
         return responseEntity;
     }
-
     @GetMapping("/bulk")
     @ResponseBody
     public ResponseEntity getPaginatedBulkOrSingleAssets(@RequestParam String tenantuuid, @RequestParam int offset, @RequestParam int limit, @RequestParam boolean isBulk){
@@ -1394,6 +1382,33 @@ public class AssetController {
     }
 
     /*******************************************END Asset Functions**********************************************/
+
+    /*******************************************Asset Mapper Functions**********************************************/
+
+    //purpose of this function is map Assets Data to plain Table for SDT functionality
+    // its one time function to map data of an organization
+    @PutMapping("/map")
+    public @ResponseBody
+    ResponseEntity mapAssetsDataToCookedTableByType(@RequestParam String organizationId, @RequestParam String type){
+        Util util = new Util();
+        ResponseEntity responseEntity = null;
+        try{
+            util.setThreadContextForLogging(scim2Util);
+            LOGGER.info("Request received in controller to map Assets data to Cooked Table by type: " + type);
+            responseEntity = new ResponseEntity<DefaultResponse>(assetService.mapAssetsDataToCookedTableByType(organizationId,type),HttpStatus.OK);
+        }catch (AccessDeniedException ade){
+            responseEntity = new ResponseEntity<String>(ade.getMessage(),HttpStatus.FORBIDDEN);
+        }catch (Exception e){
+            responseEntity = new ResponseEntity<String>(e.getMessage(),HttpStatus.INTERNAL_SERVER_ERROR);
+        }finally {
+            LOGGER.info("Returning from controller of mapping Assets Data to Cooked Table.");
+            util.clearThreadContextForLogging();
+            util = null;
+        }
+        return responseEntity;
+    }
+
+    /*******************************************END Asset Mapper Functions**********************************************/
 
     /******************************************* Consumption Functions *******************************************/
 
