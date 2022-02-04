@@ -50,7 +50,7 @@ public interface AssetRepository extends JpaRepository<Asset,Long>, PagingAndSor
     boolean existsByModelNumber(String modelNumber);
 
     // Basic Asset Detail i.e w/o Collections and ActivityWall
-    @Query("SELECT new com.sharklabs.ams.asset.AssetDetail(a.id, a.assetNumber, a.uuid, a.name, a.modelNumber, a.manufacture, a.purchaseDate, a.expiryDate, a.warranty, a.description, a.tenantUUID, a.primaryUsageUnit, a.secondaryUsageUnit, a.consumptionUnit, a.consumptionPoints, a.status) FROM t_asset a WHERE a.uuid = ?1")
+    @Query("SELECT new com.sharklabs.ams.asset.AssetDetail(a.id, a.assetNumber, a.uuid, a.name, a.modelNumber, a.manufacture, a.purchaseDate, a.expiryDate, a.warranty, a.description, a.tenantUUID, a.primaryUsageUnit, a.secondaryUsageUnit, a.consumptionUnit, a.consumptionPoints, a.status,a.categoryUUID) FROM t_asset a WHERE a.uuid = ?1")
     AssetDetail getBasicAssetDetailByUuid(String uuid);
 
 
@@ -92,6 +92,16 @@ public interface AssetRepository extends JpaRepository<Asset,Long>, PagingAndSor
     @Query("SELECT new com.sharklabs.ams.asset.AssetDTO(a.uuid,a.name) FROM t_asset a WHERE a.uuid in :uuid AND a.removeFromCategoryUUID " +
             "is NULL ")
     List<AssetDTO> findAssetByUuidAndRemoveFromCategoryUUIDIsNull(@Param("uuid") Set<String> uuid);
+
+    @Query("SELECT new com.sharklabs.ams.asset.AssetMapper(a.uuid,a.assetNumber,a.name,c.name,a.status,a.archive,a.removeFromCategoryUUID,a.tenantUUID) FROM t_asset a, t_category c WHERE a.tenantUUID=?1 AND c.uuid=a.categoryUUID")
+    List<AssetMapper> findAssetsInfoByTenantUUID(@Param("tenantUUID") String tenantUUID);
+
+    @Query("SELECT new com.sharklabs.ams.asset.AssetMapper(a.uuid,a.assetNumber,a.name,c.name,a.status,a.archive,a.removeFromCategoryUUID,a.tenantUUID) FROM t_asset a, t_category c WHERE a.uuid NOT in :uuids AND a.tenantUUID=:tenantUUID AND c.uuid= a.categoryUUID")
+    List<AssetMapper> findAssetsByUuidNotIn(@Param("uuids") List<String> uuids, @Param("tenantUUID") String tenantUUID);
+
+    //query to get uuids for Assignee mapping
+    @Query(value = "SELECT a.uuid from t_asset a where a.tenantUUID=?1 AND a.uuid is not null")
+    List<String> findAssetsUuidsByTenantUUID(@Param("tenantUUID") String tenantUUID);
     @Query("SELECT new com.sharklabs.ams.asset.AssetDTO(a.uuid,a.name) FROM t_asset a WHERE a.name like %:Query% AND a.removeFromCategoryUUID " +
             "is NULL ")
     List<AssetDTO> findAssetByNameAndRemoveFromCategoryUUIDIsNull(@Param("Query") String Query);

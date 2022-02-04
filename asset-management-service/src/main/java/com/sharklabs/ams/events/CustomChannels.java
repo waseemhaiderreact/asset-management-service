@@ -30,4 +30,13 @@ public interface CustomChannels {
 
     @Input("inBoundReceivingWalletRequestModel")
     MessageChannel setWalletRequestModel();
+
+    @Input("inBoundAssetAssignee")
+    SubscribableChannel updateAssetAssignee();
+
+    @Input("inBoundAssetIssues")
+    SubscribableChannel assetIssues();
+
+    @Input("inBoundAssetWorkOrder")
+    SubscribableChannel receiveAssetWorkOrderUpdate();
 }
