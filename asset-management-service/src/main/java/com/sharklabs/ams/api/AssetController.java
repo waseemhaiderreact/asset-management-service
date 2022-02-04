@@ -901,7 +901,7 @@ public class AssetController {
     }
     //get Asset Name and AssetgroupName  by
     @PostMapping ("/asset/asset-group/uuid")
-    @Cacheable(value = "assetAndAssetGroupByUUID")
+   // @Cacheable(value = "assetAndAssetGroupByUUID")
     public @ResponseBody
     AssetAndAssetGroupResponse getAssetAndAssetGroup(@RequestBody AssetAndAssetGroupRequest request){
         try{
