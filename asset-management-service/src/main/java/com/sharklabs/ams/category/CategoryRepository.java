@@ -14,6 +14,7 @@ public interface CategoryRepository extends JpaRepository<Category,Long> {
     Category findCategoryByUuid(String uuid);
 
     Category findByAssetsUuid(String uuid);
+    Category findByUuid(String uuid);
 
     @Query("SELECT c.name FROM t_category c WHERE c.uuid = ?1")
     String getCategoryNameByUUID(@Param("uuid") String uuid);

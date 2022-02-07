@@ -2194,7 +2194,7 @@ public class   AssetService {
             if((usagecombined != null)  ){
                 response.getAsset().setLastUsage(usagecombined);
             }
-            category = categoryRepository.findByAssetsUuid(response.getAsset().getUuid());
+            category = categoryRepository.findCategoryByUuid(response.getAsset().getCategoryUUID());
             response.setCategoryId(response.getAsset().getCategoryUUID());
             //set field template of asset
             response.setFieldTemplate(new FieldTemplateResponse());
