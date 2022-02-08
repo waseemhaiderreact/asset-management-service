@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sharklabs.ams.events.asset.AssetsNameModel;
 import com.sharklabs.ams.events.assetBasicDetail.AssetBasicDetailModelResponse;
 import com.sharklabs.ams.exception.EmptyEntityTableException;
+import com.sharklabs.ams.model.AssetAndCategoryUUIDModel;
 import com.sharklabs.ams.request.*;
 import com.sharklabs.ams.response.*;
 import com.sharklabs.ams.security.SCIM2Util;
@@ -3268,7 +3269,7 @@ public class AssetController {
 
     /*******************************************************Wallet Functions END**********************************************************/
 
-    /*******************************************************Function to get Asset Category for Inspection Template**********************************************************/
+    /*******************************************************Function to get Asset and Category for Inspection Module**********************************************************/
 
     @PostMapping("/get/categories")
     public @ResponseBody
@@ -3285,7 +3286,23 @@ public class AssetController {
         return responseEntity;
     }
 
-    /*******************************************************Function to get Asset Category for Inspection Template END**********************************************************/
+    @PostMapping("/get")
+    public @ResponseBody
+    ResponseEntity getAssetAndCategoryToMapInInspectionReports(@RequestParam List<String> uuids) throws IOException{
+        ResponseEntity responseEntity = null;
+        try{
+            LOGGER.info("Request received in get Asset and category to map in Inspection reports. Details: " + convertToJSON(uuids));
+            responseEntity = new ResponseEntity<List<AssetAndCategoryUUIDModel>>(assetService.getAssetAndCategoryToMapInInspectionReports(uuids),HttpStatus.OK);
+        }catch (Exception e){
+            responseEntity = new ResponseEntity<String>(e.getMessage(),HttpStatus.INTERNAL_SERVER_ERROR);
+        }finally {
+            LOGGER.info("Returning from controller of get Asset and category to map in Inspection repoets.");
+        }
+        return responseEntity;
+    }
+
+
+    /*******************************************************Function to get Asset and Category for Inspection Module END**********************************************************/
 
     //Delete Asset Attachment by qasim...
     @RequestMapping(method = RequestMethod.DELETE,value="/attachment",params={"id"})

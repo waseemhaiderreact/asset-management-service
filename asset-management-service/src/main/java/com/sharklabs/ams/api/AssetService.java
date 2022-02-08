@@ -61,6 +61,7 @@ import com.sharklabs.ams.inspectiontemplate.InspectionTemplate;
 import com.sharklabs.ams.inspectiontemplate.InspectionTemplateRepository;
 import com.sharklabs.ams.message.Message;
 import com.sharklabs.ams.message.MessageRepository;
+import com.sharklabs.ams.model.AssetAndCategoryUUIDModel;
 import com.sharklabs.ams.model.assignment.Assignment;
 import com.sharklabs.ams.model.assignment.AssignmentHistory;
 import com.sharklabs.ams.model.issue.Issue;
@@ -8039,7 +8040,8 @@ public class   AssetService {
         }
     }
 
-    /*******************************************************Function to get Asset Category for Inspection Template**********************************************************/
+    /*******************************************************Function to get Asset and Category for Inspection Module**********************************************************/
+
     public HashMap<String,String> getAssetCategoryToMapInInspectionTemplates(List<String> uuids) throws IOException,ApplicationException{
         HashMap<String,String> categoriesName = new HashMap<>();
         try{
@@ -8057,7 +8059,22 @@ public class   AssetService {
         }
         return categoriesName;
     }
-    /*******************************************************Function to get Asset Category for Inspection Template End**********************************************************/
+
+    public List<AssetAndCategoryUUIDModel> getAssetAndCategoryToMapInInspectionReports(List<String> uuids) throws IOException,ApplicationException{
+        List<AssetAndCategoryUUIDModel>  models = new ArrayList<>();
+        try{
+            LOGGER.info("Inside service function of get Asset category to map in Inspection templates. Details: " + convertToJSON(uuids));
+            models = assetRepository.findAssetNameAndCategoryNameByUUIDS(uuids);
+            LOGGER.info("Successfully got categories name.");
+        }catch (Exception e){
+            LOGGER.error("An Error occurred while getting Asset category to map in Inspection templates.",e);
+            throw new ApplicationException("An Error occurred while getting Asset category to map in Inspection templates.",e);
+        }finally {
+            LOGGER.info("Returning to controller.");
+        }
+        return models;
+    }
+    /*******************************************************Function to get Asset and Category for Inspection Module End**********************************************************/
 
 
 }
