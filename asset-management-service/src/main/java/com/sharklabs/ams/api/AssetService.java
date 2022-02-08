@@ -23,6 +23,7 @@ import com.sharklabs.ams.assetimport.AssetImportRepository;
 import com.sharklabs.ams.attachment.Attachment;
 import com.sharklabs.ams.attachment.AttachmentRepository;
 import com.sharklabs.ams.category.Category;
+import com.sharklabs.ams.category.CategoryDTO;
 import com.sharklabs.ams.category.CategoryFieldDTO;
 import com.sharklabs.ams.category.CategoryRepository;
 import com.sharklabs.ams.consumption.Consumption;
@@ -8038,6 +8039,27 @@ public class   AssetService {
         }
     }
 
+    /*******************************************************Function to get Asset Category for Inspection Template**********************************************************/
+    public HashMap<String,String> getAssetCategoryToMapInInspectionTemplates(List<String> uuids) throws IOException,ApplicationException{
+        HashMap<String,String> categoriesName = new HashMap<>();
+        try{
+            LOGGER.info("Inside service function of get Asset category to map in Inspection templates. Details: " + convertToJSON(uuids));
+            List<CategoryDTO> categoryDTOS = categoryRepository.findNameAndUUIDByUuids(uuids);
+            categoryDTOS.forEach(categoryDTO -> {
+                categoriesName.put(categoryDTO.getUuid(),categoryDTO.getName());
+            });
+            LOGGER.info("Successfully got categories name.");
+        }catch (Exception e){
+            LOGGER.error("An Error occurred while getting Asset category to map in Inspection templates.",e);
+            throw new ApplicationException("An Error occurred while getting Asset category to map in Inspection templates.",e);
+        }finally {
+            LOGGER.info("Returning to controller.");
+        }
+        return categoriesName;
     }
+    /*******************************************************Function to get Asset Category for Inspection Template End**********************************************************/
+
+
+}
 
 

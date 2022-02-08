@@ -28,7 +28,8 @@ public class RequestInterceptor extends HandlerInterceptorAdapter {
                 request.getRequestURI().contains("/assets/user") ||
                 request.getRequestURI().contains("/assets/user/detail/wallet") ||
                 request.getRequestURI().contains("/assets/asset-groups/name")||
-                request.getRequestURI().contains("/assets/asset/asset-group/uuid")
+                request.getRequestURI().contains("/assets/asset/asset-group/uuid") ||
+                request.getRequestURI().contains("/assets/get/categories")
                 )
             return true;
 

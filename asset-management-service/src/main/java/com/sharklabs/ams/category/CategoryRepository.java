@@ -35,4 +35,7 @@ public interface CategoryRepository extends JpaRepository<Category,Long> {
     @Transactional
 //    @Query(value = "delete from t_category where uuid=?1",nativeQuery = true)
     Integer deleteById(Long id);
+
+    @Query("SELECT new com.sharklabs.ams.category.CategoryDTO(c.uuid,c.name) FROM t_category c WHERE c.uuid in (:uuids) AND c.name is not null")
+    List<CategoryDTO> findNameAndUUIDByUuids(@Param("uuids") List<String> uuids);
 }

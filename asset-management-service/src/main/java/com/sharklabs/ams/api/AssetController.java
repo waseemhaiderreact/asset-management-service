@@ -26,6 +26,7 @@ import shark.commons.util.ApplicationException;
 import javax.persistence.Access;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
 
@@ -3264,6 +3265,28 @@ public class AssetController {
 
         return response;
     }
+
+    /*******************************************************Wallet Functions END**********************************************************/
+
+    /*******************************************************Function to get Asset Category for Inspection Template**********************************************************/
+
+    @PostMapping("/get/categories")
+    public @ResponseBody
+    ResponseEntity getAssetCategoryToMapInInspectionTemplates(@RequestParam List<String> uuids) throws IOException{
+        ResponseEntity responseEntity = null;
+        try{
+            LOGGER.info("Request received in get Asset category to map in Inspection template. Details: " + convertToJSON(uuids));
+            responseEntity = new ResponseEntity<HashMap<String,String>>(assetService.getAssetCategoryToMapInInspectionTemplates(uuids),HttpStatus.OK);
+        }catch (Exception e){
+            responseEntity = new ResponseEntity<String>(e.getMessage(),HttpStatus.INTERNAL_SERVER_ERROR);
+        }finally {
+            LOGGER.info("Returning from controller of get Asset category to map in Inspection Templates.");
+        }
+        return responseEntity;
+    }
+
+    /*******************************************************Function to get Asset Category for Inspection Template END**********************************************************/
+
     //Delete Asset Attachment by qasim...
     @RequestMapping(method = RequestMethod.DELETE,value="/attachment",params={"id"})
     public @ResponseBody
@@ -3286,4 +3309,6 @@ public class AssetController {
         ObjectMapper objectMapper = new ObjectMapper();
         return objectMapper.writeValueAsString(obj);
     }
+
+
 }
