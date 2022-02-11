@@ -5,12 +5,14 @@ public class AssetAndCategoryUUIDModel {
     private String assetName;
     private String categoryName;
     private String categoryUUID;
+    private String assetNumber;
 
-    public AssetAndCategoryUUIDModel(String assetUUID, String assetName, String categoryName, String categoryUUID) {
+    public AssetAndCategoryUUIDModel(String assetUUID, String assetName, String categoryName, String categoryUUID, String assetNumber) {
         this.assetUUID = assetUUID;
         this.assetName = assetName;
         this.categoryName = categoryName;
         this.categoryUUID = categoryUUID;
+        this.assetNumber = assetNumber;
     }
 
     public String getAssetUUID() {
@@ -43,5 +45,13 @@ public class AssetAndCategoryUUIDModel {
 
     public void setCategoryUUID(String categoryUUID) {
         this.categoryUUID = categoryUUID;
+    }
+
+    public String getAssetNumber() {
+        return assetNumber;
+    }
+
+    public void setAssetNumber(String assetNumber) {
+        this.assetNumber = assetNumber;
     }
 }
