@@ -2725,8 +2725,14 @@ public class   AssetService {
             clauses.add(criteriaBuilder.equal(root.get("tenantUUID"),request.getTenantUUID()));
             clauses.add(criteriaBuilder.isNull(root.get("removeFromCategoryUUID")));
 
-            // Add filters
-            clauses = addFilters(criteriaBuilder,root,clauses,request.getFilters(),request.getSearchQuery());
+            // Add advanced filters
+            if(request.getFilters() != null && request.getFilters().size() > 0 ) {
+                clauses = addFilters(criteriaBuilder, root, clauses, request.getFilters(), request.getSearchQuery());
+            }
+            //add Search Query
+            if(request.getSearchQuery() != null){
+                clauses = addSearchQueryToFields(clauses,root, request.getSearchQuery(),criteriaBuilder,addAssetFieldNames());
+            }
             response.setTotalElements((Long) entityManager.createQuery(query.select(criteriaBuilder.count(root)).where(clauses.toArray(new Predicate[]{}))).getSingleResult());
             response.setAssetMappers((List<AssetMapper>) entityManager.createQuery(query.select(root).where(clauses.toArray(new Predicate[]{}))
                     .orderBy(
@@ -7529,22 +7535,59 @@ public class   AssetService {
                         }
                     }
                 }
-                // For Search, Adding Like clauses for all columns if searchQuery contains data.
-                if(searchQuery != null){
-                    if(searchQuery != ""){
-                        if(searchClause != null){
-                            searchClause = criteriaBuilder.or(searchClause,criteriaBuilder.like(issues.get((String) filter.get(SDT_FIELD)).as(String.class), "%" + searchQuery.toString() + "%"));
-                        }else{
-                            searchClause = criteriaBuilder.or(criteriaBuilder.like(issues.get((String) filter.get(SDT_FIELD)).as(String.class), "%" + searchQuery.toString() + "%"));
+//                // For Search, Adding Like clauses for all columns if searchQuery contains data.
+//                if(searchQuery != null){
+//                    if(searchQuery != ""){
+//                        if(searchClause != null){
+//                            searchClause = criteriaBuilder.or(searchClause,criteriaBuilder.like(issues.get((String) filter.get(SDT_FIELD)).as(String.class), "%" + searchQuery.toString() + "%"));
+//                        }else{
+//                            searchClause = criteriaBuilder.or(criteriaBuilder.like(issues.get((String) filter.get(SDT_FIELD)).as(String.class), "%" + searchQuery.toString() + "%"));
+//                        }
+//                    }
+//                }
+            }
+//            if(searchClause !=null){
+//                clauses.add(searchClause);
+//            }
+            return clauses;
+        }
+
+        private List<Predicate> addSearchQueryToFields(List<Predicate> clauses, Root root, String searchQuery,CriteriaBuilder criteriaBuilder,List<String> fieldNames) throws ApplicationException {
+            Predicate searchClause = null;
+            try{
+                for(String field: fieldNames) {
+                    if (searchQuery != null) {
+                        if (!searchQuery.isEmpty()) {
+                            if (searchClause != null) {
+                                searchClause = criteriaBuilder.or(searchClause, criteriaBuilder.like(root.get(field), "%" + searchQuery.toString() + "%"));
+                            } else {
+                                searchClause = criteriaBuilder.or(criteriaBuilder.like(root.get(field), "%" + searchQuery.toString() + "%"));
+                            }
                         }
                     }
                 }
-            }
-            if(searchClause !=null){
-                clauses.add(searchClause);
+                if(searchClause != null){
+                    clauses.add(searchClause);
+                }
+            }catch (Exception e){
+                LOGGER.error("An Error Occurred while adding search query.",e);
+                throw new ApplicationException("An Error Occurred while adding search query.",e);
             }
             return clauses;
         }
+
+
+        private List<String> addAssetFieldNames() throws ApplicationException{
+            List<String> fieldNames = new ArrayList<>();
+            try {
+                fieldNames.addAll(Arrays.asList("assetNumber","name","categoryName","assignedTo","status","maintenanceCost","openIssues","assignedIssues","repairs","workorders"));
+            }catch (Exception e){
+                LOGGER.error("An Error occurred while adding Asset Field Names.",e);
+                throw new ApplicationException("An Error occurred while adding Asset Field Names.");
+            }
+            return fieldNames;
+        }
+
         /*************************************Written by Nouman Afzaal*******************************************************/
         /******************************************* Wallet SDT Start ***************************************************/
         public GetPaginatedDataForSDTResponse getPaginatetWalletforSDT(GetPaginatedDataForSDTRequest request) throws ApplicationException,IOException{
