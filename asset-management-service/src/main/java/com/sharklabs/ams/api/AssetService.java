@@ -3992,12 +3992,14 @@ public class   AssetService {
         Asset asset = null;
         Usage usage = null;
         DefaultResponse response = null;
-       // String userUUID=null;
+        Map<String,Object> oAuth2Authentication = authServiceProxy.getUserDetails(((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getRequest().getHeader("Authorization"));
+         String userName = null;
 
         try {
             util.setThreadContextForLogging(scim2Util);
             LOGGER.info("Inside service function of adding consumption units of asset. AssetUUID: " + request.getAssetUUID());
-
+            userName = ((String) ((Map<String, Object>) ((Map<String, Object>) oAuth2Authentication).get("profile")).get("firstName"));
+            userName = userName + " " + ((String) ((Map<String, Object>) ((Map<String, Object>) oAuth2Authentication).get("profile")).get("lastName"));
             //find asset by uuid qasim
             asset = assetRepository.findAssetByUuid(request.getAssetUUID());
             //add consumption unit in the array of consumptions of asset
@@ -4005,6 +4007,7 @@ public class   AssetService {
             request.getConsumption().setAssetUUID(request.getAssetUUID());
             request.getConsumption().setCreatedAt(new Date());
             request.getConsumption().setUuid(UUID.randomUUID().toString());
+            request.getConsumption().setSubmittedBy(userName);
             if(request.getImageVoices().size() > 0){
                 for(int i = 0; i < request.getImageVoices().size(); i++) {
                     request.getImageVoices().get(i).setConsumptionUUID(request.getConsumption().getUuid());
@@ -4014,6 +4017,7 @@ public class   AssetService {
             usage.setCreatedAt(new Date());
             usage.setAssetUUID(request.getAssetUUID());
             usage.setTenantUUID(request.getConsumption().getTenantUUID());
+            usage.setSubmittedBy(userName);
             if(request.getConsumption().getMeterType()!=null) {
                 if (request.getConsumption().getMeterType().equals(primaryUsageType)) {
                     usage.setPrimaryUsageLat(request.getConsumption().getLat());
@@ -4672,15 +4676,18 @@ public class   AssetService {
 
         Util util = new Util();
         Asset asset = null;
-
+        Map<String,Object> oAuth2Authentication = authServiceProxy.getUserDetails(((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getRequest().getHeader("Authorization"));
         DefaultResponse response=new DefaultResponse();
+        String userName = null;
         try{
             util.setThreadContextForLogging(scim2Util);
             LOGGER.info("Inside service function to add usage in asset. AssetUUID: " + request.getUsage().getAssetUUID());
-
+            userName = ((String) ((Map<String, Object>) ((Map<String, Object>) oAuth2Authentication).get("profile")).get("firstName"));
+            userName = userName + " " + ((String) ((Map<String, Object>) ((Map<String, Object>) oAuth2Authentication).get("profile")).get("lastName"));
             asset=assetRepository.findAssetByUuid(request.getUsage().getAssetUUID());
             request.getUsage().setAssetUUID(asset.getUuid());
             request.getUsage().setCreatedAt(new Date());
+            request.getUsage().setSubmittedBy(userName);
             asset.addUsage(request.getUsage());
             assetRepository.save(asset);
             response.setResponseIdentifier("Success");

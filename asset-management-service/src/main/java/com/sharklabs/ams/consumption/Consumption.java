@@ -39,6 +39,9 @@ public class Consumption {
 
     private String assetUUID;
 
+    private String submittedBy;
+
+
 //    @JsonIgnore
 //    @ManyToOne(fetch = FetchType.EAGER, cascade = {CascadeType.DETACH,CascadeType.REFRESH,CascadeType.PERSIST,CascadeType.MERGE})
 //    @JoinColumn(name = "asset_id",referencedColumnName = "id")
@@ -162,5 +165,13 @@ public class Consumption {
 
     public void setUpdatedConsumptionLevel(int updatedConsumptionLevel) {
         this.updatedConsumptionLevel = updatedConsumptionLevel;
+    }
+
+    public String getSubmittedBy() {
+        return submittedBy;
+    }
+
+    public void setSubmittedBy(String submittedBy) {
+        this.submittedBy = submittedBy;
     }
 }
