@@ -30,6 +30,9 @@ public interface AssetRepository extends JpaRepository<Asset,Long>, PagingAndSor
     @Query("SELECT new com.sharklabs.ams.asset.AssetInfoDTO(a.uuid,a.name,a.assetNumber,c.name,c.uuid) FROM t_asset a, t_category c WHERE a.uuid= ?1 AND c.uuid = a.categoryUUID")
     AssetInfoDTO findAssetInfoByAssetUUID(@Param("uuid") String uuid);
 
+    @Query("SELECT new com.sharklabs.ams.asset.AssetInfoDTO(a.uuid,a.name,a.assetNumber,c.name,c.uuid,a.primaryUsageUnit,a.secondaryUsageUnit,a.consumptionUnit) FROM t_asset a, t_category c WHERE a.tenantUUID=?1 AND c.uuid = a.categoryUUID")
+    List<AssetInfoDTO> findAssetBasicInfoByAssetUUID(@Param("uuid") String uuid);
+
     List<Asset> findByTenantUUID(String tenantUUID);
 
     @Query("SELECT a.status FROM t_asset a WHERE a.uuid = ?1")

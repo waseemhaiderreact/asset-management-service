@@ -63,4 +63,7 @@ public interface  UsageRepository extends JpaRepository<Usage,Long> {
     @Query(value = "SELECT * FROM t_usages  u WHERE u.assetuuid IN :assetUUIDS AND u.category=:category Order BY u.created_at desc \n#pageable\n",
             countQuery = "SELECT count(*) FROM t_usages u WHERE u.assetuuid in :assetUUIDS AND u.category=:category Order BY u.created_at desc \n#pageable\n",nativeQuery = true)
     Page<Usage> findByAssetUUIDInAndCategory(@Param("assetUUIDS") List<String> assetUUIDS,@Param("category") String category, Pageable pageable);
+
+    @Query("SELECT u FROM t_usages u WHERE u.tenantUUID=?1")
+    List<Usage> findUsagesByTenantUUID(@Param("tenantUUID") String tenantUUID);
 }

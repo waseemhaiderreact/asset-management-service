@@ -38,4 +38,5 @@ public interface CategoryRepository extends JpaRepository<Category,Long> {
 
     @Query("SELECT new com.sharklabs.ams.category.CategoryDTO(c.uuid,c.name) FROM t_category c WHERE c.uuid in (:uuids) AND c.name is not null")
     List<CategoryDTO> findNameAndUUIDByUuids(@Param("uuids") List<String> uuids);
+
 }
