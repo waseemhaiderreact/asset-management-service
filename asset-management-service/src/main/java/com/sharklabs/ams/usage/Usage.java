@@ -34,6 +34,8 @@ public class Usage{
     private String assetNumber;
     private String primaryUsageUnit;
     private String secondaryUsageUnit;
+    private String submittedBy;
+    private String assetCategory;
     public String getTripEndUsageUnit() {
         return tripEndUsageUnit;
     }
@@ -210,5 +212,21 @@ public class Usage{
 
     public void setTripEndUsageValue(Double tripEndUsageValue) {
         this.tripEndUsageValue = tripEndUsageValue;
+    }
+
+    public String getSubmittedBy() {
+        return submittedBy;
+    }
+
+    public void setSubmittedBy(String submittedBy) {
+        this.submittedBy = submittedBy;
+    }
+
+    public String getAssetCategory() {
+        return assetCategory;
+    }
+
+    public void setAssetCategory(String assetCategory) {
+        this.assetCategory = assetCategory;
     }
 }

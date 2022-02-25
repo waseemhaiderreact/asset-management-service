@@ -1,6 +1,7 @@
 package com.sharklabs.ams.consumption;
 
 import com.sharklabs.ams.asset.Asset;
+import com.sharklabs.ams.usage.Usage;
 import org.springframework.data.domain.Page;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
@@ -41,4 +42,7 @@ public interface ConsumptionRepository extends JpaRepository<Consumption,Long> {
                              Pageable pageable);
 
     Page<Consumption> findByAssetUUIDInOrderByIdDesc(List<String> assetUUIDS, Pageable pageable);
+
+    @Query("SELECT c FROM t_consumption c WHERE c.tenantUUID=?1")
+    List<Consumption> findConsumptionsByTenantUUID(@Param("tenantUUID") String tenantUUID);
 }

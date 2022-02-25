@@ -39,6 +39,16 @@ public class Consumption {
 
     private String assetUUID;
 
+    private String submittedBy;
+
+    private String consumptionUnit;
+
+    private String assetName;
+
+    private String assetNumber;
+
+    private String assetCategory;
+
 //    @JsonIgnore
 //    @ManyToOne(fetch = FetchType.EAGER, cascade = {CascadeType.DETACH,CascadeType.REFRESH,CascadeType.PERSIST,CascadeType.MERGE})
 //    @JoinColumn(name = "asset_id",referencedColumnName = "id")
@@ -162,5 +172,45 @@ public class Consumption {
 
     public void setUpdatedConsumptionLevel(int updatedConsumptionLevel) {
         this.updatedConsumptionLevel = updatedConsumptionLevel;
+    }
+
+    public String getSubmittedBy() {
+        return submittedBy;
+    }
+
+    public void setSubmittedBy(String submittedBy) {
+        this.submittedBy = submittedBy;
+    }
+
+    public String getConsumptionUnit() {
+        return consumptionUnit;
+    }
+
+    public void setConsumptionUnit(String consumptionUnit) {
+        this.consumptionUnit = consumptionUnit;
+    }
+
+    public String getAssetName() {
+        return assetName;
+    }
+
+    public void setAssetName(String assetName) {
+        this.assetName = assetName;
+    }
+
+    public String getAssetNumber() {
+        return assetNumber;
+    }
+
+    public void setAssetNumber(String assetNumber) {
+        this.assetNumber = assetNumber;
+    }
+
+    public String getAssetCategory() {
+        return assetCategory;
+    }
+
+    public void setAssetCategory(String assetCategory) {
+        this.assetCategory = assetCategory;
     }
 }

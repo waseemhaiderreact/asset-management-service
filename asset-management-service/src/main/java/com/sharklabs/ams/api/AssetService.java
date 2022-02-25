@@ -23,6 +23,7 @@ import com.sharklabs.ams.assetimport.AssetImportRepository;
 import com.sharklabs.ams.attachment.Attachment;
 import com.sharklabs.ams.attachment.AttachmentRepository;
 import com.sharklabs.ams.category.Category;
+import com.sharklabs.ams.category.CategoryDTO;
 import com.sharklabs.ams.category.CategoryFieldDTO;
 import com.sharklabs.ams.category.CategoryRepository;
 import com.sharklabs.ams.consumption.Consumption;
@@ -60,6 +61,7 @@ import com.sharklabs.ams.inspectiontemplate.InspectionTemplate;
 import com.sharklabs.ams.inspectiontemplate.InspectionTemplateRepository;
 import com.sharklabs.ams.message.Message;
 import com.sharklabs.ams.message.MessageRepository;
+import com.sharklabs.ams.model.AssetAndCategoryUUIDModel;
 import com.sharklabs.ams.model.assignment.Assignment;
 import com.sharklabs.ams.model.assignment.AssignmentHistory;
 import com.sharklabs.ams.model.issue.Issue;
@@ -1138,6 +1140,7 @@ public class   AssetService {
         AssetImport assetImport = new AssetImport();
         List<Asset> assets = new ArrayList<>();
         List<Asset> updateAssets = new ArrayList<>();
+        List<AssetMapper> updateAssetMappers = new ArrayList<>();
         List<ImportRecord> importRecords = new ArrayList<>();
         List<Category> categories = new ArrayList<>();
         String accessAssetNumber = "";
@@ -1217,6 +1220,7 @@ public class   AssetService {
                     //fetching Assets
                     if(assetNumber.size() > 0){
                         updateAssets = assetRepository.findAssetsByAssetNumberIn(assetNumber);
+                        updateAssetMappers = assetMapperRepository.findAssetsByAssetNumberIn(assetNumber);
                         updateCheck = true;
                     }
                 }
@@ -1495,11 +1499,29 @@ public class   AssetService {
                         asset.setAssetNumber(this.genrateAssetNumber(asset.getId()));
                     }
                     assetRepository.save(savedAssets);
+                    List<AssetMapper> assetMappers = new ArrayList<>();
+                    List<Category> finalCategories = categories;
+                    assetMappers = savedAssets.stream().map(savedAsset -> {
+                        AssetMapper assetMapper = new AssetMapper(savedAsset.getUuid(),savedAsset.getAssetNumber(),
+                                savedAsset.getName(), extractCategoryNameToMap(savedAsset.getCategoryUUID(),finalCategories), savedAsset.getStatus(),savedAsset.getArchive(),
+                                savedAsset.getRemoveFromCategoryUUID(), savedAsset.getTenantUUID());
+                        return assetMapper;
+                    }).collect(Collectors.toList());
+                    assetMapperRepository.save(assetMappers);
                 }
 
                 //saving updated Asset
                 if(updateAssets != null && updateAssets.size() > 0){
                     assetRepository.save(updateAssets);
+                    List<Asset> finalUpdateAssets = updateAssets;
+                    updateAssetMappers.forEach(assetMapper -> {
+                        Asset asset = finalUpdateAssets.stream().filter(u -> u.getAssetNumber().equalsIgnoreCase(assetMapper.getAssetNumber())).findFirst().orElse(null);
+                        if(asset != null){
+                            assetMapper.setName(asset.getName());
+                            assetMapper.setStatus(asset.getStatus());
+                        }
+                    });
+                    assetMapperRepository.save(updateAssetMappers);
                 }
                 assetImportRepository.save(assetImport);
                 if(importRecords != null && importRecords.size() > 0) {
@@ -1523,6 +1545,20 @@ public class   AssetService {
             util = null;
         }
         return response;
+    }
+
+    public String extractCategoryNameToMap(String uuid, List<Category> categories){
+        String categoryName = null;
+        try{
+            LOGGER.info("Inside function to extract category name.");
+            Category category = categories.stream().filter(c -> c.getUuid().equalsIgnoreCase(uuid)).findFirst().orElse(null);
+            if(category != null){
+                categoryName = category.getName();
+            }
+        }catch (Exception e){
+            LOGGER.error("An Error Occurred while extracting category name.",e);
+        }
+        return categoryName;
     }
 
     public GetFileResponse downloadFailureImports(String importUUID) throws ApplicationException,AccessDeniedException{
@@ -2689,8 +2725,14 @@ public class   AssetService {
             clauses.add(criteriaBuilder.equal(root.get("tenantUUID"),request.getTenantUUID()));
             clauses.add(criteriaBuilder.isNull(root.get("removeFromCategoryUUID")));
 
-            // Add filters
-            clauses = addFilters(criteriaBuilder,root,clauses,request.getFilters(),request.getSearchQuery());
+            // Add advanced filters
+            if(request.getFilters() != null && request.getFilters().size() > 0 ) {
+                clauses = addFilters(criteriaBuilder, root, clauses, request.getFilters(), request.getSearchQuery());
+            }
+            //add Search Query
+            if(request.getSearchQuery() != null){
+                clauses = addSearchQueryToFields(clauses,root, request.getSearchQuery(),criteriaBuilder,addAssetFieldNames());
+            }
             response.setTotalElements((Long) entityManager.createQuery(query.select(criteriaBuilder.count(root)).where(clauses.toArray(new Predicate[]{}))).getSingleResult());
             response.setAssetMappers((List<AssetMapper>) entityManager.createQuery(query.select(root).where(clauses.toArray(new Predicate[]{}))
                     .orderBy(
@@ -3854,6 +3896,37 @@ public class   AssetService {
                 LOGGER.info("Successfully added costs");
                 assetIds.clear();
                 assetIds = null;
+            } else if(type.equalsIgnoreCase("usage")){
+                List<Usage> usages = usageRepository.findUsagesByTenantUUID(orgId);
+                List<AssetInfoDTO> assetInfoDTOS = assetRepository.findAssetBasicInfoByAssetUUID(orgId);
+                usages.forEach(usage -> {
+                    AssetInfoDTO assetInfoDTO = assetInfoDTOS.stream().filter(a -> a.getUuid().equalsIgnoreCase(usage.getAssetUUID())).findFirst().orElse(null);
+                    if(assetInfoDTO != null){
+                        usage.setAssetName(assetInfoDTO.getName());
+                        usage.setAssetCategory(assetInfoDTO.getCategory());
+                        usage.setAssetNumber(assetInfoDTO.getAssetNumber());
+                        usage.setSecondaryUsageUnit(assetInfoDTO.getSecondaryUsageUnit());
+                        usage.setPrimaryUsageUnit(assetInfoDTO.getPrimaryUsageUnit());
+                    }
+                });
+                usageRepository.save(usages);
+                response = new DefaultResponse(SUCCESS,"Successfully update Usages","F200");
+                LOGGER.info("Successfully update Usages.");
+            } else if(type.equalsIgnoreCase("consumption")){
+                List<Consumption> consumptions = consumptionRepository.findConsumptionsByTenantUUID(orgId);
+                List<AssetInfoDTO> assetInfoDTOS = assetRepository.findAssetBasicInfoByAssetUUID(orgId);
+                consumptions.forEach(consumption -> {
+                    AssetInfoDTO assetInfoDTO = assetInfoDTOS.stream().filter(a -> a.getUuid().equalsIgnoreCase(consumption.getAssetUUID())).findFirst().orElse(null);
+                    if(assetInfoDTO != null){
+                        consumption.setAssetName(assetInfoDTO.getName());
+                        consumption.setAssetCategory(assetInfoDTO.getCategory());
+                        consumption.setAssetNumber(assetInfoDTO.getAssetNumber());
+                        consumption.setConsumptionUnit(assetInfoDTO.getConsumptionUnit());
+                    }
+                });
+                consumptionRepository.save(consumptions);
+                response = new DefaultResponse(SUCCESS,"Successfully update consumptions","F200");
+                LOGGER.info("Successfully update consumptions.");
             }
 
         }catch (Exception e){
@@ -3950,12 +4023,14 @@ public class   AssetService {
         Asset asset = null;
         Usage usage = null;
         DefaultResponse response = null;
-       // String userUUID=null;
+        Map<String,Object> oAuth2Authentication = authServiceProxy.getUserDetails(((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getRequest().getHeader("Authorization"));
+         String userName = null;
 
         try {
             util.setThreadContextForLogging(scim2Util);
             LOGGER.info("Inside service function of adding consumption units of asset. AssetUUID: " + request.getAssetUUID());
-
+            userName = ((String) ((Map<String, Object>) ((Map<String, Object>) oAuth2Authentication).get("profile")).get("firstName"));
+            userName = userName + " " + ((String) ((Map<String, Object>) ((Map<String, Object>) oAuth2Authentication).get("profile")).get("lastName"));
             //find asset by uuid qasim
             asset = assetRepository.findAssetByUuid(request.getAssetUUID());
             //add consumption unit in the array of consumptions of asset
@@ -3963,6 +4038,11 @@ public class   AssetService {
             request.getConsumption().setAssetUUID(request.getAssetUUID());
             request.getConsumption().setCreatedAt(new Date());
             request.getConsumption().setUuid(UUID.randomUUID().toString());
+            request.getConsumption().setSubmittedBy(userName);
+            request.getConsumption().setConsumptionUnit(asset.getConsumptionUnit());
+            request.getConsumption().setAssetName(asset.getName());
+            request.getConsumption().setAssetNumber(asset.getAssetNumber());
+            request.getConsumption().setAssetCategory(categoryRepository.getCategoryNameByUUID(asset.getCategoryUUID()));
             if(request.getImageVoices().size() > 0){
                 for(int i = 0; i < request.getImageVoices().size(); i++) {
                     request.getImageVoices().get(i).setConsumptionUUID(request.getConsumption().getUuid());
@@ -3972,17 +4052,23 @@ public class   AssetService {
             usage.setCreatedAt(new Date());
             usage.setAssetUUID(request.getAssetUUID());
             usage.setTenantUUID(request.getConsumption().getTenantUUID());
+            usage.setSubmittedBy(userName);
+            usage.setAssetName(request.getConsumption().getAssetName());
+            usage.setAssetNumber(request.getConsumption().getAssetNumber());
+            usage.setAssetCategory(request.getConsumption().getAssetCategory());
             if(request.getConsumption().getMeterType()!=null) {
                 if (request.getConsumption().getMeterType().equals(primaryUsageType)) {
                     usage.setPrimaryUsageLat(request.getConsumption().getLat());
                     usage.setPrimaryUsageLng(request.getConsumption().getLng());
                     usage.setPrimaryUsageTime(request.getConsumption().getCreatedAt());
                     usage.setPrimaryUsageValue(request.getConsumption().getMeterValue());
+                    usage.setPrimaryUsageUnit(asset.getPrimaryUsageUnit());
                 } else if (request.getConsumption().getMeterType().equals(secondaryUsageType)) {
                     usage.setSecondaryUsageLat(request.getConsumption().getLat());
                     usage.setSecondaryUsageLng(request.getConsumption().getLng());
                     usage.setSecondaryUsageTime(request.getConsumption().getCreatedAt());
                     usage.setSecondaryUsageValue(request.getConsumption().getMeterValue());
+                    usage.setSecondaryUsageUnit(asset.getSecondaryUsageUnit());
                 }
             }
             asset.addUsage(usage);
@@ -4491,49 +4577,7 @@ public class   AssetService {
                     .setFirstResult(request.getLimit() * request.getOffset())
                     .setMaxResults(request.getLimit())
                     .getResultList();
-            root=null;
-            clauses=null;
-            query=null;
-            query = criteriaBuilder.createQuery(Long.class);
-
-            root = query.from(Asset.class);
-
-            clauses = new ArrayList<>();
-            clauses.add(criteriaBuilder.equal(root.get("tenantUUID"),request.getTenantUUID()));
-            List<Asset> assets=entityManager.createQuery(query.select(root).where(clauses.toArray( new Predicate[]{}))).getResultList();
-            clauses.clear();
-
-            root=null;
-            query=null;
-            query = criteriaBuilder.createQuery(Long.class);
-            root = query.from(Category.class);
-            // Construct Rows List
-            response.getSdtData().put(CONTENT,new ArrayList<>());
-
-            for(Consumption consumption:consumptions) {
-                ((ArrayList) response.getSdtData().get(CONTENT)).add(new HashMap<>());
-                for (Asset asset : assets) {
-                    if (asset.getUuid().equals(consumption.getAssetUUID())) {
-                        ((HashMap) ((ArrayList) response.getSdtData().get(CONTENT)).get(((ArrayList) response.getSdtData().get(CONTENT)).size() - 1)).put("createdAt", consumption.getCreatedAt());
-                        ((HashMap) ((ArrayList) response.getSdtData().get(CONTENT)).get(((ArrayList) response.getSdtData().get(CONTENT)).size() - 1)).put("assetName", asset.getName());
-                        ((HashMap) ((ArrayList) response.getSdtData().get(CONTENT)).get(((ArrayList) response.getSdtData().get(CONTENT)).size() - 1)).put("assetNumber", asset.getAssetNumber());
-                        ((HashMap) ((ArrayList) response.getSdtData().get(CONTENT)).get(((ArrayList) response.getSdtData().get(CONTENT)).size() - 1)).put("meterType", consumption.getMeterType());
-                        ((HashMap) ((ArrayList) response.getSdtData().get(CONTENT)).get(((ArrayList) response.getSdtData().get(CONTENT)).size() - 1)).put("consumptionValue", consumption.getConsumptionValue());
-                        ((HashMap) ((ArrayList) response.getSdtData().get(CONTENT)).get(((ArrayList) response.getSdtData().get(CONTENT)).size() - 1)).put("id", consumption.getId());
-                        ((HashMap) ((ArrayList) response.getSdtData().get(CONTENT)).get(((ArrayList) response.getSdtData().get(CONTENT)).size() - 1)).put("consumptionUnit", asset.getConsumptionUnit());
-                        ((HashMap) ((ArrayList) response.getSdtData().get(CONTENT)).get(((ArrayList) response.getSdtData().get(CONTENT)).size() - 1)).put("price", consumption.getPrice());
-                        ((HashMap) ((ArrayList) response.getSdtData().get(CONTENT)).get(((ArrayList) response.getSdtData().get(CONTENT)).size() - 1)).put("currency", consumption.getCurrency());
-                        ((HashMap) ((ArrayList) response.getSdtData().get(CONTENT)).get(((ArrayList) response.getSdtData().get(CONTENT)).size() - 1)).put("consumptionLevel", consumption.getUpdatedConsumptionPoints()+"/8");
-                        clauses.add(criteriaBuilder.equal(root.get("uuid"),asset.getCategoryUUID()));
-
-                        ((HashMap) ((ArrayList) response.getSdtData().get(CONTENT)).get(((ArrayList) response.getSdtData().get(CONTENT)).size() - 1)).put("assetCategory", (String)entityManager.createQuery(query.select(root.get("name")).where(clauses.toArray( new Predicate[]{}))).getSingleResult());
-                        clauses.clear();
-
-                        break;
-                    }
-                }
-            }
-
+            response.getSdtData().put(CONTENT,consumptions);
             response.getSdtData().put(TOTAL_PAGES, ((Long) response.getSdtData().get(TOTAL_ELEMENTS) / request.getLimit()) + 1);
 
             if ((Long) response.getSdtData().get(TOTAL_ELEMENTS) == request.getLimit())
@@ -4630,15 +4674,23 @@ public class   AssetService {
 
         Util util = new Util();
         Asset asset = null;
-
+        Map<String,Object> oAuth2Authentication = authServiceProxy.getUserDetails(((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getRequest().getHeader("Authorization"));
         DefaultResponse response=new DefaultResponse();
+        String userName = null;
         try{
             util.setThreadContextForLogging(scim2Util);
             LOGGER.info("Inside service function to add usage in asset. AssetUUID: " + request.getUsage().getAssetUUID());
-
+            userName = ((String) ((Map<String, Object>) ((Map<String, Object>) oAuth2Authentication).get("profile")).get("firstName"));
+            userName = userName + " " + ((String) ((Map<String, Object>) ((Map<String, Object>) oAuth2Authentication).get("profile")).get("lastName"));
             asset=assetRepository.findAssetByUuid(request.getUsage().getAssetUUID());
             request.getUsage().setAssetUUID(asset.getUuid());
             request.getUsage().setCreatedAt(new Date());
+            request.getUsage().setSubmittedBy(userName);
+            request.getUsage().setAssetName(asset.getName());
+            request.getUsage().setAssetNumber(asset.getAssetNumber());
+            request.getUsage().setPrimaryUsageUnit(asset.getPrimaryUsageUnit());
+            request.getUsage().setSecondaryUsageUnit(asset.getSecondaryUsageUnit());
+            request.getUsage().setAssetCategory(categoryRepository.getCategoryNameByUUID(asset.getCategoryUUID()));
             asset.addUsage(request.getUsage());
             assetRepository.save(asset);
             response.setResponseIdentifier("Success");
@@ -4668,9 +4720,16 @@ public class   AssetService {
         Util util = new Util();
 
         DefaultResponse response=new DefaultResponse();
+        Asset asset = null;
         try{
             util.setThreadContextForLogging(scim2Util);
             LOGGER.info("Inside service function to edit usage in asset. AssetUUID: " + request.getUsage().getAssetUUID());
+            asset = assetRepository.findAssetByUuid(request.getUsage().getAssetUUID());
+            request.getUsage().setAssetName(asset.getName());
+            request.getUsage().setAssetNumber(asset.getAssetNumber());
+            request.getUsage().setAssetCategory(categoryRepository.getCategoryNameByUUID(asset.getCategoryUUID()));
+            request.getUsage().setPrimaryUsageUnit(asset.getPrimaryUsageUnit());
+            request.getUsage().setSecondaryUsageUnit(asset.getSecondaryUsageUnit());
             usageRepository.save(request.getUsage());
             response.setResponseIdentifier("Success");
             response.setDescription("Usage edited successfully");
@@ -4797,63 +4856,14 @@ public class   AssetService {
                     .setFirstResult(request.getLimit() * request.getOffset())
                     .setMaxResults(request.getLimit())
                     .getResultList();
-            root=null;
-            clauses=null;
-            query=null;
-            query = criteriaBuilder.createQuery(Long.class);
-
-            root = query.from(Asset.class);
-
-            clauses = new ArrayList<>();
-            clauses.add(criteriaBuilder.equal(root.get("tenantUUID"),request.getTenantUUID()));
-            List<Asset> assets=entityManager.createQuery(query.select(root).where(clauses.toArray( new Predicate[]{}))).getResultList();
-            clauses.clear();
-
-            // Construct Rows List
-            response.getSdtData().put(CONTENT,new ArrayList<>());
-
-            root=null;
-            query=null;
-            query = criteriaBuilder.createQuery(Long.class);
-            root = query.from(Category.class);
-
-
-
-            for(Usage usage:usages) {
-                ((ArrayList) response.getSdtData().get(CONTENT)).add(new HashMap<>());
-                for (Asset asset : assets) {
-                    if (asset.getUuid().equals(usage.getAssetUUID())) {
-                        ((HashMap) ((ArrayList) response.getSdtData().get(CONTENT)).get(((ArrayList) response.getSdtData().get(CONTENT)).size() - 1)).put("primaryUsageUnit", asset.getPrimaryUsageUnit());
-                        ((HashMap) ((ArrayList) response.getSdtData().get(CONTENT)).get(((ArrayList) response.getSdtData().get(CONTENT)).size() - 1)).put("secondaryUsageUnit", asset.getSecondaryUsageUnit());
-                        ((HashMap) ((ArrayList) response.getSdtData().get(CONTENT)).get(((ArrayList) response.getSdtData().get(CONTENT)).size() - 1)).put("createdAt", usage.getCreatedAt());
-                        ((HashMap) ((ArrayList) response.getSdtData().get(CONTENT)).get(((ArrayList) response.getSdtData().get(CONTENT)).size() - 1)).put("primaryUsageValue", usage.getPrimaryUsageValue());
-                        ((HashMap) ((ArrayList) response.getSdtData().get(CONTENT)).get(((ArrayList) response.getSdtData().get(CONTENT)).size() - 1)).put("secondaryUsageValue", usage.getSecondaryUsageValue());
-                        ((HashMap) ((ArrayList) response.getSdtData().get(CONTENT)).get(((ArrayList) response.getSdtData().get(CONTENT)).size() - 1)).put("category", usage.getCategory());
-                        ((HashMap) ((ArrayList) response.getSdtData().get(CONTENT)).get(((ArrayList) response.getSdtData().get(CONTENT)).size() - 1)).put("id", usage.getId());
-                        ((HashMap) ((ArrayList) response.getSdtData().get(CONTENT)).get(((ArrayList) response.getSdtData().get(CONTENT)).size() - 1)).put("assetName", asset.getName());
-                        ((HashMap) ((ArrayList) response.getSdtData().get(CONTENT)).get(((ArrayList) response.getSdtData().get(CONTENT)).size() - 1)).put("assetNumber", asset.getAssetNumber());
-                        clauses.add(criteriaBuilder.equal(root.get("uuid"),asset.getCategoryUUID()));
-
-
-                        ((HashMap) ((ArrayList) response.getSdtData().get(CONTENT)).get(((ArrayList) response.getSdtData().get(CONTENT)).size() - 1)).put("assetCategory", (String)entityManager.createQuery(query.select(root.get("name")).where(clauses.toArray( new Predicate[]{}))).getSingleResult());
-                        clauses.clear();
-                        break;
-                    }
-                }
-            }
-
-                response.getSdtData().put(TOTAL_PAGES, ((Long) response.getSdtData().get(TOTAL_ELEMENTS) / request.getLimit()) + 1);
-
-                if ((Long) response.getSdtData().get(TOTAL_ELEMENTS) == request.getLimit())
-                    response.getSdtData().replace(TOTAL_PAGES, (Long) response.getSdtData().get(TOTAL_PAGES) - 1);
-
-                response.setResponseIdentifier(SUCCESS);
-                LOGGER.info("Page of Usages for SDT got successfully. Returning it to controller");
-
-
+            response.getSdtData().put(CONTENT,usages);
+            response.getSdtData().put(TOTAL_PAGES, ((Long) response.getSdtData().get(TOTAL_ELEMENTS) / request.getLimit()) + 1);
+            if ((Long) response.getSdtData().get(TOTAL_ELEMENTS) == request.getLimit())
+                response.getSdtData().replace(TOTAL_PAGES, (Long) response.getSdtData().get(TOTAL_PAGES) - 1);
+            response.setResponseIdentifier(SUCCESS);
+            LOGGER.info("Page of Usages for SDT got successfully. Returning it to controller");
             }catch(Exception e){
                 LOGGER.error("An Error occurred in getting page of Usages for SDT, "+convertToJSON(request),e);
-
             }finally{
                 util.clearThreadContextForLogging();
                 query = null;
@@ -7493,22 +7503,59 @@ public class   AssetService {
                         }
                     }
                 }
-                // For Search, Adding Like clauses for all columns if searchQuery contains data.
-                if(searchQuery != null){
-                    if(searchQuery != ""){
-                        if(searchClause != null){
-                            searchClause = criteriaBuilder.or(searchClause,criteriaBuilder.like(issues.get((String) filter.get(SDT_FIELD)).as(String.class), "%" + searchQuery.toString() + "%"));
-                        }else{
-                            searchClause = criteriaBuilder.or(criteriaBuilder.like(issues.get((String) filter.get(SDT_FIELD)).as(String.class), "%" + searchQuery.toString() + "%"));
+//                // For Search, Adding Like clauses for all columns if searchQuery contains data.
+//                if(searchQuery != null){
+//                    if(searchQuery != ""){
+//                        if(searchClause != null){
+//                            searchClause = criteriaBuilder.or(searchClause,criteriaBuilder.like(issues.get((String) filter.get(SDT_FIELD)).as(String.class), "%" + searchQuery.toString() + "%"));
+//                        }else{
+//                            searchClause = criteriaBuilder.or(criteriaBuilder.like(issues.get((String) filter.get(SDT_FIELD)).as(String.class), "%" + searchQuery.toString() + "%"));
+//                        }
+//                    }
+//                }
+            }
+//            if(searchClause !=null){
+//                clauses.add(searchClause);
+//            }
+            return clauses;
+        }
+
+        private List<Predicate> addSearchQueryToFields(List<Predicate> clauses, Root root, String searchQuery,CriteriaBuilder criteriaBuilder,List<String> fieldNames) throws ApplicationException {
+            Predicate searchClause = null;
+            try{
+                for(String field: fieldNames) {
+                    if (searchQuery != null) {
+                        if (!searchQuery.isEmpty()) {
+                            if (searchClause != null) {
+                                searchClause = criteriaBuilder.or(searchClause, criteriaBuilder.like(root.get(field), "%" + searchQuery.toString() + "%"));
+                            } else {
+                                searchClause = criteriaBuilder.or(criteriaBuilder.like(root.get(field), "%" + searchQuery.toString() + "%"));
+                            }
                         }
                     }
                 }
-            }
-            if(searchClause !=null){
-                clauses.add(searchClause);
+                if(searchClause != null){
+                    clauses.add(searchClause);
+                }
+            }catch (Exception e){
+                LOGGER.error("An Error Occurred while adding search query.",e);
+                throw new ApplicationException("An Error Occurred while adding search query.",e);
             }
             return clauses;
         }
+
+
+        private List<String> addAssetFieldNames() throws ApplicationException{
+            List<String> fieldNames = new ArrayList<>();
+            try {
+                fieldNames.addAll(Arrays.asList("assetNumber","name","categoryName","assignedTo","status","maintenanceCost","openIssues","assignedIssues","repairs","workorders"));
+            }catch (Exception e){
+                LOGGER.error("An Error occurred while adding Asset Field Names.",e);
+                throw new ApplicationException("An Error occurred while adding Asset Field Names.");
+            }
+            return fieldNames;
+        }
+
         /*************************************Written by Nouman Afzaal*******************************************************/
         /******************************************* Wallet SDT Start ***************************************************/
         public GetPaginatedDataForSDTResponse getPaginatetWalletforSDT(GetPaginatedDataForSDTRequest request) throws ApplicationException,IOException{
@@ -8004,6 +8051,43 @@ public class   AssetService {
         }
     }
 
+    /*******************************************************Function to get Asset and Category for Inspection Module**********************************************************/
+
+    public HashMap<String,String> getAssetCategoryToMapInInspectionTemplates(List<String> uuids) throws IOException,ApplicationException{
+        HashMap<String,String> categoriesName = new HashMap<>();
+        try{
+            LOGGER.info("Inside service function of get Asset category to map in Inspection templates. Details: " + convertToJSON(uuids));
+            List<CategoryDTO> categoryDTOS = categoryRepository.findNameAndUUIDByUuids(uuids);
+            categoryDTOS.forEach(categoryDTO -> {
+                categoriesName.put(categoryDTO.getUuid(),categoryDTO.getName());
+            });
+            LOGGER.info("Successfully got categories name.");
+        }catch (Exception e){
+            LOGGER.error("An Error occurred while getting Asset category to map in Inspection templates.",e);
+            throw new ApplicationException("An Error occurred while getting Asset category to map in Inspection templates.",e);
+        }finally {
+            LOGGER.info("Returning to controller.");
+        }
+        return categoriesName;
     }
+
+    public List<AssetAndCategoryUUIDModel> getAssetAndCategoryToMapInInspectionReports(List<String> uuids) throws IOException,ApplicationException{
+        List<AssetAndCategoryUUIDModel>  models = new ArrayList<>();
+        try{
+            LOGGER.info("Inside service function of get Asset category to map in Inspection templates. Details: " + convertToJSON(uuids));
+            models = assetRepository.findAssetNameAndCategoryNameByUUIDS(uuids);
+            LOGGER.info("Successfully got categories name.");
+        }catch (Exception e){
+            LOGGER.error("An Error occurred while getting Asset category to map in Inspection templates.",e);
+            throw new ApplicationException("An Error occurred while getting Asset category to map in Inspection templates.",e);
+        }finally {
+            LOGGER.info("Returning to controller.");
+        }
+        return models;
+    }
+    /*******************************************************Function to get Asset and Category for Inspection Module End**********************************************************/
+
+
+}
 
 

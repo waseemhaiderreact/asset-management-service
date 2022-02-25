@@ -3,6 +3,7 @@ package com.sharklabs.ams.asset;
 import com.sharklabs.ams.assetfield.AssetField;
 import com.sharklabs.ams.events.assetBasicDetail.AssetBasicDetailModel;
 import com.sharklabs.ams.minimalinfo.MinimalInfo;
+import com.sharklabs.ams.model.AssetAndCategoryUUIDModel;
 import com.sharklabs.ams.response.GetNameAndTypeOfAssetResponse;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
@@ -28,6 +29,9 @@ public interface AssetRepository extends JpaRepository<Asset,Long>, PagingAndSor
 
     @Query("SELECT new com.sharklabs.ams.asset.AssetInfoDTO(a.uuid,a.name,a.assetNumber,c.name,c.uuid) FROM t_asset a, t_category c WHERE a.uuid= ?1 AND c.uuid = a.categoryUUID")
     AssetInfoDTO findAssetInfoByAssetUUID(@Param("uuid") String uuid);
+
+    @Query("SELECT new com.sharklabs.ams.asset.AssetInfoDTO(a.uuid,a.name,a.assetNumber,c.name,c.uuid,a.primaryUsageUnit,a.secondaryUsageUnit,a.consumptionUnit) FROM t_asset a, t_category c WHERE a.tenantUUID=?1 AND c.uuid = a.categoryUUID")
+    List<AssetInfoDTO> findAssetBasicInfoByAssetUUID(@Param("uuid") String uuid);
 
     List<Asset> findByTenantUUID(String tenantUUID);
 
@@ -105,4 +109,7 @@ public interface AssetRepository extends JpaRepository<Asset,Long>, PagingAndSor
     @Query("SELECT new com.sharklabs.ams.asset.AssetDTO(a.uuid,a.name) FROM t_asset a WHERE a.name like %:Query% AND a.removeFromCategoryUUID " +
             "is NULL ")
     List<AssetDTO> findAssetByNameAndRemoveFromCategoryUUIDIsNull(@Param("Query") String Query);
+
+    @Query("SELECT new com.sharklabs.ams.model.AssetAndCategoryUUIDModel(a.uuid,a.name,c.name,c.uuid,a.assetNumber) FROM t_asset a, t_category c WHERE a.uuid in (:uuids) and c.uuid=a.categoryUUID")
+    List<AssetAndCategoryUUIDModel> findAssetNameAndCategoryNameByUUIDS(@Param("uuids") List<String> uuids);
 }
