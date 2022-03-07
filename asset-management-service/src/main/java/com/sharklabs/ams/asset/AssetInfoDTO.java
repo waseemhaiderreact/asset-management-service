@@ -37,6 +37,11 @@ public class AssetInfoDTO {
         this.consumptionUnit = consumptionUnit;
     }
 
+    public AssetInfoDTO(String uuid, String name, String assetNumber) {
+        this.uuid = uuid;
+        this.name = name + " - " + assetNumber;
+    }
+
     public String getUuid() {
         return uuid;
     }

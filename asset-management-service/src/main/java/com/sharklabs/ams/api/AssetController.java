@@ -527,6 +527,11 @@ public class AssetController {
     }
 
     @PostMapping("/import/csv")
+    @Caching(evict = {
+            @CacheEvict(value= "assetAndAssetGroup",allEntries= true),
+            @CacheEvict(value= "assetGroupByAsset",allEntries= true),
+            @CacheEvict(value= "assetAndAssetGroupByUUID",allEntries= true),
+    })
     public @ResponseBody
     ResponseEntity importBulkAssetsByCSV(@RequestParam("file") MultipartFile file,
                                          @RequestParam("tenantUUID") String tenantUUID,
@@ -625,9 +630,7 @@ public class AssetController {
     @Caching(evict = {
             @CacheEvict(value= "assetAndAssetGroup",allEntries= true),
             @CacheEvict(value= "assetGroupByAsset",allEntries= true),
-            @CacheEvict(value= "assetAndAssetGroupByUUID",allEntries= true)
-
-
+            @CacheEvict(value= "assetAndAssetGroupByUUID",allEntries= true),
     })
     public @ResponseBody
     ResponseEntity addAsset(@RequestBody AddAssetRequest addAssetRequest/*, OAuth2Authentication oAuth2Authentication*/) throws IOException {
@@ -664,7 +667,7 @@ public class AssetController {
     @Caching(evict = {
             @CacheEvict(value= "assetAndAssetGroup",allEntries= true),
             @CacheEvict(value= "assetGroupByAsset",allEntries= true),
-            @CacheEvict(value= "assetAndAssetGroupByUUID",allEntries= true)
+            @CacheEvict(value= "assetAndAssetGroupByUUID",allEntries= true),
     })
     public @ResponseBody
     ResponseEntity editAsset(@RequestBody EditAssetRequest editAssetRequest) throws IOException{
@@ -701,7 +704,7 @@ public class AssetController {
     @Caching(evict = {
             @CacheEvict(value= "assetAndAssetGroup",allEntries= true),
             @CacheEvict(value= "assetGroupByAsset",allEntries= true),
-            @CacheEvict(value= "assetAndAssetGroupByUUID",allEntries= true)
+            @CacheEvict(value= "assetAndAssetGroupByUUID",allEntries= true),
     })
     public @ResponseBody
     ResponseEntity deleteAsset(@RequestParam String id) {
@@ -756,7 +759,7 @@ public class AssetController {
     @Caching(evict = {
             @CacheEvict(value= "assetAndAssetGroup",allEntries= true),
             @CacheEvict(value= "assetGroupByAsset",allEntries= true),
-            @CacheEvict(value= "assetAndAssetGroupByUUID",allEntries= true)
+            @CacheEvict(value= "assetAndAssetGroupByUUID",allEntries= true),
     })
     public @ResponseBody
     ResponseEntity archiveOrDeleteAssetByUuid(@RequestParam String uuid, @RequestParam String type){
@@ -776,8 +779,6 @@ public class AssetController {
         }
         return response;
     }
-
-
 
     //get asset AMS_UC_13
     @RequestMapping(method = RequestMethod.GET,value="",params={"id"})
@@ -901,6 +902,7 @@ public class AssetController {
             return new AssetGroupByAssetResponse();
         }
     }
+
     //get Asset Name and AssetgroupName  by
     @PostMapping ("/asset/asset-group/uuid")
    // @Cacheable(value = "assetAndAssetGroupByUUID")
@@ -928,6 +930,7 @@ public class AssetController {
             return new AssetAndAssetGroupResponse();
         }
     }
+
     @PostMapping ("/asset/asset-group/tenantuuid")
     public @ResponseBody
     AssetAndAssetGroupResponse getAssetAndAssetGroupTenantuuid(@RequestBody AssetAndAssetGroupRequest request){
@@ -1026,6 +1029,7 @@ public class AssetController {
         }
         return responseEntity;
     }
+
     @GetMapping("/bulk")
     @ResponseBody
     public ResponseEntity getPaginatedBulkOrSingleAssets(@RequestParam String tenantuuid, @RequestParam int offset, @RequestParam int limit, @RequestParam boolean isBulk){
@@ -1377,6 +1381,27 @@ public class AssetController {
             responseEntity = new ResponseEntity<String>(e.getMessage(),HttpStatus.INTERNAL_SERVER_ERROR);
         }finally {
             LOGGER.info("Returning from controller of export Asset Details.");
+            util.clearThreadContextForLogging();
+            util = null;
+        }
+        return responseEntity;
+    }
+
+    @GetMapping("/name")
+    public @ResponseBody
+    ResponseEntity getAssetNameAndNumberByTenantUUID(@RequestParam String tenantUUID){
+        Util util = new Util();
+        ResponseEntity responseEntity = null;
+        try{
+            util.setThreadContextForLogging(scim2Util);
+            LOGGER.info("Request received in controller of get Asset Name and Number by TenantUUID: " + tenantUUID);
+            responseEntity = new ResponseEntity<AssetInfoListResponse>(assetService.getAssetNameAndNumberByTenantUUID(tenantUUID),HttpStatus.OK);
+        }catch (AccessDeniedException ade){
+            responseEntity = new ResponseEntity<String>(ade.getMessage(),HttpStatus.FORBIDDEN);
+        }catch (Exception e){
+            responseEntity = new ResponseEntity<String>(e.getMessage(),HttpStatus.INTERNAL_SERVER_ERROR);
+        }finally {
+            LOGGER.info("Returning from controller of get Asset Name and Number by TenantUUID.");
             util.clearThreadContextForLogging();
             util = null;
         }
@@ -2585,7 +2610,7 @@ public class AssetController {
     @Caching(evict = {
             @CacheEvict(value= "assetAndAssetGroup",allEntries= true),
             @CacheEvict(value= "assetGroupByAsset",allEntries= true),
-            @CacheEvict(value= "assetAndAssetGroupByUUID",allEntries= true)
+            @CacheEvict(value= "assetAndAssetGroupByUUID",allEntries= true),
     })
     public @ResponseBody
     ResponseEntity addAssetGroup(@RequestBody AddAssetGroupRequest request)  throws EmptyEntityTableException,IOException {

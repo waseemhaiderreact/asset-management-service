@@ -3795,6 +3795,29 @@ public class   AssetService {
         return lastIndex;
     }
 
+    public AssetInfoListResponse getAssetNameAndNumberByTenantUUID(String tenantUUID) throws ApplicationException,AccessDeniedException{
+        if(!privilegeHandler.hasRead()){
+            LOGGER.error("Access is Denied to read Assets.");
+            throw new AccessDeniedException();
+        }
+        Util util = new Util();
+        AssetInfoListResponse response = new AssetInfoListResponse();
+        try{
+            util.setThreadContextForLogging(scim2Util);
+            LOGGER.info("Inside service function of get Asset name and number by tenant uuid: " + tenantUUID);
+            response.setAssetDTOS(assetRepository.findAssetNameAndNumber(tenantUUID));
+            response.setResponseIdentifier(SUCCESS);
+            LOGGER.info("Successfully Got Asset name and number.");
+        }catch (Exception e){
+            LOGGER.error("An Error occurred while getting Asset name and number by tenant uuid.");
+            throw new ApplicationException("An Error occurred while getting Asset name and number by tenant uuid.",e);
+        }finally {
+            LOGGER.info("Returning to controller.");
+            util.clearThreadContextForLogging();
+            util = null;
+        }
+        return response;
+    }
     /******************************************* END Asset Functions ************************************************/
 
     /*******************************************Asset Mapper Functions ************************************************/
