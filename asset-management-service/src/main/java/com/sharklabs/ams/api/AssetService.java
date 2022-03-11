@@ -3809,7 +3809,8 @@ public class   AssetService {
             response.setResponseIdentifier(SUCCESS);
             LOGGER.info("Successfully Got Asset name and number.");
         }catch (Exception e){
-            LOGGER.error("An Error occurred while getting Asset name and number by tenant uuid.");
+            response.setResponseIdentifier(FAILURE);
+            LOGGER.error("An Error occurred while getting Asset name and number by tenant uuid.",e);
             throw new ApplicationException("An Error occurred while getting Asset name and number by tenant uuid.",e);
         }finally {
             LOGGER.info("Returning to controller.");
@@ -6312,7 +6313,7 @@ public class   AssetService {
                             response=new DefaultResponse("Failure","Threshold value cannot be greater than or equal to capacity","F500");
                         }
                     }else{
-                        response=new DefaultResponse("Failure","Wallet Exist in this Type","F500");
+                        response=new DefaultResponse("Failure","This User Already created the same type of Wallet.","F500");
                     }
                 }catch(Exception e){
                     return new DefaultResponse("Failure", "Wallet Not Added Successfully ", "F500");
