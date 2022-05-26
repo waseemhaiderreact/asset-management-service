@@ -779,7 +779,27 @@ public class AssetController {
         }
         return response;
     }
+    // made by waseem haider
 
+    public @ResponseBody
+    @PutMapping("/restore")
+    ResponseEntity restoreAssetByUuid(@RequestParam String uuid, @RequestParam String type){
+        Util util = new Util();
+        ResponseEntity response = null;
+        try{
+            util.setThreadContextForLogging(scim2Util);
+            LOGGER.info("Request received in controller of restore Asset by uuid: " + uuid);
+            response = new ResponseEntity<DefaultResponse>(assetService.restoreAssetByUuid(uuid,type),HttpStatus.OK);
+        }catch (Exception e){
+            LOGGER.error("An Error occurred while restore Asset by uuid.",e);
+            response = new ResponseEntity<String>(e.getMessage(),HttpStatus.INTERNAL_SERVER_ERROR);
+        }finally {
+            LOGGER.info("Returing from controller of restore Asset by uuid.");
+            util.clearThreadContextForLogging();
+            util = null;
+        }
+        return response;
+    }
     //get asset AMS_UC_13
     @RequestMapping(method = RequestMethod.GET,value="",params={"id"})
     public @ResponseBody

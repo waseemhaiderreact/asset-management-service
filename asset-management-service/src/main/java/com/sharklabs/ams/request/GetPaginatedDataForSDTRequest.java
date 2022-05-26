@@ -12,6 +12,15 @@ public class GetPaginatedDataForSDTRequest {
     private int limit;
     private String tenantUUID;
     private String userUUID;
+    private Boolean archived;
+
+    public Boolean getArchived() {
+        return archived;
+    }
+
+    public void setArchived(Boolean archived) {
+        this.archived = archived;
+    }
 
     public List<HashMap<String, Object>> getFilters() {
         return filters;

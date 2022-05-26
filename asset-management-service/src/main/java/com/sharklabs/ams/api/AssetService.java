@@ -2123,9 +2123,57 @@ public class   AssetService {
             assets = null;
             assetGroups = null;
             response = new DefaultResponse("Success","Successfully " + (type.equals("archive") ? "archive" : "delete") + " Asset.","F200");
-            LOGGER.info("Successfully " + (type.equals("archive") ? "archive" : "delete") + " Asset.");
+            LOGGER.info("Successfully " + (type.equals("archive") ? "archive" : "delete")+(type.equals("restore") ? "restore" : "delete") + " Asset.");
         }catch (Exception e){
             throw new ApplicationException("An Error occurred while archive or delete Asset by uuid",e);
+        }finally {
+            LOGGER.info("Returning to controller.");
+            util.clearThreadContextForLogging();
+            util = null;
+            asset = null;
+            criteriaBuilder = null;
+            query = null;
+            root = null;
+        }
+        return response;
+    }
+
+    // restoring in asset
+    public DefaultResponse restoreAssetByUuid(String uuid, String type) throws ApplicationException{
+        Util util = new Util();
+        DefaultResponse response = null;
+        Asset asset = null;
+        CriteriaBuilder criteriaBuilder = null;
+        CriteriaQuery query = null;
+        Root root = null;
+        AssetMapper assetMapper = null;
+        try{
+            util.setThreadContextForLogging(scim2Util);
+            LOGGER.info("Inside service function of restore Asset by uuid: " + uuid);
+            criteriaBuilder = entityManager.getCriteriaBuilder();
+            query = criteriaBuilder.createQuery(Asset.class);
+            root = query.from(Asset.class);
+            asset = (Asset) entityManager.createQuery(query.select(root).where(criteriaBuilder.equal(root.get("uuid"),uuid))).getSingleResult();
+            assetMapper = assetMapperRepository.findByUuid(uuid);
+            Category category = categoryRepository.findCategoryByUuid(asset.getCategoryUUID());
+            category.addAsset(asset);
+            String asset1=asset.getRemoveFromGroupUUID();
+            List<String> convertedCountriesList = Arrays.asList(asset1.split(",",-1));
+            List<AssetGroup> assetGroup=  assetGroupRepository.findAssetGroupByUuid(convertedCountriesList);
+            for (AssetGroup assetGroup1:assetGroup){
+            List<Asset> assetList=new ArrayList<>();
+            assetList.add(asset);
+            }
+            categoryRepository.save(category);
+            assetGroupRepository.save(assetGroup);
+            assetRepository.save(asset);
+            assetMapperRepository.save(assetMapper);
+                asset.setRemoveFromGroupUUID(null);
+            asset.setRemoveFromCategoryUUID(null);
+            response = new DefaultResponse("Success","Successfully " + (type.equals("archive") ? "archive" : "restore") + " Asset.","F200");
+            LOGGER.info("Successfully " +(type.equals("restore") ? "restore" : "restore") + " Asset.");
+        }catch (Exception e){
+            throw new ApplicationException("An Error occurred while restore Asset by uuid",e);
         }finally {
             LOGGER.info("Returning to controller.");
             util.clearThreadContextForLogging();
@@ -2723,7 +2771,14 @@ public class   AssetService {
             root = query.from(AssetMapper.class);
 
             clauses.add(criteriaBuilder.equal(root.get("tenantUUID"),request.getTenantUUID()));
-            clauses.add(criteriaBuilder.isNull(root.get("removeFromCategoryUUID")));
+
+            if (request.getArchived()){
+                clauses.add(criteriaBuilder.equal(root.get("archive"), 1));
+                clauses.add(criteriaBuilder.isNotNull(root.get("removeFromCategoryUUID")));
+            }else {
+                clauses.add(criteriaBuilder.equal(root.get("archive"), 0));
+                clauses.add(criteriaBuilder.isNull(root.get("removeFromCategoryUUID")));
+            }
 
             // Add advanced filters
             if(request.getFilters() != null && request.getFilters().size() > 0 ) {
@@ -6396,6 +6451,12 @@ public class   AssetService {
                     walletRespository.save(wallet);
                     LOGGER.info("Wallet archived Successfully");
                     response = new DefaultResponse("Success", "Wallet Archived Successfully", "200");
+                }
+                if(type.equals("restore")){
+                    wallet.setArchived(false);
+                    walletRespository.save(wallet);
+                    LOGGER.info("Wallet restore Successfully");
+                    response = new DefaultResponse("Success", "Wallet restore Successfully", "200");
                 }
                 else if(type.equals("delete")){
                     wallet.setDeletedWalletUUID(wallet.getWalletUUID());
