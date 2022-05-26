@@ -16,6 +16,8 @@ public interface AssetGroupRepository extends JpaRepository<AssetGroup, Long> {
 
     AssetGroup findAssetGroupByUuid(String uuid);
 
+    List<AssetGroup> findAssetGroupByUuid(List<String> strings);
+
     @Transactional
     void deleteAssetGroupByUuid(String uuid);
 
